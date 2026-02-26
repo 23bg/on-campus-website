@@ -1,0 +1,187 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+    OWNER
+    MANAGER
+    VIEWER
+}
+
+enum SubscriptionStatus {
+    TRIAL
+    ACTIVE
+    INACTIVE
+    CANCELLED
+}
+
+model User {
+    id             String     @id @default(auto()) @map("_id") @db.ObjectId
+    email          String     @unique
+    name           String?
+    role           UserRole   @default(OWNER)
+    instituteId    String?    @db.ObjectId
+    institute      Institute? @relation(fields: [instituteId], references: [id])
+    emailVerified  Boolean    @default(false)
+    otpHash        String?
+    otpResendCount Int        @default(0)
+    otpExpiresAt   DateTime?
+    otpPending     Boolean    @default(false)
+    createdAt      DateTime   @default(now())
+    updatedAt      DateTime   @updatedAt
+
+    @@index([instituteId])
+}
+
+model Institute {
+    id           String        @id @default(auto()) @map("_id") @db.ObjectId
+    name         String?
+    description  String?
+    phone        String?
+    whatsapp     String?
+    city         String?
+    state        String?
+    address      String?
+    timings      String?
+    logo         String?
+    banner       String?
+    websiteUrl   String?
+    instagramUrl String?
+    facebookUrl  String?
+    youtubeUrl   String?
+    linkedinUrl  String?
+    isOnboarded  Boolean       @default(false)
+    slug         String?       @unique
+    users        User[]
+    leads        Lead[]
+    students     Student[]
+    teachers     Teacher[]
+    subscription Subscription?
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
+
+    @@index([phone])
+}
+
+model Subscription {
+    id               String             @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId      String             @unique @db.ObjectId
+    institute        Institute          @relation(fields: [instituteId], references: [id])
+    razorpaySubId    String?            @unique
+    status           SubscriptionStatus @default(TRIAL)
+    currentPeriodEnd DateTime?
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+
+    @@index([status])
+}
+
+model Lead {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    institute   Institute @relation(fields: [instituteId], references: [id])
+    name        String
+    phone       String
+    email       String?
+    source      String?
+    course      String?
+    message     String?
+    status      String    @default("NEW")
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([instituteId, createdAt])
+    @@index([phone])
+    @@index([email])
+}
+
+model Course {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String   @db.ObjectId
+    name        String
+    duration    String?
+    defaultFees Float?
+    description String?
+    createdAt   DateTime @default(now())
+
+    @@index([instituteId])
+}
+
+model Batch {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    courseId     String    @db.ObjectId
+    name        String
+    startDate   DateTime?
+    schedule    String?
+    teacherId   String?   @db.ObjectId
+    createdAt   DateTime  @default(now())
+
+    @@index([instituteId])
+    @@index([courseId])
+}
+
+model Student {
+    id            String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId   String    @db.ObjectId
+    institute     Institute @relation(fields: [instituteId], references: [id])
+    name          String
+    phone         String
+    email         String?
+    courseId       String?   @db.ObjectId
+    batchId       String?   @db.ObjectId
+    admissionDate DateTime  @default(now())
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+
+    @@index([instituteId])
+    @@index([phone])
+    @@index([email])
+}
+
+model Teacher {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    institute   Institute @relation(fields: [instituteId], references: [id])
+    name        String
+    subject     String?
+    bio         String?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([instituteId])
+}
+
+model FeePlan {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    studentId   String    @db.ObjectId
+    instituteId String    @db.ObjectId
+    totalAmount Float
+    dueDate     DateTime?
+    createdAt   DateTime  @default(now())
+
+    @@index([studentId])
+    @@index([instituteId])
+}
+
+model FeeInstallment {
+    id        String            @id @default(auto()) @map("_id") @db.ObjectId
+    feePlanId String            @db.ObjectId
+    amount    Float
+    paidOn    DateTime?
+    note      String?
+    status    InstallmentStatus
+
+    @@index([feePlanId])
+}
+
+enum InstallmentStatus {
+    PENDING
+    PAID
+    OVERDUE
+}

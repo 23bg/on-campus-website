@@ -1,0 +1,84 @@
+import { prisma } from "@/lib/db/prisma";
+
+type CreateLeadInput = {
+    instituteId: string;
+    name: string;
+    phone: string;
+    email?: string;
+    source?: string;
+    course?: string;
+    message?: string;
+    status?: string;
+};
+
+type UpdateLeadStatusInput = {
+    instituteId: string;
+    leadId: string;
+    status: string;
+};
+
+type ListLeadInput = {
+    instituteId: string;
+    status?: string;
+    query?: string;
+    from?: Date;
+    to?: Date;
+};
+
+export const leadRepository = {
+    create: async (payload: CreateLeadInput) =>
+        prisma.lead.create({
+            data: {
+                instituteId: payload.instituteId,
+                name: payload.name,
+                phone: payload.phone,
+                email: payload.email,
+                source: payload.source,
+                course: payload.course,
+                message: payload.message,
+                status: payload.status ?? "NEW",
+            },
+        }),
+
+    findByPhoneInInstitute: async (instituteId: string, phone: string) =>
+        prisma.lead.findFirst({
+            where: { instituteId, phone },
+        }),
+
+    updateStatus: async (input: UpdateLeadStatusInput) =>
+        prisma.lead.updateMany({
+            where: { id: input.leadId, instituteId: input.instituteId },
+            data: { status: input.status },
+        }),
+
+    findByIdInInstitute: async (instituteId: string, leadId: string) =>
+        prisma.lead.findFirst({
+            where: { id: leadId, instituteId },
+        }),
+
+    list: async (input: ListLeadInput) =>
+        prisma.lead.findMany({
+            where: {
+                instituteId: input.instituteId,
+                ...(input.status ? { status: input.status } : {}),
+                ...(input.query
+                    ? {
+                        OR: [
+                            { name: { contains: input.query, mode: "insensitive" } },
+                            { phone: { contains: input.query, mode: "insensitive" } },
+                            { email: { contains: input.query, mode: "insensitive" } },
+                        ],
+                    }
+                    : {}),
+                ...(input.from || input.to
+                    ? {
+                        createdAt: {
+                            ...(input.from ? { gte: input.from } : {}),
+                            ...(input.to ? { lte: input.to } : {}),
+                        },
+                    }
+                    : {}),
+            },
+            orderBy: { createdAt: "desc" },
+        }),
+};
