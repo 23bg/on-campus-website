@@ -6,7 +6,7 @@ import LandingHeader from "@/components/landing/Header";
 
 export const metadata: Metadata = {
     title: "Pricing - OnCampus",
-    description: "Simple â‚¹999/month pricing for coaching institutes.",
+    description: "Simple plans for coaching institutes: Solo ₹499/month or Team ₹999/month.",
 };
 
 export default function PricingPage() {

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import ThemeToggle from "@/components/theme-toggle";
 
 export default function LandingHeader() {
     return (
@@ -13,6 +12,7 @@ export default function LandingHeader() {
                     </Link>
 
                     <Link href="/">Home</Link>
+                    <Link href="/features">Features</Link>
                     <Link href="/pricing">Pricing</Link>
                     <Link href="/demo-institute">Demo</Link>
                 </nav>

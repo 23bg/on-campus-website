@@ -12,10 +12,10 @@ export default function Footer() {
                     <p className="mt-3 text-xs text-muted-foreground">© {year} OnCampus. All rights reserved.</p>
                 </div>
                 <nav className="grid grid-cols-2 gap-2 text-sm md:justify-items-end">
-                    <Link href="/login" className="text-muted-foreground hover:text-foreground">Login</Link>
-                    <Link href="/signup" className="text-muted-foreground hover:text-foreground">Sign up</Link>
-                    <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
-                    <Link href="/demo-institute" className="text-muted-foreground hover:text-foreground">Demo Institute</Link>
+                    <Link href="/about" className="text-muted-foreground hover:text-foreground">About</Link>
+                    <Link href="/contact" className="text-muted-foreground hover:text-foreground">Contact</Link>
+                    <Link href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy Policy</Link>
+                    <Link href="/terms" className="text-muted-foreground hover:text-foreground">Terms</Link>
                 </nav>
             </div>
         </footer>

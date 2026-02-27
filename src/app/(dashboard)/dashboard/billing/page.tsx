@@ -8,13 +8,20 @@ import { Badge } from "@/components/ui/badge";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, CreditCard } from "lucide-react";
+import { PLAN_CONFIG, PlanType } from "@/config/plans";
 
 type BillingSummary = {
+    planType: PlanType;
+    planName?: string;
     planAmount: number;
     currency: string;
+    userLimit: number;
+    usersUsed: number;
     status: string;
     nextBillingDate?: string | null;
     razorpaySubId?: string | null;
+    lastPaymentAmount?: number | null;
+    lastPaymentDate?: string | null;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -28,11 +35,16 @@ export default function BillingPage() {
     const [summary, setSummary] = useState<BillingSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<PlanType>("SOLO");
 
     const loadSummary = async () => {
         try {
             const response = await api.get(API.INTERNAL.BILLING.ROOT);
-            setSummary(response.data?.data ?? null);
+            const data = response.data?.data ?? null;
+            setSummary(data);
+            if (data?.planType) {
+                setSelectedPlan(data.planType);
+            }
         } catch {
             toast.error("Failed to load billing info");
         } finally {
@@ -42,11 +54,11 @@ export default function BillingPage() {
 
     useEffect(() => { loadSummary(); }, []);
 
-    const createSubscription = async () => {
+    const createSubscription = async (planType: PlanType) => {
         setCreating(true);
         try {
-            await api.post(API.INTERNAL.BILLING.ROOT, { action: "create-subscription" });
-            toast.success("Subscription initiated");
+            await api.post(API.INTERNAL.BILLING.ROOT, { action: "create-subscription", planType });
+            toast.success(planType === "TEAM" ? "Team plan initiated" : "Solo plan initiated");
             await loadSummary();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
@@ -68,6 +80,12 @@ export default function BillingPage() {
             <h1 className="font-heading text-2xl font-semibold">Billing</h1>
             <p className="mt-1 text-muted-foreground">Manage your subscription and billing.</p>
 
+            {summary?.status === "INACTIVE" ? (
+                <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                    Trial has expired. Choose a plan below to continue full access.
+                </div>
+            ) : null}
+
             <Card className="mt-6">
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -75,7 +93,7 @@ export default function BillingPage() {
                             <CardTitle className="flex items-center gap-2">
                                 <CreditCard className="h-5 w-5" /> Subscription Plan
                             </CardTitle>
-                            <CardDescription className="mt-1">OnCampus Pro — ₹{summary?.planAmount ?? 999}/month</CardDescription>
+                            <CardDescription className="mt-1">{summary?.planName ?? "Solo"} — ₹{summary?.planAmount ?? 499}/month</CardDescription>
                         </div>
                         <Badge variant="secondary" className={STATUS_COLORS[summary?.status ?? "TRIAL"] ?? ""}>
                             {summary?.status ?? "TRIAL"}
@@ -86,6 +104,10 @@ export default function BillingPage() {
                     <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Status</span>
                         <span className="font-medium">{summary?.status ?? "TRIAL"}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Users</span>
+                        <span className="font-medium">{summary?.usersUsed ?? 0}/{summary?.userLimit ?? 1}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Next billing date</span>
@@ -100,11 +122,37 @@ export default function BillingPage() {
                         </div>
                     ) : null}
 
-                    {!summary?.razorpaySubId ? (
-                        <Button onClick={createSubscription} disabled={creating} className="w-full mt-2">
-                            {creating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating...</> : "Subscribe Now"}
+                    <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Last payment</span>
+                        <span className="font-medium">
+                            {summary?.lastPaymentDate && summary?.lastPaymentAmount
+                                ? `${new Date(summary.lastPaymentDate).toLocaleDateString()} • ₹${summary.lastPaymentAmount}`
+                                : "No payment history yet"}
+                        </span>
+                    </div>
+
+                    <div className="grid gap-2 pt-2 sm:grid-cols-2">
+                        <Button
+                            variant={selectedPlan === "SOLO" ? "default" : "outline"}
+                            disabled={creating}
+                            onClick={() => {
+                                setSelectedPlan("SOLO");
+                                void createSubscription("SOLO");
+                            }}
+                        >
+                            {creating && selectedPlan === "SOLO" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Solo (₹${PLAN_CONFIG.SOLO.priceMonthly})`}
                         </Button>
-                    ) : null}
+                        <Button
+                            variant={selectedPlan === "TEAM" ? "default" : "outline"}
+                            disabled={creating}
+                            onClick={() => {
+                                setSelectedPlan("TEAM");
+                                void createSubscription("TEAM");
+                            }}
+                        >
+                            {creating && selectedPlan === "TEAM" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Team (₹${PLAN_CONFIG.TEAM.priceMonthly})`}
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </main>

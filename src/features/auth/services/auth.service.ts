@@ -23,7 +23,7 @@ export type VerifyOtpInput = {
 export type AuthResult = {
     userId: string;
     instituteId: string;
-    role: "OWNER" | "MANAGER" | "VIEWER";
+    role: "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
     subscriptionStatus: SubscriptionStatus;
     redirectTo: "/dashboard" | "/pricing" | "/onboarding";
 };
@@ -106,6 +106,10 @@ export const authService = {
                 role: "OWNER",
                 emailVerified: true,
             });
+
+            if (!user) {
+                throw new AppError("User not found after institute assignment", 500, "USER_NOT_FOUND");
+            }
         }
 
         if (!user.instituteId) {

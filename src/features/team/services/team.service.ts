@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { userRepository } from "@/features/auth/repositories/user.repo";
 import { AppError } from "@/lib/utils/error";
+import { subscriptionService } from "@/features/subscription/services/subscription.service";
 
 const roleSchema = z.enum(["MANAGER", "VIEWER"]);
 
@@ -11,7 +12,7 @@ export const teamService = {
 
     async createMember(
         instituteId: string,
-        actorRole: "OWNER" | "MANAGER" | "VIEWER",
+        actorRole: "OWNER" | "EDITOR" | "MANAGER" | "VIEWER",
         payload: { email: string; name?: string; role: "MANAGER" | "VIEWER" }
     ) {
         if (actorRole !== "OWNER") {
@@ -24,6 +25,22 @@ export const teamService = {
 
         if (existing?.instituteId && existing.instituteId !== instituteId) {
             throw new AppError("User already belongs to another institute", 409, "USER_ALREADY_ASSIGNED");
+        }
+
+        const willConsumeNewSeat = !existing || existing.instituteId !== instituteId;
+        if (willConsumeNewSeat) {
+            const [subscription, currentUsers] = await Promise.all([
+                subscriptionService.getSubscription(instituteId),
+                userRepository.countByInstitute(instituteId),
+            ]);
+
+            if (currentUsers >= (subscription.userLimit ?? 1)) {
+                throw new AppError(
+                    "Your current plan user limit is reached. Upgrade to TEAM to add more users.",
+                    409,
+                    "PLAN_USER_LIMIT_REACHED"
+                );
+            }
         }
 
         if (existing) {
@@ -45,7 +62,7 @@ export const teamService = {
 
     async updateMemberRole(
         instituteId: string,
-        actorRole: "OWNER" | "MANAGER" | "VIEWER",
+        actorRole: "OWNER" | "EDITOR" | "MANAGER" | "VIEWER",
         actorUserId: string,
         memberId: string,
         role: "MANAGER" | "VIEWER"
@@ -70,7 +87,7 @@ export const teamService = {
 
     async removeMember(
         instituteId: string,
-        actorRole: "OWNER" | "MANAGER" | "VIEWER",
+        actorRole: "OWNER" | "EDITOR" | "MANAGER" | "VIEWER",
         actorUserId: string,
         memberId: string
     ) {

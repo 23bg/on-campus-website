@@ -1,15 +1,23 @@
 import { prisma } from "@/lib/db/prisma";
 
+type AppRole = "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+
 type CreateUserInput = {
     email: string;
     instituteId?: string;
-    role?: "OWNER" | "MANAGER" | "VIEWER";
+    role?: AppRole;
     name?: string;
     emailVerified?: boolean;
     otpPending?: boolean;
     otpHash?: string | null;
     otpResendCount?: number;
     otpExpiresAt?: Date | null;
+};
+
+const toPrismaRole = (role?: AppRole): "OWNER" | "EDITOR" | "VIEWER" | undefined => {
+    if (!role) return undefined;
+    if (role === "MANAGER") return "EDITOR";
+    return role;
 };
 
 export const userRepository = {
@@ -25,7 +33,7 @@ export const userRepository = {
             data: {
                 email: input.email.trim().toLowerCase(),
                 instituteId: input.instituteId,
-                role: input.role ?? "OWNER",
+                role: toPrismaRole(input.role) ?? "OWNER",
                 name: input.name,
                 emailVerified: input.emailVerified ?? false,
                 otpPending: input.otpPending ?? false,
@@ -39,7 +47,7 @@ export const userRepository = {
         email: string,
         input: {
             instituteId?: string;
-            role?: "OWNER" | "MANAGER" | "VIEWER";
+            role?: AppRole;
             name?: string | null;
             emailVerified?: boolean;
             otpPending?: boolean;
@@ -47,11 +55,26 @@ export const userRepository = {
             otpResendCount?: number;
             otpExpiresAt?: Date | null;
         }
-    ) =>
-        prisma.user.update({
+    ) => {
+        const normalizedEmail = email.trim().toLowerCase();
+        await prisma.user.updateMany({
+            where: { email: normalizedEmail },
+            data: {
+                ...(input.instituteId !== undefined ? { instituteId: input.instituteId } : {}),
+                ...(input.role !== undefined ? { role: toPrismaRole(input.role) } : {}),
+                ...(input.name !== undefined ? { name: input.name } : {}),
+                ...(input.emailVerified !== undefined ? { emailVerified: input.emailVerified } : {}),
+                ...(input.otpPending !== undefined ? { otpPending: input.otpPending } : {}),
+                ...(input.otpHash !== undefined ? { otpHash: input.otpHash } : {}),
+                ...(input.otpResendCount !== undefined ? { otpResendCount: input.otpResendCount } : {}),
+                ...(input.otpExpiresAt !== undefined ? { otpExpiresAt: input.otpExpiresAt } : {}),
+            },
+        });
+
+        return prisma.user.findUnique({
             where: { email: email.trim().toLowerCase() },
-            data: input,
-        }),
+        });
+    },
 
     listByInstitute: async (instituteId: string) =>
         prisma.user.findMany({
@@ -59,14 +82,22 @@ export const userRepository = {
             orderBy: { createdAt: "desc" },
         }),
 
+    countByInstitute: async (instituteId: string) =>
+        prisma.user.count({
+            where: { instituteId },
+        }),
+
     updateByIdAndInstitute: async (
         id: string,
         instituteId: string,
-        input: { role?: "OWNER" | "MANAGER" | "VIEWER"; name?: string | null }
+        input: { role?: AppRole; name?: string | null }
     ) =>
         prisma.user.updateMany({
             where: { id, instituteId },
-            data: input,
+            data: {
+                ...(input.role !== undefined ? { role: toPrismaRole(input.role) } : {}),
+                ...(input.name !== undefined ? { name: input.name } : {}),
+            },
         }),
 
     removeByIdAndInstitute: async (id: string, instituteId: string) =>

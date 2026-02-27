@@ -13,6 +13,7 @@ import {
     Layers,
     IndianRupee,
     UserRound,
+    Wallet,
 } from "lucide-react"
 
 import {
@@ -84,6 +85,11 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
             title: "Fees",
             url: ROUTES.DASHBOARD.FEES,
             icon: IndianRupee,
+        },
+        {
+            title: "Payments",
+            url: ROUTES.DASHBOARD.PAYMENTS,
+            icon: Wallet,
         },
         {
             title: "Institute",

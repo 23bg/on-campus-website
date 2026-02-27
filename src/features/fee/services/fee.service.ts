@@ -14,6 +14,8 @@ const addPaymentSchema = z.object({
     amount: z.number().min(1, "Amount must be at least 1"),
     date: z.string().optional(),
     note: z.string().optional(),
+    method: z.string().optional(),
+    reference: z.string().optional(),
 });
 
 export const feeService = {
@@ -63,13 +65,32 @@ export const feeService = {
     // Simple "Add Payment" — always PAID status
     async addPayment(payload: unknown) {
         const input = addPaymentSchema.parse(payload);
-        return feeRepository.createInstallment({
+        const plan = await feeRepository.findPlanById(input.feePlanId);
+        if (!plan) {
+            throw new AppError("Fee plan not found", 404, "FEE_PLAN_NOT_FOUND");
+        }
+
+        const paidOn = input.date ? new Date(input.date) : new Date();
+
+        const installment = await feeRepository.createInstallment({
             feePlanId: input.feePlanId,
+            instituteId: plan.instituteId,
             amount: input.amount,
             status: "PAID",
-            paidOn: input.date ? new Date(input.date) : new Date(),
+            paidOn,
             note: input.note,
         });
+
+        await feeRepository.createPaymentRecord({
+            instituteId: plan.instituteId,
+            studentId: plan.studentId,
+            amount: input.amount,
+            method: input.method,
+            reference: input.reference,
+            paidOn,
+        });
+
+        return installment;
     },
 
     // Legacy support
@@ -79,8 +100,15 @@ export const feeService = {
             amount: z.number().min(0),
             status: z.enum(["PENDING", "PAID", "OVERDUE"]).default("PENDING"),
         }).parse(payload);
+
+        const plan = await feeRepository.findPlanById(input.feePlanId);
+        if (!plan) {
+            throw new AppError("Fee plan not found", 404, "FEE_PLAN_NOT_FOUND");
+        }
+
         return feeRepository.createInstallment({
             feePlanId: input.feePlanId,
+            instituteId: plan.instituteId,
             amount: input.amount,
             status: input.status,
         });
@@ -147,5 +175,19 @@ export const feeService = {
     // Defaulters list
     async getDefaulters(instituteId: string) {
         return feeRepository.getDefaultersByInstitute(instituteId);
+    },
+
+    async listPayments(instituteId: string, filters: { from?: string; to?: string; studentId?: string; method?: string; limit?: number }) {
+        const from = filters.from ? new Date(filters.from) : undefined;
+        const to = filters.to ? new Date(filters.to) : undefined;
+
+        return feeRepository.listPaymentsByInstitute({
+            instituteId,
+            from,
+            to,
+            studentId: filters.studentId,
+            method: filters.method,
+            limit: filters.limit,
+        });
     },
 };

@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import api from "@/lib/axios";
+import { API } from "@/constants/api";
 
 type DashboardSettings = {
     compactTables: boolean;
@@ -45,6 +47,8 @@ export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+    const [dataCounts, setDataCounts] = useState({ students: 0, leads: 0, courses: 0, payments: 0 });
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -59,11 +63,71 @@ export default function SettingsPage() {
         } catch {
             setSettings(defaultSettings);
         }
+
+        const loadCounts = async () => {
+            try {
+                const [studentsRes, leadsRes, coursesRes, paymentsRes] = await Promise.all([
+                    api.get(API.INTERNAL.STUDENTS.ROOT),
+                    api.get(API.INTERNAL.LEADS.ROOT),
+                    api.get(API.INTERNAL.COURSES.ROOT),
+                    api.get(API.INTERNAL.PAYMENTS.ROOT),
+                ]);
+
+                setDataCounts({
+                    students: (studentsRes.data?.data ?? []).length,
+                    leads: (leadsRes.data?.data ?? []).length,
+                    courses: (coursesRes.data?.data ?? []).length,
+                    payments: (paymentsRes.data?.data ?? []).length,
+                });
+            } catch {
+                // Keep defaults silently
+            }
+        };
+
+        loadCounts();
     }, []);
 
     const saveSettings = () => {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
         toast.success("Settings saved");
+    };
+
+    const exportData = async () => {
+        setExporting(true);
+        try {
+            const [studentsRes, leadsRes, coursesRes, feesRes, paymentsRes] = await Promise.all([
+                api.get(API.INTERNAL.STUDENTS.ROOT),
+                api.get(API.INTERNAL.LEADS.ROOT),
+                api.get(API.INTERNAL.COURSES.ROOT),
+                api.get(API.INTERNAL.FEES.ROOT),
+                api.get(API.INTERNAL.PAYMENTS.ROOT),
+            ]);
+
+            const payload = {
+                exportedAt: new Date().toISOString(),
+                data: {
+                    students: studentsRes.data?.data ?? [],
+                    leads: leadsRes.data?.data ?? [],
+                    courses: coursesRes.data?.data ?? [],
+                    fees: feesRes.data?.data ?? [],
+                    payments: paymentsRes.data?.data ?? [],
+                },
+            };
+
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `oncampus-export-${new Date().toISOString().slice(0, 10)}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            toast.success("Data export downloaded");
+        } catch {
+            toast.error("Failed to export data");
+        } finally {
+            setExporting(false);
+        }
     };
 
     return (
@@ -207,6 +271,25 @@ export default function SettingsPage() {
                             }
                         />
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Data</CardTitle>
+                    <CardDescription>Review usage and export your institute data anytime.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Students</p><p className="text-lg font-semibold">{dataCounts.students}</p></div>
+                        <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Leads</p><p className="text-lg font-semibold">{dataCounts.leads}</p></div>
+                        <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Courses</p><p className="text-lg font-semibold">{dataCounts.courses}</p></div>
+                        <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Payments</p><p className="text-lg font-semibold">{dataCounts.payments}</p></div>
+                    </div>
+
+                    <Button variant="outline" onClick={exportData} disabled={exporting}>
+                        {exporting ? "Exporting..." : "Export Data"}
+                    </Button>
                 </CardContent>
             </Card>
 

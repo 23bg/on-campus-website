@@ -12,6 +12,7 @@ const leadInputSchema = z.object({
     source: z.string().optional(),
     course: z.string().optional(),
     message: z.string().optional(),
+    followUpAt: z.string().optional(),
 });
 
 const listInputSchema = z.object({
@@ -26,6 +27,7 @@ export const leadService = {
         const input = leadInputSchema.parse(payload);
         return leadRepository.create({
             ...input,
+            followUpAt: input.followUpAt ? new Date(input.followUpAt) : undefined,
             status: "NEW",
         });
     },
@@ -79,6 +81,39 @@ export const leadService = {
 
     async updateLeadStatus(instituteId: string, leadId: string, status: string) {
         return this.updateStatus(instituteId, leadId, status);
+    },
+
+    async updateLead(
+        instituteId: string,
+        leadId: string,
+        payload: { status?: string; message?: string | null; followUpAt?: string | null }
+    ) {
+        if (!payload.status && payload.message === undefined && payload.followUpAt === undefined) {
+            throw new AppError("Nothing to update", 400, "INVALID_UPDATE");
+        }
+
+        if (payload.status) {
+            return this.updateStatus(instituteId, leadId, payload.status);
+        }
+
+        const followUpAt =
+            payload.followUpAt === undefined
+                ? undefined
+                : payload.followUpAt
+                    ? new Date(payload.followUpAt)
+                    : null;
+
+        await leadRepository.updateByIdInInstitute(instituteId, leadId, {
+            message: payload.message,
+            followUpAt,
+        });
+
+        const updated = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        if (!updated) {
+            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+        }
+
+        return updated;
     },
 
     async searchLeads(

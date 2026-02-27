@@ -8,6 +8,7 @@ type CreateLeadInput = {
     source?: string;
     course?: string;
     message?: string;
+    followUpAt?: Date;
     status?: string;
 };
 
@@ -36,6 +37,7 @@ export const leadRepository = {
                 source: payload.source,
                 course: payload.course,
                 message: payload.message,
+                followUpAt: payload.followUpAt,
                 status: payload.status ?? "NEW",
             },
         }),
@@ -54,6 +56,20 @@ export const leadRepository = {
     findByIdInInstitute: async (instituteId: string, leadId: string) =>
         prisma.lead.findFirst({
             where: { id: leadId, instituteId },
+        }),
+
+    updateByIdInInstitute: async (
+        instituteId: string,
+        leadId: string,
+        payload: { message?: string | null; followUpAt?: Date | null; status?: string }
+    ) =>
+        prisma.lead.updateMany({
+            where: { id: leadId, instituteId },
+            data: {
+                ...(payload.message !== undefined ? { message: payload.message } : {}),
+                ...(payload.followUpAt !== undefined ? { followUpAt: payload.followUpAt } : {}),
+                ...(payload.status !== undefined ? { status: payload.status } : {}),
+            },
         }),
 
     list: async (input: ListLeadInput) =>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { readSessionFromCookie } from "@/lib/auth/auth";
+import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/lib/auth/auth";
+import { subscriptionService } from "@/features/subscription/services/subscription.service";
 
 export async function GET() {
     const session = await readSessionFromCookie();
@@ -12,6 +13,16 @@ export async function GET() {
     }
 
     const isOnboarded = Boolean(session.isOnboarded);
+    const subscription = await subscriptionService.getSubscription(session.instituteId);
+    const liveStatus = subscription.status;
+
+    if (liveStatus !== session.subscriptionStatus) {
+        const refreshedToken = createSessionToken({
+            ...session,
+            subscriptionStatus: liveStatus,
+        });
+        await setSessionCookie(refreshedToken);
+    }
 
     return NextResponse.json({
         success: true,
@@ -28,7 +39,7 @@ export async function GET() {
             },
             institute: {
                 id: session.instituteId,
-                subscriptionStatus: session.subscriptionStatus,
+                subscriptionStatus: liveStatus,
             },
             gbp: {
                 status: "NOT_CONNECTED" as const,

@@ -9,7 +9,7 @@ datasource db {
 
 enum UserRole {
     OWNER
-    MANAGER
+    EDITOR
     VIEWER
 }
 
@@ -18,6 +18,11 @@ enum SubscriptionStatus {
     ACTIVE
     INACTIVE
     CANCELLED
+}
+
+enum PlanType {
+    SOLO
+    TEAM
 }
 
 model User {
@@ -30,8 +35,11 @@ model User {
     emailVerified  Boolean    @default(false)
     otpHash        String?
     otpResendCount Int        @default(0)
+    otpAttempts    Int        @default(0)
+    lastOtpSentAt  DateTime?
     otpExpiresAt   DateTime?
     otpPending     Boolean    @default(false)
+    deletedAt      DateTime?
     createdAt      DateTime   @default(now())
     updatedAt      DateTime   @updatedAt
 
@@ -39,31 +47,38 @@ model User {
 }
 
 model Institute {
-    id           String        @id @default(auto()) @map("_id") @db.ObjectId
-    name         String?
-    description  String?
-    phone        String?
-    whatsapp     String?
-    city         String?
-    state        String?
-    address      String?
-    timings      String?
-    logo         String?
-    banner       String?
-    websiteUrl   String?
-    instagramUrl String?
-    facebookUrl  String?
-    youtubeUrl   String?
-    linkedinUrl  String?
-    isOnboarded  Boolean       @default(false)
-    slug         String?       @unique
-    users        User[]
-    leads        Lead[]
-    students     Student[]
-    teachers     Teacher[]
-    subscription Subscription?
-    createdAt    DateTime      @default(now())
-    updatedAt    DateTime      @updatedAt
+    id              String             @id @default(auto()) @map("_id") @db.ObjectId
+    name            String?
+    description     String?
+    phone           String?
+    whatsapp        String?
+    city            String?
+    state           String?
+    address         String?
+    timings         String?
+    logo            String?
+    banner          String?
+    websiteUrl      String?
+    instagramUrl    String?
+    facebookUrl     String?
+    youtubeUrl      String?
+    linkedinUrl     String?
+    isOnboarded     Boolean            @default(false)
+    slug            String?            @unique
+    users           User[]
+    leads           Lead[]
+    students        Student[]
+    teachers        Teacher[]
+    courses         Course[]
+    batches         Batch[]
+    payments        Payment[]
+    feePlans        FeePlan[]
+    settings        InstituteSettings?
+    subscription    Subscription?
+    deletedAt       DateTime?
+    createdAt       DateTime           @default(now())
+    updatedAt       DateTime           @updatedAt
+    feeInstallments FeeInstallment[]
 
     @@index([phone])
 }
@@ -72,13 +87,19 @@ model Subscription {
     id               String             @id @default(auto()) @map("_id") @db.ObjectId
     instituteId      String             @unique @db.ObjectId
     institute        Institute          @relation(fields: [instituteId], references: [id])
-    razorpaySubId    String?            @unique
+    razorpaySubId    String?
+    planType         PlanType?          @default(SOLO)
+    userLimit        Int?               @default(1)
+    trialEndsAt      DateTime?
     status           SubscriptionStatus @default(TRIAL)
     currentPeriodEnd DateTime?
+    deletedAt        DateTime?
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
 
     @@index([status])
+    @@index([planType])
+    @@index([razorpaySubId])
 }
 
 model Lead {
@@ -91,24 +112,36 @@ model Lead {
     source      String?
     course      String?
     message     String?
+    followUpAt  DateTime?
     status      String    @default("NEW")
+    createdBy   String?   @db.ObjectId
+    deletedAt   DateTime?
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
+    @@unique([instituteId, phone])
     @@index([instituteId, createdAt])
+    @@index([instituteId, status])
     @@index([phone])
     @@index([email])
 }
 
 model Course {
-    id          String   @id @default(auto()) @map("_id") @db.ObjectId
-    instituteId String   @db.ObjectId
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    institute   Institute @relation(fields: [instituteId], references: [id])
     name        String
+    slug        String?
     banner      String?
     duration    String?
     defaultFees Float?
     description String?
-    createdAt   DateTime @default(now())
+    createdBy   String?   @db.ObjectId
+    deletedAt   DateTime?
+    batches     Batch[]
+    students    Student[]
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
     @@index([instituteId])
 }
@@ -116,12 +149,20 @@ model Course {
 model Batch {
     id          String    @id @default(auto()) @map("_id") @db.ObjectId
     instituteId String    @db.ObjectId
+    institute   Institute @relation(fields: [instituteId], references: [id])
     courseId    String    @db.ObjectId
+    course      Course    @relation(fields: [courseId], references: [id])
     name        String
+    slug        String?
     startDate   DateTime?
     schedule    String?
     teacherId   String?   @db.ObjectId
+    teacher     Teacher?  @relation(fields: [teacherId], references: [id])
+    createdBy   String?   @db.ObjectId
+    deletedAt   DateTime?
+    students    Student[]
     createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
     @@index([instituteId])
     @@index([courseId])
@@ -135,12 +176,20 @@ model Student {
     phone         String
     email         String?
     courseId      String?   @db.ObjectId
+    course        Course?   @relation(fields: [courseId], references: [id])
     batchId       String?   @db.ObjectId
+    batch         Batch?    @relation(fields: [batchId], references: [id])
+    createdBy     String?   @db.ObjectId
+    deletedAt     DateTime?
+    payments      Payment[]
+    feePlans      FeePlan[]
     admissionDate DateTime  @default(now())
     createdAt     DateTime  @default(now())
     updatedAt     DateTime  @updatedAt
 
+    @@unique([instituteId, phone])
     @@index([instituteId])
+    @@index([instituteId, admissionDate])
     @@index([phone])
     @@index([email])
 }
@@ -150,8 +199,12 @@ model Teacher {
     instituteId String    @db.ObjectId
     institute   Institute @relation(fields: [instituteId], references: [id])
     name        String
+    slug        String?
     subject     String?
     bio         String?
+    createdBy   String?   @db.ObjectId
+    deletedAt   DateTime?
+    batches     Batch[]
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
@@ -159,26 +212,71 @@ model Teacher {
 }
 
 model FeePlan {
-    id          String    @id @default(auto()) @map("_id") @db.ObjectId
-    studentId   String    @db.ObjectId
-    instituteId String    @db.ObjectId
-    totalAmount Float
-    dueDate     DateTime?
-    createdAt   DateTime  @default(now())
+    id           String           @id @default(auto()) @map("_id") @db.ObjectId
+    studentId    String           @db.ObjectId
+    student      Student          @relation(fields: [studentId], references: [id])
+    instituteId  String           @db.ObjectId
+    institute    Institute        @relation(fields: [instituteId], references: [id])
+    totalAmount  Float
+    dueDate      DateTime?
+    createdBy    String?          @db.ObjectId
+    deletedAt    DateTime?
+    installments FeeInstallment[]
+    createdAt    DateTime         @default(now())
+    updatedAt    DateTime         @updatedAt
 
     @@index([studentId])
     @@index([instituteId])
 }
 
 model FeeInstallment {
-    id        String            @id @default(auto()) @map("_id") @db.ObjectId
-    feePlanId String            @db.ObjectId
-    amount    Float
-    paidOn    DateTime?
-    note      String?
-    status    InstallmentStatus
+    id          String            @id @default(auto()) @map("_id") @db.ObjectId
+    feePlanId   String            @db.ObjectId
+    feePlan     FeePlan           @relation(fields: [feePlanId], references: [id])
+    instituteId String            @db.ObjectId
+    institute   Institute         @relation(fields: [instituteId], references: [id])
+    amount      Float
+    paidOn      DateTime?
+    note        String?
+    status      InstallmentStatus
+    createdBy   String?           @db.ObjectId
+    deletedAt   DateTime?
+    createdAt   DateTime          @default(now())
+    updatedAt   DateTime          @updatedAt
 
     @@index([feePlanId])
+    @@index([instituteId])
+}
+
+model Payment {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    institute   Institute @relation(fields: [instituteId], references: [id])
+    studentId   String    @db.ObjectId
+    student     Student   @relation(fields: [studentId], references: [id])
+    amount      Float
+    method      String?
+    reference   String?
+    createdBy   String?   @db.ObjectId
+    deletedAt   DateTime?
+    paidOn      DateTime  @default(now())
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([studentId])
+    @@index([instituteId])
+    @@index([instituteId, paidOn])
+}
+
+model InstituteSettings {
+    id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId         String    @unique @db.ObjectId
+    institute           Institute @relation(fields: [instituteId], references: [id])
+    leadWhatsappEnabled Boolean   @default(false)
+    autoReplyEnabled    Boolean   @default(false)
+    deletedAt           DateTime?
+    createdAt           DateTime  @default(now())
+    updatedAt           DateTime  @updatedAt
 }
 
 enum InstallmentStatus {

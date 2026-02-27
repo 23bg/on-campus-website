@@ -4,7 +4,7 @@ import { env, requireEnv } from "@/lib/config/env";
 
 const SESSION_COOKIE = "session_token";
 
-export type SessionRole = "OWNER" | "MANAGER" | "VIEWER";
+export type SessionRole = "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
 export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
 
 export type SessionPayload = {

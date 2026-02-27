@@ -47,7 +47,7 @@ export default function FeesPage() {
 
     // Add Payment dialog
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-    const [paymentForm, setPaymentForm] = useState({ amount: "", date: "", note: "" });
+    const [paymentForm, setPaymentForm] = useState({ amount: "", date: "", note: "", method: "CASH", reference: "" });
     const [savingPayment, setSavingPayment] = useState(false);
 
     const studentMap = Object.fromEntries(students.map((s) => [s.id, s]));
@@ -132,14 +132,16 @@ export default function FeesPage() {
         try {
             const body: Record<string, unknown> = {
                 amount: parseFloat(paymentForm.amount),
+                method: paymentForm.method,
             };
             if (paymentForm.date) body.date = paymentForm.date;
             if (paymentForm.note.trim()) body.note = paymentForm.note.trim();
+            if (paymentForm.reference.trim()) body.reference = paymentForm.reference.trim();
 
             await api.post(API.INTERNAL.FEES.INSTALLMENTS(selectedPlan.id), body);
-            toast.success("Payment recorded");
+            toast.success(`Payment saved: ₹${parseFloat(paymentForm.amount).toLocaleString("en-IN")}`);
             setPaymentDialogOpen(false);
-            setPaymentForm({ amount: "", date: "", note: "" });
+            setPaymentForm({ amount: "", date: "", note: "", method: "CASH", reference: "" });
             await viewPayments(selectedPlan);
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
@@ -326,6 +328,23 @@ export default function FeesPage() {
                             <Label>Date</Label>
                             <Input type="date" value={paymentForm.date} onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })} />
                             <p className="text-xs text-muted-foreground">Defaults to today if left empty</p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Method</Label>
+                            <Select value={paymentForm.method} onValueChange={(value) => setPaymentForm({ ...paymentForm, method: value })}>
+                                <SelectTrigger><SelectValue placeholder="Select payment method" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="CASH">Cash</SelectItem>
+                                    <SelectItem value="UPI">UPI</SelectItem>
+                                    <SelectItem value="CARD">Card</SelectItem>
+                                    <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                                    <SelectItem value="OTHER">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Reference</Label>
+                            <Input value={paymentForm.reference} onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })} placeholder="Txn ID / receipt no. (optional)" />
                         </div>
                         <div className="space-y-2">
                             <Label>Note</Label>
