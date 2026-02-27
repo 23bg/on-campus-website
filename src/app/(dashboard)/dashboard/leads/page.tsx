@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
@@ -20,6 +23,8 @@ type Lead = {
     course?: string | null;
     source?: string | null;
     status: string;
+    message?: string | null;
+    followUpAt?: string | null;
     createdAt: string;
 };
 
@@ -38,6 +43,10 @@ export default function LeadsPage() {
     const [from, setFrom] = useState("");
     const [to, setTo] = useState("");
     const [loading, setLoading] = useState(true);
+    const [editingLead, setEditingLead] = useState<Lead | null>(null);
+    const [notes, setNotes] = useState("");
+    const [followUpAt, setFollowUpAt] = useState("");
+    const [savingDetails, setSavingDetails] = useState(false);
 
     const queryString = useMemo(() => {
         const params = new URLSearchParams();
@@ -71,6 +80,31 @@ export default function LeadsPage() {
             await loadLeads();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
+        }
+    };
+
+    const openDetails = (lead: Lead) => {
+        setEditingLead(lead);
+        setNotes(lead.message ?? "");
+        setFollowUpAt(lead.followUpAt ? lead.followUpAt.slice(0, 10) : "");
+    };
+
+    const saveDetails = async () => {
+        if (!editingLead) return;
+
+        setSavingDetails(true);
+        try {
+            await api.patch(API.INTERNAL.LEADS.BY_ID(editingLead.id), {
+                message: notes || null,
+                followUpAt: followUpAt || null,
+            });
+            toast.success("Lead details updated");
+            setEditingLead(null);
+            await loadLeads();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
+        } finally {
+            setSavingDetails(false);
         }
     };
 
@@ -114,6 +148,8 @@ export default function LeadsPage() {
                             <TableHead>Email</TableHead>
                             <TableHead>Course</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Follow-up</TableHead>
+                            <TableHead>Notes</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead>Action</TableHead>
                         </TableRow>
@@ -121,14 +157,14 @@ export default function LeadsPage() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="text-center py-8">
+                                <TableCell colSpan={10} className="text-center py-8">
                                     <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
                                 </TableCell>
                             </TableRow>
                         ) : leads.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                                    No leads found.
+                                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                                    No leads yet. Share your institute page to start collecting enquiries.
                                 </TableCell>
                             </TableRow>
                         ) : leads.map((lead, index) => (
@@ -143,24 +179,53 @@ export default function LeadsPage() {
                                         {lead.status}
                                     </Badge>
                                 </TableCell>
+                                <TableCell className="text-xs text-muted-foreground">
+                                    {lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}
+                                </TableCell>
+                                <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground">{lead.message || "-"}</TableCell>
                                 <TableCell className="text-muted-foreground text-xs">
                                     {new Date(lead.createdAt).toLocaleDateString()}
                                 </TableCell>
                                 <TableCell>
-                                    <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
-                                        <SelectTrigger className="h-8 w-[130px]">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-2">
+                                        <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
+                                            <SelectTrigger className="h-8 w-[130px]">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button variant="outline" size="sm" onClick={() => openDetails(lead)}>Notes</Button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </div>
+
+            <Dialog open={Boolean(editingLead)} onOpenChange={(open) => !open && setEditingLead(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Lead Notes & Follow-up</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-1">
+                        <div className="space-y-2">
+                            <Label>Follow-up Date</Label>
+                            <Input type="date" value={followUpAt} onChange={(event) => setFollowUpAt(event.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Notes</Label>
+                            <Textarea rows={5} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Called parent, interested in NEET, follow-up on Sunday..." />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditingLead(null)}>Cancel</Button>
+                        <Button onClick={saveDetails} disabled={savingDetails}>{savingDetails ? "Saving..." : "Save"}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </main>
     );
 }

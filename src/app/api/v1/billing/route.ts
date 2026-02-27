@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
 import { toAppError } from "@/lib/utils/error";
+import { isPlanType } from "@/config/plans";
 
 export async function GET() {
     try {
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const body = (await req.json().catch(() => ({}))) as { action?: string };
+        const body = (await req.json().catch(() => ({}))) as { action?: string; planType?: string };
         if (body.action !== "create-subscription") {
             return NextResponse.json(
                 { success: false, error: { code: "INVALID_ACTION", message: "Unsupported action" } },
@@ -42,7 +43,14 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const data = await subscriptionService.createRazorpaySubscription(session.instituteId);
+        if (body.planType && !isPlanType(body.planType)) {
+            return NextResponse.json(
+                { success: false, error: { code: "INVALID_PLAN", message: "Unsupported plan type" } },
+                { status: 400 }
+            );
+        }
+
+        const data = await subscriptionService.createRazorpaySubscription(session.instituteId, body.planType);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

@@ -14,6 +14,29 @@ type Metrics = {
     conversionPercentage: number;
     totalFeesCollectedThisMonth: number;
     totalOutstandingFees: number;
+    todayOverview?: {
+        newLeads: number;
+        feesCollected: number;
+        feesDueToday: number;
+        newStudents: number;
+    };
+    recentLeads?: Array<{
+        id: string;
+        name: string;
+        phone: string;
+        status: string;
+        createdAt: string;
+    }>;
+    recentPayments?: Array<{
+        id: string;
+        amount: number;
+        method?: string | null;
+        paidOn: string;
+        student: {
+            name: string;
+            phone: string;
+        };
+    }>;
 };
 
 type Defaulter = {
@@ -84,6 +107,94 @@ export default function DashboardPage() {
                                 </CardContent>
                             </Card>
                         ))}
+                    </div>
+
+                    <Card className="mt-6">
+                        <CardHeader>
+                            <CardTitle className="text-base">Today Overview</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                                <div className="rounded-lg border p-3">
+                                    <p className="text-xs text-muted-foreground">New Leads</p>
+                                    <p className="text-xl font-semibold">{metrics?.todayOverview?.newLeads ?? 0}</p>
+                                </div>
+                                <div className="rounded-lg border p-3">
+                                    <p className="text-xs text-muted-foreground">Fees Collected</p>
+                                    <p className="text-xl font-semibold">{formatCurrency(metrics?.todayOverview?.feesCollected ?? 0)}</p>
+                                </div>
+                                <div className="rounded-lg border p-3">
+                                    <p className="text-xs text-muted-foreground">Fees Due Today</p>
+                                    <p className="text-xl font-semibold">{metrics?.todayOverview?.feesDueToday ?? 0}</p>
+                                </div>
+                                <div className="rounded-lg border p-3">
+                                    <p className="text-xs text-muted-foreground">New Students</p>
+                                    <p className="text-xl font-semibold">{metrics?.todayOverview?.newStudents ?? 0}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Recent Leads</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {!metrics?.recentLeads?.length ? (
+                                    <p className="text-sm text-muted-foreground">No recent leads yet. Share your institute link to start receiving enquiries.</p>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Phone</TableHead>
+                                                <TableHead>Status</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {metrics.recentLeads.map((lead) => (
+                                                <TableRow key={lead.id}>
+                                                    <TableCell className="font-medium">{lead.name}</TableCell>
+                                                    <TableCell>{lead.phone}</TableCell>
+                                                    <TableCell>{lead.status}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Recent Payments</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {!metrics?.recentPayments?.length ? (
+                                    <p className="text-sm text-muted-foreground">No recent payments found.</p>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Student</TableHead>
+                                                <TableHead className="text-right">Amount</TableHead>
+                                                <TableHead>Method</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {metrics.recentPayments.map((payment) => (
+                                                <TableRow key={payment.id}>
+                                                    <TableCell className="font-medium">{payment.student.name}</TableCell>
+                                                    <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
+                                                    <TableCell>{payment.method || "-"}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
 
                     {/* Defaulters List */}

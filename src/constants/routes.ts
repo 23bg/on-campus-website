@@ -9,6 +9,7 @@ const ROUTES = {
 		COURSES: "/courses",
 		BATCHES: "/batches",
 		FEES: "/fees",
+		PAYMENTS: "/payments",
 		INSTITUTE: "/institute",
 		SETTINGS: "/settings",
 		BILLING: "/billing",
@@ -21,7 +22,12 @@ const ROUTES = {
 		VERIFICATION: "/verification",
 	},
 	PRICING: "/pricing",
+	FEATURES: "/features",
 	DEMO_INSTITUTE: "/demo-institute",
+	ABOUT: "/about",
+	CONTACT: "/contact",
+	PRIVACY: "/privacy",
+	TERMS: "/terms",
 };
 
 export default ROUTES;

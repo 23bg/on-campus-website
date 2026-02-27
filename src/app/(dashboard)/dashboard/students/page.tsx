@@ -192,6 +192,17 @@ export default function StudentsPage() {
 
     const formatCurrency = (v: number) => v > 0 ? `₹${v.toLocaleString("en-IN")}` : "-";
 
+    const downloadSampleCsv = () => {
+        const sample = "name,phone,email,course,batch,fees\nRahul Sharma,9876543210,rahul@example.com,NEET,Batch A,50000\nPriya Singh,9123456789,priya@example.com,JEE,Weekend Batch,42000\n";
+        const blob = new Blob([sample], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "students-sample.csv";
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <main className="p-6">
             <div className="flex items-center justify-between">
@@ -338,6 +349,7 @@ export default function StudentsPage() {
                         <p className="text-sm text-muted-foreground">
                             Required columns: <span className="font-medium">name</span>, <span className="font-medium">phone</span>. Optional: email, course, batch, fees.
                         </p>
+                        <Button variant="outline" size="sm" onClick={downloadSampleCsv}>Download Sample CSV</Button>
 
                         <div
                             onClick={() => fileInputRef.current?.click()}
@@ -369,7 +381,7 @@ export default function StudentsPage() {
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2">
                                     <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                    <span className="text-sm font-medium">{uploadResult.inserted} students imported</span>
+                                    <span className="text-sm font-medium">{uploadResult.inserted} students imported • {uploadResult.errors.length} failed</span>
                                 </div>
                                 {uploadResult.errors.length > 0 ? (
                                     <div className="space-y-1">

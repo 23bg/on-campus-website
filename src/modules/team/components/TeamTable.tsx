@@ -24,6 +24,12 @@ type TeamTableProps = {
 };
 
 export default function TeamTable({ rows, canManage, onEdit, onDelete }: TeamTableProps) {
+    const displayRole = (role: TeamRow["role"]) => {
+        if (role === "MANAGER") return "EDITOR";
+        if (role === "COUNSELOR") return "EDITOR";
+        return role;
+    };
+
     return (
         <div className="mt-4 rounded-md border">
             <Table>
@@ -52,7 +58,7 @@ export default function TeamTable({ rows, canManage, onEdit, onDelete }: TeamTab
                                 <TableCell className="font-medium">{member.name}</TableCell>
                                 <TableCell>{member.phone || "-"}</TableCell>
                                 <TableCell>{member.email || "-"}</TableCell>
-                                <TableCell>{member.role}</TableCell>
+                                <TableCell>{displayRole(member.role)}</TableCell>
                                 <TableCell>{member.active ? "Yes" : "No"}</TableCell>
                                 <TableCell>{member.subjects || "-"}</TableCell>
                                 <TableCell>{member.experience || "-"}</TableCell>

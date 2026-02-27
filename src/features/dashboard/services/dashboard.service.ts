@@ -13,8 +13,22 @@ export const dashboardService = {
     async getMetrics(instituteId: string) {
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
-        const [leadsAgg, admissionsAgg, studentsAgg, feesCollected, outstandingFees] = await Promise.all([
+        const [
+            leadsAgg,
+            admissionsAgg,
+            studentsAgg,
+            feesCollected,
+            outstandingFees,
+            leadsTodayAgg,
+            studentsTodayAgg,
+            feesCollectedToday,
+            feesDueToday,
+            recentLeads,
+            recentPayments,
+        ] = await Promise.all([
             prisma.lead.aggregateRaw({
                 pipeline: [
                     {
@@ -50,11 +64,50 @@ export const dashboardService = {
             }),
             feeRepository.totalCollectedByInstitute(instituteId, monthStart),
             feeRepository.totalOutstandingByInstitute(instituteId),
+            prisma.lead.aggregateRaw({
+                pipeline: [
+                    {
+                        $match: {
+                            instituteId,
+                            createdAt: { $gte: todayStart, $lt: tomorrowStart },
+                        },
+                    },
+                    { $count: "count" },
+                ],
+            }),
+            prisma.student.aggregateRaw({
+                pipeline: [
+                    {
+                        $match: {
+                            instituteId,
+                            createdAt: { $gte: todayStart, $lt: tomorrowStart },
+                        },
+                    },
+                    { $count: "count" },
+                ],
+            }),
+            feeRepository.totalCollectedByInstitute(instituteId, todayStart),
+            feeRepository.countFeesDueOnDate(instituteId, todayStart, tomorrowStart),
+            prisma.lead.findMany({
+                where: { instituteId },
+                orderBy: { createdAt: "desc" },
+                take: 5,
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true,
+                    status: true,
+                    createdAt: true,
+                },
+            }),
+            feeRepository.listPaymentsByInstitute({ instituteId, limit: 5 }),
         ]);
 
         const leadsThisMonth = parseAggregateCount(leadsAgg);
         const admissionsThisMonth = parseAggregateCount(admissionsAgg);
         const totalStudents = parseAggregateCount(studentsAgg);
+        const leadsToday = parseAggregateCount(leadsTodayAgg);
+        const studentsToday = parseAggregateCount(studentsTodayAgg);
 
         const conversionPercentage = leadsThisMonth > 0 ? Math.round((admissionsThisMonth / leadsThisMonth) * 100) : 0;
 
@@ -65,6 +118,14 @@ export const dashboardService = {
             conversionPercentage,
             totalFeesCollectedThisMonth: feesCollected,
             totalOutstandingFees: outstandingFees,
+            todayOverview: {
+                newLeads: leadsToday,
+                feesCollected: feesCollectedToday,
+                feesDueToday,
+                newStudents: studentsToday,
+            },
+            recentLeads,
+            recentPayments,
         };
     },
 };

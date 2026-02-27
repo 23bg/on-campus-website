@@ -171,6 +171,13 @@ export default function TeamPage() {
                 {canManage ? <Button onClick={openCreate}>Add Team Member</Button> : null}
             </div>
 
+            <div className="mt-4 rounded-md border p-3 text-sm">
+                <p className="font-medium mb-2">Role Access</p>
+                <p><span className="font-medium">OWNER</span> — Full control over team, data, and billing.</p>
+                <p><span className="font-medium">EDITOR</span> — Manage leads, students, courses, batches, and fees.</p>
+                <p><span className="font-medium">VIEWER</span> — Read-only access.</p>
+            </div>
+
             {loading ? (
                 <p className="mt-6 text-sm text-muted-foreground">Loading team...</p>
             ) : (

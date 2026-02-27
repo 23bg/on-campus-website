@@ -72,6 +72,9 @@
             INSTALLMENTS: (id: string) => `/fees/${id}/installments`,
             WITH_STUDENT: (studentId: string) => `/fees?studentId=${studentId}`,
         },
+        PAYMENTS: {
+            ROOT: '/payments',
+        },
         LEADS: {
             ROOT: '/leads',
             BY_ID: (id: string) => `/leads/${id}`,

@@ -18,16 +18,20 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         }
 
         const { id } = await context.params;
-        const body = (await req.json()) as { status?: string };
+        const body = (await req.json()) as { status?: string; message?: string | null; followUpAt?: string | null };
 
-        if (!body.status) {
+        if (!body.status && body.message === undefined && body.followUpAt === undefined) {
             return NextResponse.json(
-                { success: false, error: { code: "INVALID_STATUS", message: "status is required" } },
+                { success: false, error: { code: "INVALID_PAYLOAD", message: "status, message, or followUpAt is required" } },
                 { status: 400 }
             );
         }
 
-        const data = await leadService.updateLeadStatus(session.instituteId, id, body.status);
+        const data = await leadService.updateLead(session.instituteId, id, {
+            status: body.status,
+            message: body.message,
+            followUpAt: body.followUpAt,
+        });
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

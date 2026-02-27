@@ -45,7 +45,7 @@ export default function TeamForm({ form, onChange }: TeamFormProps) {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="OWNER">Owner</SelectItem>
-                        <SelectItem value="MANAGER">Manager</SelectItem>
+                        <SelectItem value="MANAGER">Editor</SelectItem>
                         <SelectItem value="COUNSELOR">Counselor</SelectItem>
                         <SelectItem value="TEACHER">Teacher</SelectItem>
                         <SelectItem value="VIEWER">Viewer</SelectItem>

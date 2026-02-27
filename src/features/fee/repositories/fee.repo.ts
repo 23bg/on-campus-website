@@ -9,6 +9,7 @@ type CreateFeePlanInput = {
 
 type CreateInstallmentInput = {
     feePlanId: string;
+    instituteId: string;
     amount: number;
     status: "PENDING" | "PAID" | "OVERDUE";
     paidOn?: Date;
@@ -47,6 +48,25 @@ export const feeRepository = {
     // Installment / Payment operations
     createInstallment: async (payload: CreateInstallmentInput) =>
         prisma.feeInstallment.create({ data: payload }),
+
+    createPaymentRecord: async (payload: {
+        instituteId: string;
+        studentId: string;
+        amount: number;
+        method?: string;
+        reference?: string;
+        paidOn?: Date;
+    }) =>
+        prisma.payment.create({
+            data: {
+                instituteId: payload.instituteId,
+                studentId: payload.studentId,
+                amount: payload.amount,
+                method: payload.method,
+                reference: payload.reference,
+                paidOn: payload.paidOn ?? new Date(),
+            },
+        }),
 
     listInstallmentsByPlan: async (feePlanId: string) =>
         prisma.feeInstallment.findMany({
@@ -194,5 +214,74 @@ export const feeRepository = {
                 dueDate: d.dueDate,
             };
         });
+    },
+
+    listPaymentsByInstitute: async (input: {
+        instituteId: string;
+        from?: Date;
+        to?: Date;
+        studentId?: string;
+        method?: string;
+        limit?: number;
+    }) =>
+        prisma.payment.findMany({
+            where: {
+                instituteId: input.instituteId,
+                ...(input.studentId ? { studentId: input.studentId } : {}),
+                ...(input.method ? { method: { equals: input.method, mode: "insensitive" } } : {}),
+                ...(input.from || input.to
+                    ? {
+                        paidOn: {
+                            ...(input.from ? { gte: input.from } : {}),
+                            ...(input.to ? { lte: input.to } : {}),
+                        },
+                    }
+                    : {}),
+            },
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        name: true,
+                        phone: true,
+                    },
+                },
+            },
+            orderBy: { paidOn: "desc" },
+            ...(input.limit ? { take: input.limit } : {}),
+        }),
+
+    countFeesDueOnDate: async (instituteId: string, start: Date, end: Date) => {
+        const plans = await prisma.feePlan.findMany({
+            where: {
+                instituteId,
+                dueDate: {
+                    gte: start,
+                    lt: end,
+                },
+            },
+            select: {
+                id: true,
+                totalAmount: true,
+            },
+        });
+
+        if (plans.length === 0) return 0;
+
+        const planIds = plans.map((p) => p.id);
+        const payments = await prisma.feeInstallment.findMany({
+            where: {
+                feePlanId: { in: planIds },
+                status: "PAID",
+            },
+            select: { feePlanId: true, amount: true },
+        });
+
+        const paidByPlan: Record<string, number> = {};
+        for (const payment of payments) {
+            paidByPlan[payment.feePlanId] = (paidByPlan[payment.feePlanId] ?? 0) + payment.amount;
+        }
+
+        return plans.filter((plan) => (plan.totalAmount - (paidByPlan[plan.id] ?? 0)) > 0).length;
     },
 };
