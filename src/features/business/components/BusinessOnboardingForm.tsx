@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -61,27 +63,18 @@ export function BusinessOnboardingForm({ onSuccess }: BusinessOnboardingFormProp
     const onSubmit = async (data: BusinessFormData) => {
         setIsLoading(true);
         try {
-            const response = await fetch("/api/institute", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: data.name,
-                    description: data.description,
-                    phone: data.phoneNumber1,
-                    whatsapp: data.phoneNumber2,
-                    address: data.address,
-                    city: data.city,
-                    state: data.state,
-                    socialLinks: {
-                        website: data.website,
-                    },
-                }),
+            await api.put(API.INTERNAL.INSTITUTE.ROOT, {
+                name: data.name,
+                description: data.description,
+                phone: data.phoneNumber1,
+                whatsapp: data.phoneNumber2,
+                address: data.address,
+                city: data.city,
+                state: data.state,
+                socialLinks: {
+                    website: data.website,
+                },
             });
-
-            if (!response.ok) {
-                const errorJson = await response.json().catch(() => null);
-                throw new Error(errorJson?.error?.message || "Failed to create business. Please try again.");
-            }
 
             toast.success("Business created successfully!");
             onSuccess?.();

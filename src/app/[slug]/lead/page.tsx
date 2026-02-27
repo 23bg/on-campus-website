@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 export default function LeadCapturePage() {
@@ -26,25 +28,16 @@ export default function LeadCapturePage() {
         setError(null);
         setSaving(true);
         try {
-            const response = await fetch(`/api/public/${slug}/lead`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: form.name,
-                    phone: form.phone,
-                    email: form.email || undefined,
-                    course: form.course || undefined,
-                    message: form.message || undefined,
-                }),
+            await api.post(API.INTERNAL.PUBLIC.LEAD(slug), {
+                name: form.name,
+                phone: form.phone,
+                email: form.email || undefined,
+                course: form.course || undefined,
+                message: form.message || undefined,
             });
-            const json = await response.json();
-            if (!response.ok) {
-                setError(json.error?.message ?? "Submission failed");
-                return;
-            }
             setSubmitted(true);
-        } catch {
-            setError("Network error. Please try again.");
+        } catch (error: any) {
+            setError(error?.response?.data?.error?.message ?? "Network error. Please try again.");
         } finally {
             setSaving(false);
         }

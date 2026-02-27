@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -54,12 +56,11 @@ export default function FeesPage() {
         setLoading(true);
         try {
             const [planRes, studentRes] = await Promise.all([
-                fetch("/api/fees", { cache: "no-store" }),
-                fetch("/api/students", { cache: "no-store" }),
+                api.get(API.INTERNAL.FEES.ROOT),
+                api.get(API.INTERNAL.STUDENTS.ROOT),
             ]);
-            const [planJson, studentJson] = await Promise.all([planRes.json(), studentRes.json()]);
-            setPlans(planJson.data ?? []);
-            setStudents(studentJson.data ?? []);
+            setPlans(planRes.data?.data ?? []);
+            setStudents(studentRes.data?.data ?? []);
         } catch {
             toast.error("Failed to load fee data");
         } finally {
@@ -83,22 +84,13 @@ export default function FeesPage() {
             };
             if (planForm.dueDate) body.dueDate = planForm.dueDate;
 
-            const res = await fetch("/api/fees", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            const json = await res.json();
-            if (!res.ok) {
-                toast.error(json.error?.message ?? "Failed to create plan");
-                return;
-            }
+            await api.post(API.INTERNAL.FEES.ROOT, body);
             toast.success("Fee plan created");
             setPlanDialogOpen(false);
             setPlanForm({ studentId: "", totalAmount: "", dueDate: "" });
             await loadData();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         } finally {
             setSavingPlan(false);
         }
@@ -107,19 +99,15 @@ export default function FeesPage() {
     // Delete fee plan
     const deletePlan = async (planId: string) => {
         try {
-            const res = await fetch(`/api/fees/${planId}`, { method: "DELETE" });
-            if (!res.ok) {
-                toast.error("Failed to delete plan");
-                return;
-            }
+            await api.delete(API.INTERNAL.FEES.BY_ID(planId));
             toast.success("Fee plan deleted");
             if (selectedPlan?.id === planId) {
                 setSelectedPlan(null);
                 setPayments([]);
             }
             await loadData();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
     };
 
@@ -127,11 +115,10 @@ export default function FeesPage() {
     const viewPayments = async (plan: FeePlan) => {
         setSelectedPlan(plan);
         try {
-            const res = await fetch(`/api/fees/${plan.id}/installments`, { cache: "no-store" });
-            const json = await res.json();
-            setPayments(json.data ?? []);
-        } catch {
-            toast.error("Failed to load payments");
+            const response = await api.get(API.INTERNAL.FEES.INSTALLMENTS(plan.id));
+            setPayments(response.data?.data ?? []);
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Failed to load payments");
         }
     };
 
@@ -149,22 +136,13 @@ export default function FeesPage() {
             if (paymentForm.date) body.date = paymentForm.date;
             if (paymentForm.note.trim()) body.note = paymentForm.note.trim();
 
-            const res = await fetch(`/api/fees/${selectedPlan.id}/installments`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            const json = await res.json();
-            if (!res.ok) {
-                toast.error(json.error?.message ?? "Failed to add payment");
-                return;
-            }
+            await api.post(API.INTERNAL.FEES.INSTALLMENTS(selectedPlan.id), body);
             toast.success("Payment recorded");
             setPaymentDialogOpen(false);
             setPaymentForm({ amount: "", date: "", note: "" });
             await viewPayments(selectedPlan);
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         } finally {
             setSavingPayment(false);
         }
@@ -273,14 +251,16 @@ export default function FeesPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead>Sr. No.</TableHead>
                                             <TableHead>Amount</TableHead>
                                             <TableHead>Date</TableHead>
                                             <TableHead>Note</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {payments.map((payment) => (
+                                        {payments.map((payment, index) => (
                                             <TableRow key={payment.id}>
+                                                <TableCell>{index + 1}</TableCell>
                                                 <TableCell className="font-medium">{formatCurrency(payment.amount)}</TableCell>
                                                 <TableCell>{payment.paidOn ? new Date(payment.paidOn).toLocaleDateString() : "-"}</TableCell>
                                                 <TableCell className="text-muted-foreground text-sm">{payment.note || "-"}</TableCell>

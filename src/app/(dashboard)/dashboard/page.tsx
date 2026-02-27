@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2, IndianRupee, AlertTriangle, GraduationCap, UserPlus, Users } from "lucide-react";
 
 type Metrics = {
@@ -34,15 +36,11 @@ export default function DashboardPage() {
         const load = async () => {
             try {
                 const [metricsRes, defaultersRes] = await Promise.all([
-                    fetch("/api/dashboard/metrics", { cache: "no-store" }),
-                    fetch("/api/dashboard/defaulters", { cache: "no-store" }),
+                    api.get(API.INTERNAL.DASHBOARD.METRICS),
+                    api.get(API.INTERNAL.DASHBOARD.DEFAULTERS),
                 ]);
-                const [metricsJson, defaultersJson] = await Promise.all([
-                    metricsRes.json(),
-                    defaultersRes.json(),
-                ]);
-                setMetrics(metricsJson.data ?? null);
-                setDefaulters(defaultersJson.data ?? []);
+                setMetrics(metricsRes.data?.data ?? null);
+                setDefaulters(defaultersRes.data?.data ?? []);
             } catch {
                 // silently fail — show zeros
             } finally {
@@ -101,6 +99,7 @@ export default function DashboardPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead>Sr. No.</TableHead>
                                             <TableHead>Student</TableHead>
                                             <TableHead>Phone</TableHead>
                                             <TableHead>Course</TableHead>
@@ -111,8 +110,9 @@ export default function DashboardPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {defaulters.map((d) => (
+                                        {defaulters.map((d, index) => (
                                             <TableRow key={d.studentId}>
+                                                <TableCell>{index + 1}</TableCell>
                                                 <TableCell className="font-medium">{d.studentName}</TableCell>
                                                 <TableCell>{d.phone}</TableCell>
                                                 <TableCell>{d.courseName}</TableCell>

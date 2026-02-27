@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2, Pencil, Trash2, Plus } from "lucide-react";
 
 type Teacher = {
@@ -31,9 +33,8 @@ export default function TeachersPage() {
     const load = async () => {
         setLoading(true);
         try {
-            const response = await fetch("/api/teachers", { cache: "no-store" });
-            const json = await response.json();
-            setTeachers(json.data ?? []);
+            const response = await api.get(API.INTERNAL.TEACHERS.ROOT);
+            setTeachers(response.data?.data ?? []);
         } catch {
             toast.error("Failed to load teachers");
         } finally {
@@ -62,23 +63,14 @@ export default function TeachersPage() {
         }
         setSaving(true);
         try {
-            const url = editingId ? `/api/teachers/${editingId}` : "/api/teachers";
+            const url = editingId ? API.INTERNAL.TEACHERS.BY_ID(editingId) : API.INTERNAL.TEACHERS.ROOT;
             const method = editingId ? "PATCH" : "POST";
-            const response = await fetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: form.name, subject: form.subject || undefined, bio: form.bio || undefined }),
-            });
-            const json = await response.json();
-            if (!response.ok) {
-                toast.error(json.error?.message ?? "Failed to save teacher");
-                return;
-            }
+            await api.request({ method, url, data: { name: form.name, subject: form.subject || undefined, bio: form.bio || undefined } });
             toast.success(editingId ? "Teacher updated" : "Teacher added");
             setDialogOpen(false);
             await load();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         } finally {
             setSaving(false);
         }
@@ -86,15 +78,11 @@ export default function TeachersPage() {
 
     const deleteTeacher = async (id: string) => {
         try {
-            const response = await fetch(`/api/teachers/${id}`, { method: "DELETE" });
-            if (!response.ok) {
-                toast.error("Failed to delete teacher");
-                return;
-            }
+            await api.delete(API.INTERNAL.TEACHERS.BY_ID(id));
             toast.success("Teacher deleted");
             await load();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
     };
 
@@ -112,6 +100,7 @@ export default function TeachersPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Sr. No.</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Subject</TableHead>
                             <TableHead>Bio</TableHead>
@@ -121,18 +110,19 @@ export default function TeachersPage() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8">
+                                <TableCell colSpan={5} className="text-center py-8">
                                     <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
                                 </TableCell>
                             </TableRow>
                         ) : teachers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                                     No teachers yet. Add your first teacher.
                                 </TableCell>
                             </TableRow>
-                        ) : teachers.map((teacher) => (
+                        ) : teachers.map((teacher, index) => (
                             <TableRow key={teacher.id}>
+                                <TableCell>{index + 1}</TableCell>
                                 <TableCell className="font-medium">{teacher.name}</TableCell>
                                 <TableCell>{teacher.subject || "-"}</TableCell>
                                 <TableCell className="max-w-[200px] truncate">{teacher.bio || "-"}</TableCell>

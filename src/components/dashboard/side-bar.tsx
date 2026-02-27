@@ -2,9 +2,9 @@
 
 import {
     CreditCard,
-    UserCircle,
+    Settings,
     Home,
-    UserRound,
+    Building2,
     Users,
     MessageCircle,
     Twitter,
@@ -12,8 +12,7 @@ import {
     BookOpen,
     Layers,
     IndianRupee,
-    Upload,
-    AlertTriangle,
+    UserRound,
 } from "lucide-react"
 
 import {
@@ -32,8 +31,6 @@ import Link from "next/link"
 import ROUTES from "@/constants/routes"
 import { NavMain } from "@/components/dashboard/nav-main"
 import { usePathname } from "next/navigation"
-import Image from "next/image"
-import logo from "../../../public/on-campus.png";
 
 export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
@@ -42,12 +39,12 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
 
     const withActiveFlag = (items: any[]) =>
         items.map((item) => {
-            const isRoot = item.url === "/dashboard";
+            const isRoot = item.url === "/";
 
             return {
                 ...item,
                 isActive: isRoot
-                    ? pathname === "/dashboard" // Dashboard ONLY active on "/dashboard"
+                    ? pathname === "/"
                     : pathname === item.url || pathname.startsWith(item.url + "/"),
             };
         });
@@ -57,16 +54,6 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
             title: "Dashboard",
             url: ROUTES.DASHBOARD.ROOT,
             icon: Home,
-        },
-        {
-            title: "Courses",
-            url: ROUTES.DASHBOARD.COURSES,
-            icon: BookOpen,
-        },
-        {
-            title: "Batches",
-            url: ROUTES.DASHBOARD.BATCHES,
-            icon: Layers,
         },
         {
             title: "Leads",
@@ -79,9 +66,19 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
             icon: UserRound,
         },
         {
-            title: "Teachers",
-            url: ROUTES.DASHBOARD.TEACHERS,
-            icon: UserRound,
+            title: "Team",
+            url: ROUTES.DASHBOARD.TEAM,
+            icon: Users,
+        },
+        {
+            title: "Courses",
+            url: ROUTES.DASHBOARD.COURSES,
+            icon: BookOpen,
+        },
+        {
+            title: "Batches",
+            url: ROUTES.DASHBOARD.BATCHES,
+            icon: Layers,
         },
         {
             title: "Fees",
@@ -89,29 +86,19 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
             icon: IndianRupee,
         },
         {
-            title: "Defaulters",
-            url: ROUTES.DASHBOARD.DEFAULTERS,
-            icon: AlertTriangle,
+            title: "Institute",
+            url: ROUTES.DASHBOARD.INSTITUTE,
+            icon: Building2,
         },
         {
-            title: "Teams",
-            url: ROUTES.DASHBOARD.TEAMS,
-            icon: Users,
-        },
-        {
-            title: "Profile",
-            url: ROUTES.DASHBOARD.PROFILE,
-            icon: UserCircle,
+            title: "Settings",
+            url: ROUTES.DASHBOARD.SETTINGS,
+            icon: Settings,
         },
         {
             title: "Billing",
             url: ROUTES.DASHBOARD.BILLING,
             icon: CreditCard,
-        },
-        {
-            title: "Upload",
-            url: ROUTES.DASHBOARD.UPLOAD,
-            icon: Upload,
         },
     ];
 

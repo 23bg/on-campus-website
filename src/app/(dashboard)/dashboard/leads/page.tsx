@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 
 type Lead = {
@@ -49,9 +51,8 @@ export default function LeadsPage() {
     const loadLeads = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/leads${queryString ? `?${queryString}` : ""}`, { cache: "no-store" });
-            const json = await response.json();
-            setLeads(json.data ?? []);
+            const response = await api.get(`${API.INTERNAL.LEADS.ROOT}${queryString ? `?${queryString}` : ""}`);
+            setLeads(response.data?.data ?? []);
         } catch {
             toast.error("Failed to load leads");
         } finally {
@@ -65,20 +66,11 @@ export default function LeadsPage() {
 
     const updateStatus = async (leadId: string, nextStatus: string) => {
         try {
-            const response = await fetch(`/api/leads/${leadId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: nextStatus }),
-            });
-            const json = await response.json();
-            if (!response.ok) {
-                toast.error(json.error?.message ?? "Failed to update status");
-                return;
-            }
+            await api.patch(API.INTERNAL.LEADS.BY_ID(leadId), { status: nextStatus });
             toast.success(`Lead marked as ${nextStatus}`);
             await loadLeads();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
     };
 
@@ -116,6 +108,7 @@ export default function LeadsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Sr. No.</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Phone</TableHead>
                             <TableHead>Email</TableHead>
@@ -128,18 +121,19 @@ export default function LeadsPage() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8">
+                                <TableCell colSpan={8} className="text-center py-8">
                                     <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
                                 </TableCell>
                             </TableRow>
                         ) : leads.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                                     No leads found.
                                 </TableCell>
                             </TableRow>
-                        ) : leads.map((lead) => (
+                        ) : leads.map((lead, index) => (
                             <TableRow key={lead.id}>
+                                <TableCell>{index + 1}</TableCell>
                                 <TableCell className="font-medium">{lead.name}</TableCell>
                                 <TableCell>{lead.phone}</TableCell>
                                 <TableCell>{lead.email || "-"}</TableCell>

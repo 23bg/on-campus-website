@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 
 type InstituteProfile = {
@@ -39,10 +41,8 @@ export default function DashboardProfilePage() {
 
     useEffect(() => {
         const load = async () => {
-            const response = await fetch("/api/institute", { cache: "no-store" });
-            if (!response.ok) return;
-            const json = await response.json();
-            const d = json.data ?? {};
+            const response = await api.get(API.INTERNAL.INSTITUTE.ROOT);
+            const d = response.data?.data ?? {};
             setForm({
                 name: d.name ?? "",
                 slug: d.slug ?? "",
@@ -73,28 +73,19 @@ export default function DashboardProfilePage() {
     const save = async () => {
         setSaving(true);
         try {
-            const response = await fetch("/api/institute", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    ...form,
-                    socialLinks: {
-                        website: form.website,
-                        instagram: form.instagram,
-                        facebook: form.facebook,
-                        youtube: form.youtube,
-                        linkedin: form.linkedin,
-                    },
-                }),
+            await api.put(API.INTERNAL.INSTITUTE.ROOT, {
+                ...form,
+                socialLinks: {
+                    website: form.website,
+                    instagram: form.instagram,
+                    facebook: form.facebook,
+                    youtube: form.youtube,
+                    linkedin: form.linkedin,
+                },
             });
-            const json = await response.json();
-            if (!response.ok) {
-                toast.error(json.error?.message ?? "Failed to save profile");
-                return;
-            }
             toast.success("Profile updated successfully");
-        } catch {
-            toast.error("Network error. Please try again.");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error. Please try again.");
         } finally {
             setSaving(false);
         }

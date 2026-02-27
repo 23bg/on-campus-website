@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 type CreateCourseInput = {
     instituteId: string;
     name: string;
+    banner?: string;
     duration?: string;
     defaultFees?: number;
     description?: string;
@@ -10,6 +11,7 @@ type CreateCourseInput = {
 
 type UpdateCourseInput = {
     name?: string;
+    banner?: string | null;
     duration?: string | null;
     defaultFees?: number | null;
     description?: string | null;

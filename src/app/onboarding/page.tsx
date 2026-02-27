@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 
 type OnboardingForm = {
@@ -49,35 +51,33 @@ export default function OnboardingIndexPage() {
 
     useEffect(() => {
         const load = async () => {
-            const response = await fetch("/api/institute", { cache: "no-store" });
-            if (!response.ok) {
+            try {
+                const response = await api.get(API.INTERNAL.INSTITUTE.ROOT);
+                const data = response.data?.data ?? {};
+
+                if (data.isOnboarded) {
+                    router.push("/dashboard");
+                    return;
+                }
+
+                setForm({
+                    name: data.name ?? "",
+                    phone: data.phone ?? "",
+                    city: data.city ?? "",
+                    state: data.state ?? "",
+                    address: data.address ?? "",
+                    whatsapp: data.whatsapp ?? "",
+                    description: data.description ?? "",
+                    website: data.socialLinks?.website ?? "",
+                    facebook: data.socialLinks?.facebook ?? "",
+                    instagram: data.socialLinks?.instagram ?? "",
+                    youtube: data.socialLinks?.youtube ?? "",
+                    linkedin: data.socialLinks?.linkedin ?? "",
+                });
+                setLoading(false);
+            } catch {
                 router.push("/login");
-                return;
             }
-
-            const json = await response.json();
-            const data = json.data ?? {};
-
-            if (data.isOnboarded) {
-                router.push("/dashboard");
-                return;
-            }
-
-            setForm({
-                name: data.name ?? "",
-                phone: data.phone ?? "",
-                city: data.city ?? "",
-                state: data.state ?? "",
-                address: data.address ?? "",
-                whatsapp: data.whatsapp ?? "",
-                description: data.description ?? "",
-                website: data.socialLinks?.website ?? "",
-                facebook: data.socialLinks?.facebook ?? "",
-                instagram: data.socialLinks?.instagram ?? "",
-                youtube: data.socialLinks?.youtube ?? "",
-                linkedin: data.socialLinks?.linkedin ?? "",
-            });
-            setLoading(false);
         };
         load();
     }, [router]);
@@ -104,23 +104,12 @@ export default function OnboardingIndexPage() {
         if (!validate()) return;
         setSaving(true);
         try {
-            const response = await fetch("/api/institute/onboarding", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form),
-            });
-
-            const json = await response.json();
-
-            if (!response.ok) {
-                toast.error(json.error?.message ?? "Failed to save onboarding");
-                return;
-            }
+            await api.post(API.INTERNAL.INSTITUTE.ONBOARDING, form);
 
             toast.success("Institute setup complete!");
             router.push("/dashboard");
-        } catch {
-            toast.error("Network error. Please try again.");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error. Please try again.");
         } finally {
             setSaving(false);
         }

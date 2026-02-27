@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 
 type TeamMember = {
     id: string;
@@ -23,15 +25,12 @@ export default function DashboardTeamsPage() {
     const load = async () => {
         setLoading(true);
         const [sessionResponse, membersResponse] = await Promise.all([
-            fetch("/api/auth/me", { cache: "no-store" }),
-            fetch("/api/teams", { cache: "no-store" }),
+            api.get(API.INTERNAL.AUTH.ME),
+            api.get(API.INTERNAL.TEAMS.ROOT),
         ]);
 
-        const sessionJson = await sessionResponse.json();
-        const membersJson = await membersResponse.json();
-
-        setSessionUser(sessionJson?.data?.user ?? null);
-        setMembers(membersJson.data ?? []);
+        setSessionUser(sessionResponse.data?.data?.user ?? null);
+        setMembers(membersResponse.data?.data ?? []);
         setLoading(false);
     };
 
@@ -42,26 +41,18 @@ export default function DashboardTeamsPage() {
     const canManage = sessionUser?.role === "OWNER";
 
     const createMember = async () => {
-        await fetch("/api/teams", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-        });
+        await api.post(API.INTERNAL.TEAMS.ROOT, form);
         setForm({ email: "", name: "", role: "MANAGER" });
         await load();
     };
 
     const updateRole = async (id: string, role: "MANAGER" | "VIEWER") => {
-        await fetch(`/api/teams/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ role }),
-        });
+        await api.patch(API.INTERNAL.TEAMS.BY_ID(id), { role });
         await load();
     };
 
     const removeMember = async (id: string) => {
-        await fetch(`/api/teams/${id}`, { method: "DELETE" });
+        await api.delete(API.INTERNAL.TEAMS.BY_ID(id));
         await load();
     };
 
@@ -105,6 +96,7 @@ export default function DashboardTeamsPage() {
                     <table className="w-full text-sm">
                         <thead className="bg-muted/50 text-left">
                             <tr>
+                                <th className="px-3 py-2">Sr. No.</th>
                                 <th className="px-3 py-2">Name</th>
                                 <th className="px-3 py-2">Email</th>
                                 <th className="px-3 py-2">Role</th>
@@ -112,8 +104,9 @@ export default function DashboardTeamsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {members.map((member) => (
+                            {members.map((member, index) => (
                                 <tr key={member.id} className="border-t">
+                                    <td className="px-3 py-2">{index + 1}</td>
                                     <td className="px-3 py-2">{member.name || "-"}</td>
                                     <td className="px-3 py-2">{member.email}</td>
                                     <td className="px-3 py-2">{member.role}</td>
@@ -140,7 +133,7 @@ export default function DashboardTeamsPage() {
                             ))}
                             {members.length === 0 ? (
                                 <tr>
-                                    <td className="px-3 py-4 text-muted-foreground" colSpan={canManage ? 4 : 3}>
+                                    <td className="px-3 py-4 text-muted-foreground" colSpan={canManage ? 5 : 4}>
                                         No team members found.
                                     </td>
                                 </tr>

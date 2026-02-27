@@ -1,23 +1,23 @@
 ﻿import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
 import "@/styles/globals.css";
 import { ReduxProvider } from "@/providers/ReduxProvider";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/providers/theme-provider";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 
-const inter = Inter({
+export const inter = Inter({
   subsets: ["latin"],
-  display: "swap",
   variable: "--font-inter",
+  display: "swap",
 });
 
-const poppins = Poppins({
+export const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-jakarta",
   display: "swap",
-  variable: "--font-poppins",
 });
+
 
 export const metadata: Metadata = {
   title: "OnCampus - Admission CRM for Coaching Institutes",
@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${poppins.variable} font-sans antialiased`}
+        className={`${inter.variable} ${jakarta.variable} font-sans antialiased`}
       >
         <ThemeProvider>
           <ReduxProvider>

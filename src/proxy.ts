@@ -2,9 +2,27 @@
 import { verifySessionToken } from "@/lib/auth/auth";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/verification", "/pricing", "/demo-institute"];
-const DASHBOARD_PATH = "/dashboard";
 const ONBOARDING_PATH = "/onboarding";
-const BILLING_PATH = "/dashboard/billing";
+const BILLING_PATH = "/billing";
+const APP_PROTECTED_PATHS = [
+    "/leads",
+    "/students",
+    "/team",
+    "/courses",
+    "/batches",
+    "/fees",
+    "/institute",
+    "/settings",
+    "/billing",
+    "/profile",
+];
+
+const normalizeDashboardPath = (pathname: string): string | null => {
+    if (!pathname.startsWith("/dashboard")) return null;
+    const remainder = pathname.slice("/dashboard".length);
+    if (!remainder) return "/";
+    return remainder.startsWith("/") ? remainder : `/${remainder}`;
+};
 
 const isPublicPath = (pathname: string): boolean =>
     PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -13,10 +31,15 @@ const getSessionToken = (req: NextRequest): string | undefined =>
     req.cookies.get("session_token")?.value || req.cookies.get("access_token")?.value;
 
 const isProtectedPath = (pathname: string): boolean =>
-    pathname.startsWith(DASHBOARD_PATH) || pathname.startsWith(ONBOARDING_PATH);
+    pathname.startsWith(ONBOARDING_PATH) || APP_PROTECTED_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
 export function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
+
+    const normalizedPath = normalizeDashboardPath(pathname);
+    if (normalizedPath) {
+        return NextResponse.redirect(new URL(normalizedPath, req.url));
+    }
 
     if (
         pathname.startsWith("/_next") ||
@@ -30,12 +53,8 @@ export function proxy(req: NextRequest) {
     const token = getSessionToken(req);
     const session = token ? verifySessionToken(token) : null;
     const isOnboarded = Boolean(session?.isOnboarded);
-    const isDashboardPath = pathname.startsWith(DASHBOARD_PATH);
+    const isDashboardPath = APP_PROTECTED_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
     const isOnboardingPath = pathname.startsWith(ONBOARDING_PATH);
-
-    if (session && pathname === "/") {
-        return NextResponse.redirect(new URL(isOnboarded ? DASHBOARD_PATH : ONBOARDING_PATH, req.url));
-    }
 
     if (!session && isProtectedPath(pathname) && !isPublicPath(pathname)) {
         if (isOnboardingPath) {
@@ -48,7 +67,7 @@ export function proxy(req: NextRequest) {
     }
 
     if (session && ["/login", "/signup", "/verification"].includes(pathname)) {
-        return NextResponse.redirect(new URL(isOnboarded ? DASHBOARD_PATH : ONBOARDING_PATH, req.url));
+        return NextResponse.redirect(new URL(isOnboarded ? "/" : ONBOARDING_PATH, req.url));
     }
 
     if (session && !isOnboarded && isDashboardPath) {
@@ -56,7 +75,7 @@ export function proxy(req: NextRequest) {
     }
 
     if (session && isOnboarded && isOnboardingPath) {
-        return NextResponse.redirect(new URL(DASHBOARD_PATH, req.url));
+        return NextResponse.redirect(new URL("/", req.url));
     }
 
     if (session && isOnboarded && (isDashboardPath || isProtectedPath(pathname))) {

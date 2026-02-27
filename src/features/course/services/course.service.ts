@@ -5,6 +5,7 @@ import { AppError } from "@/lib/utils/error";
 const courseInputSchema = z.object({
     instituteId: z.string().min(1),
     name: z.string().min(2, "Course name must be at least 2 characters"),
+    banner: z.string().url().optional().or(z.literal("")),
     duration: z.string().optional(),
     defaultFees: z.number().min(0).optional(),
     description: z.string().optional(),
@@ -19,12 +20,18 @@ export const courseService = {
     async updateCourse(
         instituteId: string,
         courseId: string,
-        payload: { name?: string; duration?: string | null; defaultFees?: number | null; description?: string | null }
+        payload: { name?: string; banner?: string | null; duration?: string | null; defaultFees?: number | null; description?: string | null }
     ) {
         if (payload.name !== undefined) {
             z.string().min(2).parse(payload.name);
         }
-        return courseRepository.update(instituteId, courseId, payload);
+        if (payload.banner !== undefined && payload.banner !== null && payload.banner !== "") {
+            z.string().url().parse(payload.banner);
+        }
+        return courseRepository.update(instituteId, courseId, {
+            ...payload,
+            banner: payload.banner === "" ? null : payload.banner,
+        });
     },
 
     async deleteCourse(instituteId: string, courseId: string) {

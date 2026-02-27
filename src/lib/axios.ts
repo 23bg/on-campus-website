@@ -4,7 +4,7 @@ import ROUTES from "../constants/routes";
 import { AppError } from "@/lib/utils/error";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: API.BASE_V1,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
   timeout: 10000

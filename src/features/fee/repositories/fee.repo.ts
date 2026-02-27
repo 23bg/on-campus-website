@@ -127,16 +127,41 @@ export const feeRepository = {
             paidByPlan[p.feePlanId] = (paidByPlan[p.feePlanId] ?? 0) + p.amount;
         }
 
-        // Find plans with pending > 0
-        const defaulterPlans = plans
-            .map((plan) => ({
-                studentId: plan.studentId,
-                totalAmount: plan.totalAmount,
-                totalPaid: paidByPlan[plan.id] ?? 0,
-                pending: plan.totalAmount - (paidByPlan[plan.id] ?? 0),
-                dueDate: plan.dueDate,
-            }))
-            .filter((p) => p.pending > 0);
+        // Find plans with pending > 0 and aggregate by student
+        const aggregatedByStudent: Record<string, {
+            studentId: string;
+            totalAmount: number;
+            totalPaid: number;
+            pending: number;
+            dueDate: Date | null;
+        }> = {};
+
+        for (const plan of plans) {
+            const totalPaid = paidByPlan[plan.id] ?? 0;
+            const pending = plan.totalAmount - totalPaid;
+            if (pending <= 0) continue;
+
+            const existing = aggregatedByStudent[plan.studentId];
+            if (!existing) {
+                aggregatedByStudent[plan.studentId] = {
+                    studentId: plan.studentId,
+                    totalAmount: plan.totalAmount,
+                    totalPaid,
+                    pending,
+                    dueDate: plan.dueDate,
+                };
+                continue;
+            }
+
+            existing.totalAmount += plan.totalAmount;
+            existing.totalPaid += totalPaid;
+            existing.pending += pending;
+            if (plan.dueDate && (!existing.dueDate || plan.dueDate < existing.dueDate)) {
+                existing.dueDate = plan.dueDate;
+            }
+        }
+
+        const defaulterPlans = Object.values(aggregatedByStudent);
 
         // Get student details
         const studentIds = [...new Set(defaulterPlans.map((d) => d.studentId))];

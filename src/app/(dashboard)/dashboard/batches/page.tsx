@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Pencil, Trash2, Plus, Layers } from "lucide-react";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
+import { Loader2, Pencil, Trash2, Plus, Layers, Eye } from "lucide-react";
 
 type Course = { id: string; name: string };
 type Teacher = { id: string; name: string; subject?: string | null };
@@ -31,23 +33,22 @@ export default function BatchesPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [viewDialogOpen, setViewDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
     const [form, setForm] = useState<BatchForm>(emptyForm);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
             const [batchRes, courseRes, teacherRes] = await Promise.all([
-                fetch("/api/batches", { cache: "no-store" }),
-                fetch("/api/courses", { cache: "no-store" }),
-                fetch("/api/teachers", { cache: "no-store" }),
+                api.get(API.INTERNAL.BATCHES.ROOT),
+                api.get(API.INTERNAL.COURSES.ROOT),
+                api.get(API.INTERNAL.TEACHERS.ROOT),
             ]);
-            const [batchJson, courseJson, teacherJson] = await Promise.all([
-                batchRes.json(), courseRes.json(), teacherRes.json(),
-            ]);
-            setBatches(batchJson.data ?? []);
-            setCourses(courseJson.data ?? []);
-            setTeachers(teacherJson.data ?? []);
+            setBatches(batchRes.data?.data ?? []);
+            setCourses(courseRes.data?.data ?? []);
+            setTeachers(teacherRes.data?.data ?? []);
         } catch {
             toast.error("Failed to load data");
         } finally {
@@ -85,28 +86,19 @@ export default function BatchesPage() {
         }
         setSaving(true);
         try {
-            const url = editingId ? `/api/batches/${editingId}` : "/api/batches";
+            const url = editingId ? API.INTERNAL.BATCHES.BY_ID(editingId) : API.INTERNAL.BATCHES.ROOT;
             const method = editingId ? "PATCH" : "POST";
             const body: Record<string, unknown> = { courseId: form.courseId, name: form.name };
             if (form.startDate) body.startDate = form.startDate;
             if (form.schedule) body.schedule = form.schedule;
             if (form.teacherId) body.teacherId = form.teacherId;
 
-            const res = await fetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            const json = await res.json();
-            if (!res.ok) {
-                toast.error(json.error?.message ?? "Failed to save batch");
-                return;
-            }
+            await api.request({ method, url, data: body });
             toast.success(editingId ? "Batch updated" : "Batch added");
             setDialogOpen(false);
             await load();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         } finally {
             setSaving(false);
         }
@@ -114,16 +106,17 @@ export default function BatchesPage() {
 
     const deleteBatch = async (id: string) => {
         try {
-            const res = await fetch(`/api/batches/${id}`, { method: "DELETE" });
-            if (!res.ok) {
-                toast.error("Failed to delete batch");
-                return;
-            }
+            await api.delete(API.INTERNAL.BATCHES.BY_ID(id));
             toast.success("Batch deleted");
             await load();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
+    };
+
+    const openView = (batch: Batch) => {
+        setSelectedBatch(batch);
+        setViewDialogOpen(true);
     };
 
     return (
@@ -148,6 +141,7 @@ export default function BatchesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Sr. No.</TableHead>
                             <TableHead>Batch Name</TableHead>
                             <TableHead>Course</TableHead>
                             <TableHead>Start Date</TableHead>
@@ -159,18 +153,19 @@ export default function BatchesPage() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8">
+                                <TableCell colSpan={7} className="text-center py-8">
                                     <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
                                 </TableCell>
                             </TableRow>
                         ) : batches.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                                     No batches yet.
                                 </TableCell>
                             </TableRow>
-                        ) : batches.map((batch) => (
+                        ) : batches.map((batch, index) => (
                             <TableRow key={batch.id}>
+                                <TableCell>{index + 1}</TableCell>
                                 <TableCell className="font-medium">{batch.name}</TableCell>
                                 <TableCell>{courseMap[batch.courseId] ?? "-"}</TableCell>
                                 <TableCell>{batch.startDate ? new Date(batch.startDate).toLocaleDateString() : "-"}</TableCell>
@@ -180,6 +175,9 @@ export default function BatchesPage() {
                                     <div className="flex gap-1">
                                         <Button variant="ghost" size="icon" onClick={() => openEdit(batch)}>
                                             <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => openView(batch)}>
+                                            <Eye className="h-4 w-4" />
                                         </Button>
                                         <Button variant="ghost" size="icon" onClick={() => deleteBatch(batch.id)}>
                                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -239,6 +237,26 @@ export default function BatchesPage() {
                             {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             {editingId ? "Update" : "Add"}
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Batch Details</DialogTitle>
+                    </DialogHeader>
+                    {selectedBatch ? (
+                        <div className="space-y-3 py-2 text-sm">
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Batch Name</span><span className="font-medium">{selectedBatch.name}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Course</span><span>{courseMap[selectedBatch.courseId] ?? "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Start Date</span><span>{selectedBatch.startDate ? new Date(selectedBatch.startDate).toLocaleDateString() : "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Schedule</span><span>{selectedBatch.schedule || "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Teacher</span><span>{selectedBatch.teacherId ? (teacherMap[selectedBatch.teacherId] ?? "-") : "-"}</span></div>
+                        </div>
+                    ) : null}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setViewDialogOpen(false)}>Close</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

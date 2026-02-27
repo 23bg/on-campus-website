@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Pencil, Trash2, Plus } from "lucide-react";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
+import { Loader2, Pencil, Trash2, Plus, Upload, CheckCircle2, AlertCircle, Eye } from "lucide-react";
 
 type Course = { id: string; name: string; defaultFees?: number | null };
 type Batch = { id: string; courseId: string; name: string };
@@ -25,6 +27,10 @@ type Student = {
 
 type StudentForm = { name: string; phone: string; email: string; courseId: string; batchId: string; admissionDate: string; fees: string };
 const emptyForm: StudentForm = { name: "", phone: "", email: "", courseId: "", batchId: "", admissionDate: "", fees: "" };
+type UploadResult = {
+    inserted: number;
+    errors: Array<{ row: number; message: string }>;
+};
 
 export default function StudentsPage() {
     const [students, setStudents] = useState<Student[]>([]);
@@ -34,37 +40,41 @@ export default function StudentsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+    const [viewDialogOpen, setViewDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [form, setForm] = useState<StudentForm>(emptyForm);
+    const [uploading, setUploading] = useState(false);
+    const [uploadFileName, setUploadFileName] = useState<string | null>(null);
+    const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
             const [studentRes, courseRes, batchRes] = await Promise.all([
-                fetch("/api/students", { cache: "no-store" }),
-                fetch("/api/courses", { cache: "no-store" }),
-                fetch("/api/batches", { cache: "no-store" }),
+                api.get(API.INTERNAL.STUDENTS.ROOT),
+                api.get(API.INTERNAL.COURSES.ROOT),
+                api.get(API.INTERNAL.BATCHES.ROOT),
             ]);
-            const [studentJson, courseJson, batchJson] = await Promise.all([
-                studentRes.json(), courseRes.json(), batchRes.json(),
-            ]);
-            const studentList: Student[] = studentJson.data ?? [];
+            const studentList: Student[] = studentRes.data?.data ?? [];
             setStudents(studentList);
-            setCourses(courseJson.data ?? []);
-            setBatches(batchJson.data ?? []);
+            setCourses(courseRes.data?.data ?? []);
+            setBatches(batchRes.data?.data ?? []);
 
             // Load fee summaries for all students
             const summaries: Record<string, FeeSummary> = {};
             await Promise.all(
                 studentList.map(async (s) => {
                     try {
-                        const res = await fetch(`/api/fees?studentId=${s.id}`, { cache: "no-store" });
-                        const json = await res.json();
-                        if (json.data) {
+                        const response = await api.get(API.INTERNAL.FEES.WITH_STUDENT(s.id));
+                        const feeData = response.data?.data;
+                        if (feeData) {
                             summaries[s.id] = {
-                                totalFees: json.data.totalFees ?? 0,
-                                totalPaid: json.data.totalPaid ?? 0,
-                                totalPending: json.data.totalPending ?? 0,
+                                totalFees: feeData.totalFees ?? 0,
+                                totalPaid: feeData.totalPaid ?? 0,
+                                totalPending: feeData.totalPending ?? 0,
                             };
                         }
                     } catch {
@@ -123,7 +133,7 @@ export default function StudentsPage() {
         }
         setSaving(true);
         try {
-            const url = editingId ? `/api/students/${editingId}` : "/api/students";
+            const url = editingId ? API.INTERNAL.STUDENTS.BY_ID(editingId) : API.INTERNAL.STUDENTS.ROOT;
             const method = editingId ? "PATCH" : "POST";
             const body: Record<string, unknown> = { name: form.name, phone: form.phone };
             if (form.email) body.email = form.email;
@@ -132,21 +142,12 @@ export default function StudentsPage() {
             if (form.admissionDate) body.admissionDate = form.admissionDate;
             if (!editingId && form.fees) body.fees = parseFloat(form.fees);
 
-            const res = await fetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            const json = await res.json();
-            if (!res.ok) {
-                toast.error(json.error?.message ?? "Failed to save student");
-                return;
-            }
+            await api.request({ method, url, data: body });
             toast.success(editingId ? "Student updated" : "Student added");
             setDialogOpen(false);
             await load();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         } finally {
             setSaving(false);
         }
@@ -154,15 +155,38 @@ export default function StudentsPage() {
 
     const deleteStudent = async (id: string) => {
         try {
-            const res = await fetch(`/api/students/${id}`, { method: "DELETE" });
-            if (!res.ok) {
-                toast.error("Failed to delete student");
-                return;
-            }
+            await api.delete(API.INTERNAL.STUDENTS.BY_ID(id));
             toast.success("Student deleted");
             await load();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
+        }
+    };
+
+    const openView = (student: Student) => {
+        setSelectedStudent(student);
+        setViewDialogOpen(true);
+    };
+
+    const onUpload = async (file: File) => {
+        setUploadFileName(file.name);
+        setUploadResult(null);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        setUploading(true);
+        try {
+            const response = await api.post(API.INTERNAL.STUDENTS.UPLOAD, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            const data = response.data?.data as UploadResult;
+            setUploadResult(data);
+            toast.success(`${data.inserted} students imported`);
+            await load();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error during upload");
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -175,13 +199,19 @@ export default function StudentsPage() {
                     <h1 className="font-heading text-2xl font-semibold">Students</h1>
                     <p className="text-muted-foreground text-sm mt-1">{students.length} total students</p>
                 </div>
-                <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Student</Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+                        <Upload className="mr-2 h-4 w-4" /> Upload CSV
+                    </Button>
+                    <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Student</Button>
+                </div>
             </div>
 
             <div className="mt-4 rounded-md border">
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Sr. No.</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Phone</TableHead>
                             <TableHead>Course</TableHead>
@@ -195,20 +225,21 @@ export default function StudentsPage() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="text-center py-8">
+                                <TableCell colSpan={9} className="text-center py-8">
                                     <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
                                 </TableCell>
                             </TableRow>
                         ) : students.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                                     No students yet. Add your first student.
                                 </TableCell>
                             </TableRow>
-                        ) : students.map((student) => {
+                        ) : students.map((student, index) => {
                             const fee = feeSummaries[student.id];
                             return (
                                 <TableRow key={student.id}>
+                                    <TableCell>{index + 1}</TableCell>
                                     <TableCell className="font-medium">{student.name}</TableCell>
                                     <TableCell>{student.phone}</TableCell>
                                     <TableCell>{student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}</TableCell>
@@ -220,6 +251,9 @@ export default function StudentsPage() {
                                         <div className="flex gap-1">
                                             <Button variant="ghost" size="icon" onClick={() => openEdit(student)}>
                                                 <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" onClick={() => openView(student)}>
+                                                <Eye className="h-4 w-4" />
                                             </Button>
                                             <Button variant="ghost" size="icon" onClick={() => deleteStudent(student.id)}>
                                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -291,6 +325,98 @@ export default function StudentsPage() {
                             {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             {editingId ? "Update" : "Add"}
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Upload Students CSV</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <p className="text-sm text-muted-foreground">
+                            Required columns: <span className="font-medium">name</span>, <span className="font-medium">phone</span>. Optional: email, course, batch, fees.
+                        </p>
+
+                        <div
+                            onClick={() => fileInputRef.current?.click()}
+                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                        >
+                            <Upload className="h-7 w-7 mx-auto text-muted-foreground mb-2" />
+                            <p className="text-sm text-muted-foreground">
+                                {uploadFileName ? uploadFileName : "Click to select a CSV file"}
+                            </p>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".csv"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) onUpload(file);
+                                }}
+                            />
+                        </div>
+
+                        {uploading ? (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Loader2 className="h-4 w-4 animate-spin" /> Uploading...
+                            </div>
+                        ) : null}
+
+                        {uploadResult ? (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                    <span className="text-sm font-medium">{uploadResult.inserted} students imported</span>
+                                </div>
+                                {uploadResult.errors.length > 0 ? (
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <AlertCircle className="h-4 w-4 text-destructive" />
+                                            <span className="text-sm font-medium">{uploadResult.errors.length} row errors</span>
+                                        </div>
+                                        <ul className="text-xs text-muted-foreground space-y-1 pl-6 max-h-32 overflow-auto">
+                                            {uploadResult.errors.map((error) => (
+                                                <li key={`${error.row}-${error.message}`}>
+                                                    Row {error.row}: {error.message}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">All rows imported successfully.</p>
+                                )}
+                            </div>
+                        ) : null}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Student Details</DialogTitle>
+                    </DialogHeader>
+                    {selectedStudent ? (
+                        <div className="space-y-3 py-2 text-sm">
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Name</span><span className="font-medium">{selectedStudent.name}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Phone</span><span>{selectedStudent.phone || "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Email</span><span>{selectedStudent.email || "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Course</span><span>{selectedStudent.courseId ? (courseMap[selectedStudent.courseId]?.name ?? "-") : "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Batch</span><span>{selectedStudent.batchId ? (batchMap[selectedStudent.batchId] ?? "-") : "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Admission Date</span><span>{selectedStudent.admissionDate ? new Date(selectedStudent.admissionDate).toLocaleDateString() : "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Total Fees</span><span>{formatCurrency(feeSummaries[selectedStudent.id]?.totalFees ?? 0)}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Paid</span><span className="text-green-600">{formatCurrency(feeSummaries[selectedStudent.id]?.totalPaid ?? 0)}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Pending</span><span className="text-red-600">{formatCurrency(feeSummaries[selectedStudent.id]?.totalPending ?? 0)}</span></div>
+                        </div>
+                    ) : null}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setViewDialogOpen(false)}>Close</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

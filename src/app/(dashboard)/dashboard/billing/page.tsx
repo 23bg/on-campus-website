@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2, CreditCard } from "lucide-react";
 
 type BillingSummary = {
@@ -29,9 +31,8 @@ export default function BillingPage() {
 
     const loadSummary = async () => {
         try {
-            const response = await fetch("/api/billing", { cache: "no-store" });
-            const json = await response.json();
-            setSummary(json.data ?? null);
+            const response = await api.get(API.INTERNAL.BILLING.ROOT);
+            setSummary(response.data?.data ?? null);
         } catch {
             toast.error("Failed to load billing info");
         } finally {
@@ -44,20 +45,11 @@ export default function BillingPage() {
     const createSubscription = async () => {
         setCreating(true);
         try {
-            const response = await fetch("/api/billing", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "create-subscription" }),
-            });
-            const json = await response.json();
-            if (!response.ok) {
-                toast.error(json.error?.message ?? "Failed to create subscription");
-                return;
-            }
+            await api.post(API.INTERNAL.BILLING.ROOT, { action: "create-subscription" });
             toast.success("Subscription initiated");
             await loadSummary();
-        } catch {
-            toast.error("Network error");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
         } finally {
             setCreating(false);
         }

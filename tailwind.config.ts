@@ -5,8 +5,8 @@ const config: Config = {
     theme: {
         extend: {
             fontFamily: {
-                sans: ["var(--font-inter)"],
-                heading: ["var(--font-poppins)"],
+                sans: ["var(--font-inter)", "sans-serif"],
+                heading: ["var(--font-jakarta)", "sans-serif"],
             },
             colors: {
                 primary: {

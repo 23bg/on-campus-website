@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
 import { Loader2, AlertTriangle } from "lucide-react";
 
 type Defaulter = {
@@ -24,9 +26,8 @@ export default function DefaultersPage() {
     useEffect(() => {
         const load = async () => {
             try {
-                const res = await fetch("/api/dashboard/defaulters", { cache: "no-store" });
-                const json = await res.json();
-                setDefaulters(json.data ?? []);
+                const response = await api.get(API.INTERNAL.DASHBOARD.DEFAULTERS);
+                setDefaulters(response.data?.data ?? []);
             } catch {
                 toast.error("Failed to load defaulters");
             } finally {
@@ -68,6 +69,7 @@ export default function DefaultersPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>Sr. No.</TableHead>
                                     <TableHead>Student</TableHead>
                                     <TableHead>Phone</TableHead>
                                     <TableHead>Course</TableHead>
@@ -78,8 +80,9 @@ export default function DefaultersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {defaulters.map((d) => (
+                                {defaulters.map((d, index) => (
                                     <TableRow key={d.studentId}>
+                                        <TableCell>{index + 1}</TableCell>
                                         <TableCell className="font-medium">{d.studentName}</TableCell>
                                         <TableCell>{d.phone}</TableCell>
                                         <TableCell>{d.courseName}</TableCell>
