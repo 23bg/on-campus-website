@@ -11,6 +11,8 @@ type UpdateInstituteInput = {
     timings?: string | null;
     logo?: string | null;
     banner?: string | null;
+    heroImage?: string | null;
+    googleMapLink?: string | null;
     websiteUrl?: string | null;
     instagramUrl?: string | null;
     facebookUrl?: string | null;

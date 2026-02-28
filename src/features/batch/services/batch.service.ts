@@ -5,9 +5,9 @@ import { AppError } from "@/lib/utils/error";
 const batchInputSchema = z.object({
     instituteId: z.string().min(1),
     courseId: z.string().min(1),
-    name: z.string().min(2, "Batch name must be at least 2 characters"),
+    name: z.string().trim().min(2, "Batch name must be at least 2 characters").max(120, "Batch name cannot exceed 120 characters"),
     startDate: z.string().optional(),
-    schedule: z.string().optional(),
+    schedule: z.string().trim().max(120).optional(),
     teacherId: z.string().optional(),
 });
 
@@ -26,7 +26,10 @@ export const batchService = {
         payload: { name?: string; startDate?: string | null; schedule?: string | null; teacherId?: string | null }
     ) {
         if (payload.name !== undefined) {
-            z.string().min(2).parse(payload.name);
+            z.string().trim().min(2).max(120).parse(payload.name);
+        }
+        if (payload.schedule !== undefined && payload.schedule !== null) {
+            z.string().trim().max(120).parse(payload.schedule);
         }
         return batchRepository.update(instituteId, batchId, {
             name: payload.name,

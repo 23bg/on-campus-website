@@ -6,9 +6,9 @@ import { AppError } from "@/lib/utils/error";
 
 const studentInputSchema = z.object({
     instituteId: z.string().min(1),
-    name: z.string().min(2),
+    name: z.string().trim().min(2).max(80),
     phone: z.string().regex(/^[6-9]\d{9}$/),
-    email: z.string().email().optional(),
+    email: z.string().trim().max(120).email().optional(),
     courseId: z.string().optional(),
     batchId: z.string().optional(),
     admissionDate: z.string().optional(),
@@ -59,11 +59,14 @@ export const studentService = {
         studentId: string,
         payload: { name?: string; phone?: string; email?: string | null; courseId?: string | null; batchId?: string | null }
     ) {
+        if (payload.name) {
+            z.string().trim().min(2).max(80).parse(payload.name);
+        }
         if (payload.phone) {
             z.string().regex(/^[6-9]\d{9}$/).parse(payload.phone);
         }
         if (payload.email) {
-            z.string().email().parse(payload.email);
+            z.string().trim().max(120).email().parse(payload.email);
         }
 
         return studentRepository.update({
@@ -125,7 +128,7 @@ export const studentService = {
             const batchName = batchIndex >= 0 ? values[batchIndex] : undefined;
             const feesStr = feesIndex >= 0 ? values[feesIndex] : undefined;
 
-            if (!name || name.length < 2) {
+            if (!name || name.length < 2 || name.length > 80) {
                 errors.push({ row: rowNumber, message: "Invalid name" });
                 continue;
             }
@@ -135,7 +138,7 @@ export const studentService = {
                 continue;
             }
 
-            if (email && !z.string().email().safeParse(email).success) {
+            if (email && !z.string().trim().max(120).email().safeParse(email).success) {
                 errors.push({ row: rowNumber, message: "Invalid email" });
                 continue;
             }

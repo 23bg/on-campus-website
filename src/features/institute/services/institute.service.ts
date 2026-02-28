@@ -10,8 +10,14 @@ const phoneSchema = z
     .optional()
     .or(z.literal(""));
 
-const urlSchema = z.string().url().optional().or(z.literal(""));
-const optionalText = z.string().trim().optional().or(z.literal(""));
+const urlSchema = z.string().trim().max(2048, "URL is too long").url().optional().or(z.literal(""));
+
+const instituteNameSchema = z.string().trim().min(2, "Institute name must be at least 2 characters").max(80, "Institute name cannot exceed 80 characters");
+const slugInputSchema = z.string().trim().min(2, "Slug must be at least 2 characters").max(80, "Slug cannot exceed 80 characters");
+const descriptionSchema = z.string().trim().max(1024, "Description cannot exceed 1024 characters").optional().or(z.literal(""));
+const cityStateSchema = z.string().trim().min(2, "Must be at least 2 characters").max(60, "Cannot exceed 60 characters").optional().or(z.literal(""));
+const addressSchema = z.string().trim().min(5, "Address must be at least 5 characters").max(240, "Address cannot exceed 240 characters").optional().or(z.literal(""));
+const timingsSchema = z.string().trim().max(80, "Timings cannot exceed 80 characters").optional().or(z.literal(""));
 
 const normalizeSlug = (name: string): string =>
     name
@@ -91,6 +97,8 @@ export const instituteService = {
             timings?: string;
             logo?: string;
             banner?: string;
+            heroImage?: string;
+            googleMapLink?: string;
             socialLinks?: {
                 website?: string;
                 instagram?: string;
@@ -116,17 +124,38 @@ export const instituteService = {
             phoneSchema.parse(normalizedWhatsapp);
         }
 
-        [payload.description, payload.city, payload.state, payload.address, payload.timings]
-            .filter((value) => value !== undefined)
-            .forEach((text) => optionalText.parse(text));
+        if (payload.name !== undefined) {
+            instituteNameSchema.parse(payload.name);
+        }
+        if (payload.slug !== undefined) {
+            slugInputSchema.parse(payload.slug);
+        }
+
+        if (payload.description !== undefined) {
+            descriptionSchema.parse(payload.description);
+        }
+        if (payload.city !== undefined) {
+            cityStateSchema.parse(payload.city);
+        }
+        if (payload.state !== undefined) {
+            cityStateSchema.parse(payload.state);
+        }
+        if (payload.address !== undefined) {
+            addressSchema.parse(payload.address);
+        }
+        if (payload.timings !== undefined) {
+            timingsSchema.parse(payload.timings);
+        }
 
         const websiteUrl = payload.socialLinks?.website ?? payload.websiteUrl;
         const instagramUrl = payload.socialLinks?.instagram ?? payload.instagramUrl;
         const facebookUrl = payload.socialLinks?.facebook ?? payload.facebookUrl;
         const youtubeUrl = payload.socialLinks?.youtube ?? payload.youtubeUrl;
         const linkedinUrl = payload.socialLinks?.linkedin ?? payload.linkedinUrl;
+        const heroImage = payload.heroImage;
+        const googleMapLink = payload.googleMapLink;
 
-        [websiteUrl, instagramUrl, facebookUrl, youtubeUrl, linkedinUrl]
+        [websiteUrl, instagramUrl, facebookUrl, youtubeUrl, linkedinUrl, heroImage, googleMapLink]
             .filter(Boolean)
             .forEach((url) => urlSchema.parse(url));
 
@@ -172,6 +201,8 @@ export const instituteService = {
             timings: payload.timings || null,
             logo: payload.logo || null,
             banner: payload.banner || null,
+            heroImage: payload.heroImage || null,
+            googleMapLink: payload.googleMapLink || null,
             websiteUrl: websiteUrl || null,
             instagramUrl: instagramUrl || null,
             facebookUrl: facebookUrl || null,
@@ -218,6 +249,14 @@ export const instituteService = {
                 throw new AppError("Name, city, state and address are required", 400, "ONBOARDING_REQUIRED_FIELDS");
             }
         });
+
+        instituteNameSchema.parse(payload.name);
+        cityStateSchema.parse(payload.city);
+        cityStateSchema.parse(payload.state);
+        addressSchema.parse(payload.address);
+        if (payload.description !== undefined) {
+            descriptionSchema.parse(payload.description);
+        }
 
         const socialUrls = [payload.website, payload.facebook, payload.instagram, payload.youtube, payload.linkedin].filter(Boolean);
         socialUrls.forEach((url) => urlSchema.parse(url));

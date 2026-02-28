@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@/components/ui/input-group";
 
 type InstituteProfile = {
     name: string;
@@ -22,7 +25,8 @@ type InstituteProfile = {
     address: string;
     timings: string;
     logo: string;
-    banner: string;
+    heroImage: string;
+    googleMapLink: string;
     website: string;
     instagram: string;
     facebook: string;
@@ -30,20 +34,86 @@ type InstituteProfile = {
     linkedin: string;
 };
 
+const isValidUrl = (value: string) => {
+    try {
+        new URL(value);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+const optionalUrlSchema = z
+    .string()
+    .trim()
+    .max(2048, "URL cannot exceed 2048 characters.")
+    .refine((value) => !value || isValidUrl(value), "Please enter a valid URL.");
+
+const optionalIndianPhoneSchema = z
+    .string()
+    .trim()
+    .max(14, "Enter a valid Indian mobile number.")
+    .refine((value) => {
+        if (!value) return true;
+        const digits = value.replace(/\D/g, "");
+        if (digits.length === 12 && digits.startsWith("91")) {
+            return /^[6-9]\d{9}$/.test(digits.slice(2));
+        }
+        return /^[6-9]\d{9}$/.test(digits);
+    }, "Enter a valid Indian mobile number.");
+
+const optionalTextWithMinMax = (min: number, max: number, minMessage: string, maxMessage: string) =>
+    z
+        .string()
+        .trim()
+        .max(max, maxMessage)
+        .refine((value) => !value || value.length >= min, minMessage);
+
+const instituteProfileSchema = z.object({
+    name: z.string().trim().min(2, "Institute name must be at least 2 characters.").max(80, "Institute name cannot exceed 80 characters."),
+    slug: z.string().trim().min(2, "Slug must be at least 2 characters.").max(80, "Slug cannot exceed 80 characters."),
+    description: z.string().trim().max(1024, "Description cannot exceed 1024 characters."),
+    phone: optionalIndianPhoneSchema,
+    whatsapp: optionalIndianPhoneSchema,
+    city: optionalTextWithMinMax(2, 60, "City must be at least 2 characters.", "City cannot exceed 60 characters."),
+    state: optionalTextWithMinMax(2, 60, "State must be at least 2 characters.", "State cannot exceed 60 characters."),
+    address: optionalTextWithMinMax(5, 240, "Address must be at least 5 characters.", "Address cannot exceed 240 characters."),
+    timings: z.string().trim().max(80, "Timings cannot exceed 80 characters."),
+    logo: optionalUrlSchema,
+    heroImage: optionalUrlSchema,
+    googleMapLink: optionalUrlSchema,
+    website: optionalUrlSchema,
+    instagram: optionalUrlSchema,
+    facebook: optionalUrlSchema,
+    youtube: optionalUrlSchema,
+    linkedin: optionalUrlSchema,
+});
+
 export default function DashboardProfilePage() {
-    const [form, setForm] = useState<InstituteProfile>({
+    const defaultValues: InstituteProfile = {
         name: "", slug: "", description: "", phone: "", whatsapp: "",
-        city: "", state: "", address: "", timings: "", logo: "", banner: "",
+        city: "", state: "", address: "", timings: "", logo: "", heroImage: "", googleMapLink: "",
         website: "", instagram: "", facebook: "", youtube: "", linkedin: "",
-    });
+    };
+
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+
+    const {
+        control,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting },
+    } = useForm<InstituteProfile>({
+        resolver: zodResolver(instituteProfileSchema),
+        mode: "onBlur",
+        defaultValues,
+    });
 
     useEffect(() => {
         const load = async () => {
             const response = await api.get(API.INTERNAL.INSTITUTE.ROOT);
             const d = response.data?.data ?? {};
-            setForm({
+            reset({
                 name: d.name ?? "",
                 slug: d.slug ?? "",
                 description: d.description ?? "",
@@ -54,7 +124,8 @@ export default function DashboardProfilePage() {
                 address: d.address ?? "",
                 timings: d.timings ?? "",
                 logo: d.logo ?? "",
-                banner: d.banner ?? "",
+                heroImage: d.heroImage ?? d.banner ?? "",
+                googleMapLink: d.googleMapLink ?? "",
                 website: d.socialLinks?.website ?? "",
                 instagram: d.socialLinks?.instagram ?? "",
                 facebook: d.socialLinks?.facebook ?? "",
@@ -64,17 +135,13 @@ export default function DashboardProfilePage() {
             setLoading(false);
         };
         load();
-    }, []);
+    }, [reset]);
 
-    const setValue = (key: keyof InstituteProfile, value: string) => {
-        setForm((prev) => ({ ...prev, [key]: value }));
-    };
-
-    const save = async () => {
-        setSaving(true);
+    const save = async (form: InstituteProfile) => {
         try {
             await api.put(API.INTERNAL.INSTITUTE.ROOT, {
                 ...form,
+                banner: form.heroImage,
                 socialLinks: {
                     website: form.website,
                     instagram: form.instagram,
@@ -86,8 +153,6 @@ export default function DashboardProfilePage() {
             toast.success("Profile updated successfully");
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error. Please try again.");
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -101,52 +166,102 @@ export default function DashboardProfilePage() {
 
     return (
         <main className="p-6 max-w-4xl">
-            <h1 className="font-heading text-2xl font-semibold">Institute Profile</h1>
+            <h1 className=" text-2xl font-semibold">Institute Profile</h1>
             <p className="mt-1 text-muted-foreground">Update your institute details. Changes are visible on your public page.</p>
 
-            <div className="mt-6 space-y-6">
+            <form className="mt-6 space-y-6" onSubmit={handleSubmit(save)}>
                 <Card>
                     <CardHeader>
                         <CardTitle>Basic Info</CardTitle>
                         <CardDescription>Institute name, contact, and location.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label>Institute Name</Label>
-                            <Input value={form.name} onChange={(e) => setValue("name", e.target.value)} placeholder="Institute Name" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Slug</Label>
-                            <Input value={form.slug} onChange={(e) => setValue("slug", e.target.value)} placeholder="URL slug" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Phone</Label>
-                            <Input value={form.phone} onChange={(e) => setValue("phone", e.target.value)} placeholder="Phone" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>WhatsApp</Label>
-                            <Input value={form.whatsapp} onChange={(e) => setValue("whatsapp", e.target.value)} placeholder="WhatsApp" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>City</Label>
-                            <Input value={form.city} onChange={(e) => setValue("city", e.target.value)} placeholder="City" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>State</Label>
-                            <Input value={form.state} onChange={(e) => setValue("state", e.target.value)} placeholder="State" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Timings</Label>
-                            <Input value={form.timings} onChange={(e) => setValue("timings", e.target.value)} placeholder="e.g. Mon-Sat 9AM-6PM" />
-                        </div>
-                        <div className="space-y-2 md:col-span-2">
-                            <Label>Address</Label>
-                            <Textarea value={form.address} onChange={(e) => setValue("address", e.target.value)} placeholder="Full address" rows={3} />
-                        </div>
-                        <div className="space-y-2 md:col-span-2">
-                            <Label>Description</Label>
-                            <Textarea value={form.description} onChange={(e) => setValue("description", e.target.value)} placeholder="Brief description of your institute" rows={4} />
-                        </div>
+                        <Field>
+                            <FieldLabel>Institute Name</FieldLabel>
+                            <Controller name="name" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="Institute Name" minLength={2} maxLength={80} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Slug</FieldLabel>
+                            <Controller name="slug" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="URL slug" minLength={2} maxLength={80} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Phone</FieldLabel>
+                            <Controller name="phone" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="Phone" inputMode="numeric" maxLength={14} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>WhatsApp</FieldLabel>
+                            <Controller name="whatsapp" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="WhatsApp" inputMode="numeric" maxLength={14} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>City</FieldLabel>
+                            <Controller name="city" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="City" minLength={2} maxLength={60} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>State</FieldLabel>
+                            <Controller name="state" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="State" minLength={2} maxLength={60} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Timings</FieldLabel>
+                            <Controller name="timings" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="e.g. Mon-Sat 9AM-6PM" maxLength={80} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field className="md:col-span-2">
+                            <FieldLabel>Address</FieldLabel>
+                            <Controller name="address" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <InputGroupTextarea {...field} placeholder="Full address" rows={3} minLength={5} maxLength={240} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field className="md:col-span-2">
+                            <FieldLabel>Description</FieldLabel>
+                            <Controller name="description" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <InputGroup>
+                                        <InputGroupTextarea {...field} placeholder="Brief description of your institute" rows={4} maxLength={1024} />
+                                        <InputGroupAddon>
+                                            <InputGroupText>{field.value.length}/1024 characters</InputGroupText>
+                                        </InputGroupAddon>
+                                    </InputGroup>
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
                     </CardContent>
                 </Card>
 
@@ -156,50 +271,94 @@ export default function DashboardProfilePage() {
                         <CardDescription>Add website and social media links.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label>Website</Label>
-                            <Input value={form.website} onChange={(e) => setValue("website", e.target.value)} placeholder="https://..." />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Instagram</Label>
-                            <Input value={form.instagram} onChange={(e) => setValue("instagram", e.target.value)} placeholder="https://instagram.com/..." />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Facebook</Label>
-                            <Input value={form.facebook} onChange={(e) => setValue("facebook", e.target.value)} placeholder="https://facebook.com/..." />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>YouTube</Label>
-                            <Input value={form.youtube} onChange={(e) => setValue("youtube", e.target.value)} placeholder="https://youtube.com/..." />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>LinkedIn</Label>
-                            <Input value={form.linkedin} onChange={(e) => setValue("linkedin", e.target.value)} placeholder="https://linkedin.com/..." />
-                        </div>
+                        <Field>
+                            <FieldLabel>Website</FieldLabel>
+                            <Controller name="website" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input type="url" {...field} placeholder="https://..." maxLength={2048} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Instagram</FieldLabel>
+                            <Controller name="instagram" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input type="url" {...field} placeholder="https://instagram.com/..." maxLength={2048} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Facebook</FieldLabel>
+                            <Controller name="facebook" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input type="url" {...field} placeholder="https://facebook.com/..." maxLength={2048} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>YouTube</FieldLabel>
+                            <Controller name="youtube" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input type="url" {...field} placeholder="https://youtube.com/..." maxLength={2048} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>LinkedIn</FieldLabel>
+                            <Controller name="linkedin" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input type="url" {...field} placeholder="https://linkedin.com/..." maxLength={2048} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field className="md:col-span-2">
+                            <FieldLabel>Google Map Link</FieldLabel>
+                            <Controller name="googleMapLink" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input type="url" {...field} placeholder="https://maps.google.com/..." maxLength={2048} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
                         <CardTitle>Media</CardTitle>
-                        <CardDescription>Logo and banner image URLs.</CardDescription>
+                        <CardDescription>Logo and hero image URLs.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label>Logo URL</Label>
-                            <Input value={form.logo} onChange={(e) => setValue("logo", e.target.value)} placeholder="Logo image URL" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Banner URL</Label>
-                            <Input value={form.banner} onChange={(e) => setValue("banner", e.target.value)} placeholder="Banner image URL" />
-                        </div>
+                        <Field>
+                            <FieldLabel>Logo URL</FieldLabel>
+                            <Controller name="logo" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input type="url" {...field} placeholder="Logo image URL" maxLength={2048} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Hero Image URL</FieldLabel>
+                            <Controller name="heroImage" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input type="url" {...field} placeholder="Hero image URL" maxLength={2048} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
                     </CardContent>
                 </Card>
 
-                <Button onClick={save} disabled={saving} size="lg">
-                    {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Profile"}
+                <Button type="submit" disabled={isSubmitting} size="lg">
+                    {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Profile"}
                 </Button>
-            </div>
+            </form>
         </main>
     );
 }

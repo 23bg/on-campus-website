@@ -6,18 +6,18 @@ import { AppError } from "@/lib/utils/error";
 
 const leadInputSchema = z.object({
     instituteId: z.string().min(1),
-    name: z.string().min(2),
+    name: z.string().trim().min(2).max(80),
     phone: z.string().regex(/^[6-9]\d{9}$/),
-    email: z.string().email().optional(),
-    source: z.string().optional(),
-    course: z.string().optional(),
-    message: z.string().optional(),
+    email: z.string().trim().max(120).email().optional(),
+    source: z.string().trim().max(80).optional(),
+    course: z.string().trim().max(120).optional(),
+    message: z.string().trim().max(1024).optional(),
     followUpAt: z.string().optional(),
 });
 
 const listInputSchema = z.object({
     status: z.string().optional(),
-    query: z.string().optional(),
+    query: z.string().trim().max(120).optional(),
     from: z.coerce.date().optional(),
     to: z.coerce.date().optional(),
 });
@@ -94,6 +94,10 @@ export const leadService = {
 
         if (payload.status) {
             return this.updateStatus(instituteId, leadId, payload.status);
+        }
+
+        if (payload.message !== undefined && payload.message !== null) {
+            z.string().trim().max(1024).parse(payload.message);
         }
 
         const followUpAt =

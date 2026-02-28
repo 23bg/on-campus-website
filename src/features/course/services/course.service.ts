@@ -4,11 +4,11 @@ import { AppError } from "@/lib/utils/error";
 
 const courseInputSchema = z.object({
     instituteId: z.string().min(1),
-    name: z.string().min(2, "Course name must be at least 2 characters"),
-    banner: z.string().url().optional().or(z.literal("")),
-    duration: z.string().optional(),
+    name: z.string().trim().min(2, "Course name must be at least 2 characters").max(120, "Course name cannot exceed 120 characters"),
+    banner: z.string().trim().max(2048).url().optional().or(z.literal("")),
+    duration: z.string().trim().max(120).optional(),
     defaultFees: z.number().min(0).optional(),
-    description: z.string().optional(),
+    description: z.string().trim().max(1024).optional(),
 });
 
 export const courseService = {
@@ -23,10 +23,16 @@ export const courseService = {
         payload: { name?: string; banner?: string | null; duration?: string | null; defaultFees?: number | null; description?: string | null }
     ) {
         if (payload.name !== undefined) {
-            z.string().min(2).parse(payload.name);
+            z.string().trim().min(2).max(120).parse(payload.name);
         }
         if (payload.banner !== undefined && payload.banner !== null && payload.banner !== "") {
-            z.string().url().parse(payload.banner);
+            z.string().trim().max(2048).url().parse(payload.banner);
+        }
+        if (payload.duration !== undefined && payload.duration !== null) {
+            z.string().trim().max(120).parse(payload.duration);
+        }
+        if (payload.description !== undefined && payload.description !== null) {
+            z.string().trim().max(1024).parse(payload.description);
         }
         return courseRepository.update(instituteId, courseId, {
             ...payload,

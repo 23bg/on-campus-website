@@ -96,7 +96,7 @@
 "use client";
 
 import { useAuth } from "../hooks/useAuth";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginFormSchema } from "../validations/login.validation";
 import { loginFormData } from "../validations/login.validation";
@@ -116,18 +116,16 @@ import {
 
 import Link from "next/link";
 import { toast } from "sonner";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 export default function LoginForm() {
     const router = useRouter();
     const { login, loading } = useAuth();
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        reset,
-    } = useForm<loginFormData>({
+    const form = useForm<loginFormData>({
         resolver: zodResolver(loginFormSchema),
+        mode: "onBlur",
+        defaultValues: { email: "" },
     });
 
     const onSubmit = async (data: loginFormData) => {
@@ -141,7 +139,7 @@ export default function LoginForm() {
 
                     toast.success("Login successful. OTP sent!");
                     router.push(ROUTES.AUTH.VERIFICATION);
-                    reset();
+                    form.reset();
                 },
 
                 onError: (err: any) => {
@@ -152,7 +150,7 @@ export default function LoginForm() {
     };
 
     return (
-        <Card className="border-0 shadow-lg">
+        <Card className="border shadow-none rounded-md">
             <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl">Sign in</CardTitle>
                 <CardDescription>
@@ -161,36 +159,42 @@ export default function LoginForm() {
             </CardHeader>
 
             <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="space-y-2">
-                        <label>Email</label>
-                        <Input
-                            type="email"
-                            {...register("email")}
-                            placeholder="name@example.com"
-                            disabled={loading}
-                        />
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <FieldGroup>
+                        <Field>
+                            <FieldLabel>Email</FieldLabel>
+                            <Controller
+                                name="email"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input
+                                            type="email"
+                                            {...field}
+                                            placeholder="name@example.com"
+                                            disabled={loading}
+                                            maxLength={120}
+                                        />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
 
-                        {errors.email && (
-                            <p className="text-red-500 text-sm">
-                                {errors.email.message}
-                            </p>
-                        )}
-                    </div>
+                        <Button type="submit" className="w-full" disabled={loading || form.formState.isSubmitting}>
+                            {loading || form.formState.isSubmitting ? "Signing in..." : "Sign in"}
+                        </Button>
 
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Signing in..." : "Sign in"}
-                    </Button>
-
-                    <p className="text-center text-sm text-muted-foreground">
-                        Don't have an account?{" "}
-                        <Link
-                            href={ROUTES.AUTH.SIGN_UP}
-                            className="text-primary hover:underline font-medium"
-                        >
-                            Sign up
-                        </Link>
-                    </p>
+                        <p className="text-center text-sm text-muted-foreground">
+                            Don't have an account?{" "}
+                            <Link
+                                href={ROUTES.AUTH.SIGN_UP}
+                                className="text-primary hover:underline font-medium"
+                            >
+                                Sign up
+                            </Link>
+                        </p>
+                    </FieldGroup>
                 </form>
             </CardContent>
         </Card>

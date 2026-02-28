@@ -1,29 +1,83 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
+import { PUBLIC_NAV_ITEMS } from "@/constants/navigation";
+import ROUTES from "@/constants/routes";
+import { cn } from "@/lib/utils";
 
 export default function LandingHeader() {
     return (
         <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
             <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-                <nav className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
-
+                <div className="flex items-center gap-6">
                     <Link href="/" className="text-base font-bold tracking-tight">
                         OnCampus
                     </Link>
 
-                    <Link href="/">Home</Link>
-                    <Link href="/features">Features</Link>
-                    <Link href="/pricing">Pricing</Link>
-                    <Link href="/demo-institute">Demo</Link>
-                </nav>
+                    <nav className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
+                        {PUBLIC_NAV_ITEMS.map((item) => (
+                            <Link key={item.href} href={item.href} className="hover:text-foreground transition-colors">
+                                {item.label}
+                            </Link>
+                        ))}
+                    </nav>
+                </div>
 
                 <div className="flex items-center gap-2">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
+                                <Menu className="h-5 w-5" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="w-[85%] sm:max-w-sm">
+                            <SheetHeader className="border-b">
+                                <SheetTitle>Menu</SheetTitle>
+                            </SheetHeader>
+                            <nav className="grid gap-1 px-4 py-3">
+                                {PUBLIC_NAV_ITEMS.map((item) => (
+                                    <SheetClose key={item.href} asChild>
+                                        <Link
+                                            href={item.href}
+                                            className={cn(
+                                                "rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                            )}
+                                        >
+                                            {item.label}
+                                        </Link>
+                                    </SheetClose>
+                                ))}
+                            </nav>
+                            <div className="mt-auto grid gap-2 border-t p-4">
+                                <SheetClose asChild>
+                                    <Button asChild variant="ghost" size="sm" className="justify-start">
+                                        <Link href={ROUTES.AUTH.LOG_IN}>Login</Link>
+                                    </Button>
+                                </SheetClose>
+                                <SheetClose asChild>
+                                    <Button asChild size="sm" className="justify-start">
+                                        <Link href={ROUTES.AUTH.SIGN_UP}>Start Free Trial</Link>
+                                    </Button>
+                                </SheetClose>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
 
                     <Button asChild variant="ghost" size="sm">
-                        <Link href="/login">Login</Link>
+                        <Link href={ROUTES.AUTH.LOG_IN}>Login</Link>
                     </Button>
                     <Button asChild size="sm">
-                        <Link href="/signup">Start Free Trial</Link>
+                        <Link href={ROUTES.AUTH.SIGN_UP}>Start Free Trial</Link>
                     </Button>
                 </div>
             </div>

@@ -13,9 +13,9 @@ const addPaymentSchema = z.object({
     feePlanId: z.string().min(1),
     amount: z.number().min(1, "Amount must be at least 1"),
     date: z.string().optional(),
-    note: z.string().optional(),
-    method: z.string().optional(),
-    reference: z.string().optional(),
+    note: z.string().trim().max(1024).optional(),
+    method: z.string().trim().max(40).optional(),
+    reference: z.string().trim().max(120).optional(),
 });
 
 export const feeService = {

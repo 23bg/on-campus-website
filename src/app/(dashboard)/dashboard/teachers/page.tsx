@@ -90,13 +90,13 @@ export default function TeachersPage() {
         <main className="p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold">Teachers</h1>
+                    <h1 className=" text-2xl font-semibold">Teachers</h1>
                     <p className="text-muted-foreground text-sm mt-1">{teachers.length} total teachers</p>
                 </div>
                 <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Teacher</Button>
             </div>
 
-            <div className="mt-4 rounded-md border">
+            <div className="mt-4 rounded border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -150,15 +150,15 @@ export default function TeachersPage() {
                     <div className="space-y-4 py-2">
                         <div className="space-y-2">
                             <Label>Name *</Label>
-                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Teacher name" />
+                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Teacher name" minLength={2} maxLength={80} />
                         </div>
                         <div className="space-y-2">
                             <Label>Subject</Label>
-                            <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Subject taught" />
+                            <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Subject taught" maxLength={120} />
                         </div>
                         <div className="space-y-2">
                             <Label>Bio</Label>
-                            <Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Short bio" rows={3} />
+                            <Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Short bio" rows={3} maxLength={1024} />
                         </div>
                     </div>
                     <DialogFooter>

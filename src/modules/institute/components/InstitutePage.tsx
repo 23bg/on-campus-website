@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { API } from "@/constants/api";
 import InstituteProfileView from "@/modules/institute/components/InstituteProfileView";
-import InstituteProfileForm, { InstituteFormState } from "@/modules/institute/components/InstituteProfileForm";
+import InstituteProfileForm, { InstituteFormValues as InstituteFormState } from "@/modules/institute/forms/InstituteProfileForm";
 
 const emptyForm: InstituteFormState = {
     name: "",
@@ -70,8 +70,7 @@ export default function InstitutePage() {
         return (
             <main className="p-6">
                 <InstituteProfileForm
-                    form={form}
-                    onChange={setForm}
+                    initialValues={form}
                     onCancel={() => setMode("view")}
                     onSaved={async () => {
                         await load();

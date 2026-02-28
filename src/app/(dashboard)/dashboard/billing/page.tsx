@@ -77,11 +77,11 @@ export default function BillingPage() {
 
     return (
         <main className="p-6 max-w-2xl">
-            <h1 className="font-heading text-2xl font-semibold">Billing</h1>
+            <h1 className=" text-2xl font-semibold">Billing</h1>
             <p className="mt-1 text-muted-foreground">Manage your subscription and billing.</p>
 
             {summary?.status === "INACTIVE" ? (
-                <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <div className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                     Trial has expired. Choose a plan below to continue full access.
                 </div>
             ) : null}

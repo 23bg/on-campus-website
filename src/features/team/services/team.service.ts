@@ -4,6 +4,8 @@ import { AppError } from "@/lib/utils/error";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
 
 const roleSchema = z.enum(["MANAGER", "VIEWER"]);
+const memberEmailSchema = z.string().trim().max(120).email();
+const memberNameSchema = z.string().trim().min(2).max(80);
 
 export const teamService = {
     async listMembers(instituteId: string) {
@@ -19,7 +21,8 @@ export const teamService = {
             throw new AppError("Only owners can add team members", 403, "FORBIDDEN");
         }
 
-        const email = payload.email.trim().toLowerCase();
+        const email = memberEmailSchema.parse(payload.email).toLowerCase();
+        const name = payload.name ? memberNameSchema.parse(payload.name) : undefined;
         const role = roleSchema.parse(payload.role);
         const existing = await userRepository.findByEmail(email);
 
@@ -47,7 +50,7 @@ export const teamService = {
             return userRepository.updateByEmail(email, {
                 instituteId,
                 role,
-                name: payload.name ?? existing.name,
+                name: name ?? existing.name,
             });
         }
 
@@ -55,7 +58,7 @@ export const teamService = {
             email,
             instituteId,
             role,
-            name: payload.name,
+            name,
             emailVerified: false,
         });
     },

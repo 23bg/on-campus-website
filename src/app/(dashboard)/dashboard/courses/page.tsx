@@ -117,7 +117,7 @@ export default function CoursesPage() {
         <main className="p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold flex items-center gap-2">
+                    <h1 className=" text-2xl font-semibold flex items-center gap-2">
                         <BookOpen className="h-6 w-6" /> Courses
                     </h1>
                     <p className="text-muted-foreground text-sm mt-1">{courses.length} total courses</p>
@@ -125,7 +125,7 @@ export default function CoursesPage() {
                 <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Course</Button>
             </div>
 
-            <div className="mt-4 rounded-md border">
+            <div className="mt-4 rounded border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -186,15 +186,15 @@ export default function CoursesPage() {
                     <div className="space-y-4 py-2">
                         <div className="space-y-2">
                             <Label>Name *</Label>
-                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. NEET 2026, JEE Foundation" />
+                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. NEET 2026, JEE Foundation" minLength={2} maxLength={120} />
                         </div>
                         <div className="space-y-2">
                             <Label>Banner URL</Label>
-                            <Input value={form.banner} onChange={(e) => setForm({ ...form, banner: e.target.value })} placeholder="https://..." />
+                            <Input type="url" value={form.banner} onChange={(e) => setForm({ ...form, banner: e.target.value })} placeholder="https://..." maxLength={2048} />
                         </div>
                         <div className="space-y-2">
                             <Label>Duration</Label>
-                            <Input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="e.g. 6 months, 1 year" />
+                            <Input value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} placeholder="e.g. 6 months, 1 year" maxLength={120} />
                         </div>
                         <div className="space-y-2">
                             <Label>Default Fees (₹)</Label>
@@ -202,7 +202,7 @@ export default function CoursesPage() {
                         </div>
                         <div className="space-y-2">
                             <Label>Description</Label>
-                            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Brief description of the course" rows={3} />
+                            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Brief description of the course" rows={3} maxLength={1024} />
                         </div>
                     </div>
                     <DialogFooter>
@@ -232,10 +232,10 @@ export default function CoursesPage() {
                                         width={800}
                                         height={160}
                                         unoptimized
-                                        className="h-20 w-full rounded-md border object-cover"
+                                        className="h-20 w-full rounded border object-cover"
                                     />
                                 ) : (
-                                    <div className="h-20 w-full rounded-md border bg-linear-to-r from-indigo-500/20 via-violet-500/20 to-sky-500/20" />
+                                    <div className="h-20 w-full rounded border bg-linear-to-r from-indigo-500/20 via-violet-500/20 to-sky-500/20" />
                                 )}
                             </div>
                             <div className="flex justify-between gap-4"><span className="text-muted-foreground">Duration</span><span>{selectedCourse.duration || "-"}</span></div>

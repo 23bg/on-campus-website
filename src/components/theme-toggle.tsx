@@ -17,7 +17,7 @@ export default function ThemeToggle() {
         <Button
             size="icon"
             variant="outline"
-            className="rounded-full bg-muted text-muted-foreground hover:bg-primary-600 hover:text-white"
+            className="bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             onClick={toggleTheme}
             aria-label="Toggle theme"
         >

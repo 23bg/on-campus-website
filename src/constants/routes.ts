@@ -2,7 +2,7 @@ const ROUTES = {
 	ROOT: "/",
 	HOME: "/",
 	DASHBOARD: {
-		ROOT: "/",
+		ROOT: "/dashboard",
 		LEADS: "/leads",
 		STUDENTS: "/students",
 		TEAM: "/team",
@@ -23,6 +23,14 @@ const ROUTES = {
 	},
 	PRICING: "/pricing",
 	FEATURES: "/features",
+	FEATURE_DETAILS: {
+		LEAD_MANAGEMENT: "/features/lead-management",
+		STUDENT_RECORDS: "/features/student-records",
+		PUBLIC_INSTITUTE_PAGE: "/features/public-institute-page",
+		SUBSCRIPTION_BILLING: "/features/subscription-billing",
+	},
+	USE_CASES: "/use-cases",
+	RESOURCES: "/resources",
 	DEMO_INSTITUTE: "/demo-institute",
 	ABOUT: "/about",
 	CONTACT: "/contact",

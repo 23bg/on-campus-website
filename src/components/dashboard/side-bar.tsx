@@ -131,7 +131,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
     ];
 
     return (
-        <Sidebar collapsible="icon" {...props} variant="inset" className="h-screen overflow-hidden " >
+        <Sidebar collapsible='icon' {...props} variant="sidebar" className="h-screen overflow-hidden " >
             <SidebarHeader className="mx-0 px-0 ">
                 <SidebarGroup>
                     <SidebarMenu>

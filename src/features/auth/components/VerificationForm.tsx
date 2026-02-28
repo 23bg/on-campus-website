@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useAuth } from "../hooks/useAuth";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -17,10 +17,10 @@ import {
     CardDescription,
     CardContent,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 const otpSchema = z.object({
-    otp: z.string().length(5, "OTP must be 5 digits"),
+    otp: z.string().regex(/^\d{5}$/, "OTP must be 5 digits"),
 });
 
 type OtpFormData = z.infer<typeof otpSchema>;
@@ -53,12 +53,9 @@ export default function VerificationForm() {
         setEmail(storedEmail);
     }, [router]);
 
-    const {
-        handleSubmit,
-        setValue,
-        formState: { errors },
-    } = useForm<OtpFormData>({
+    const form = useForm<OtpFormData>({
         resolver: zodResolver(otpSchema),
+        mode: "onBlur",
         defaultValues: { otp: "" },
     });
 
@@ -83,7 +80,7 @@ export default function VerificationForm() {
     if (email === null) return null;
 
     return (
-        <Card className="border-0 shadow-lg">
+        <Card className="border shadow-none rounded-md">
             <CardHeader>
                 <CardTitle className="text-2xl">Verify your account</CardTitle>
                 <CardDescription>Enter the 5-digit code sent to your email</CardDescription>
@@ -94,41 +91,46 @@ export default function VerificationForm() {
                     onSubmit={(e) => {
                         e.preventDefault();
                         const finalOtp = codes.join("");
-                        setValue("otp", finalOtp, { shouldValidate: true });
-                        handleSubmit(onSubmit)(); // validation runs AFTER setting OTP
+                        form.setValue("otp", finalOtp, { shouldValidate: true, shouldTouch: true });
+                        form.handleSubmit(onSubmit)();
                     }}
-                    className="space-y-4"
                 >
-                    <div className="space-y-2">
-                        <Label className="block text-center">Verification Code</Label>
+                    <FieldGroup>
+                        <Field>
+                            <FieldLabel className="block text-center">Verification Code</FieldLabel>
+                            <Controller
+                                name="otp"
+                                control={form.control}
+                                render={({ fieldState }) => (
+                                    <>
+                                        <div className="flex justify-center gap-2">
+                                            {codes.map((c, i) => (
+                                                <Input
+                                                    key={i}
+                                                    id={`code-${i}`}
+                                                    maxLength={1}
+                                                    inputMode="numeric"
+                                                    value={c}
+                                                    onChange={(e) => handleCodeChange(i, e.target.value.replace(/\D/g, ""))}
+                                                    className="w-12 h-12 text-xl text-center font-semibold"
+                                                    disabled={loading}
+                                                />
+                                            ))}
+                                        </div>
+                                        <FieldError errors={[fieldState.error]} className="text-center" />
+                                    </>
+                                )}
+                            />
+                        </Field>
 
-                        <div className="flex justify-center gap-2">
-                            {codes.map((c, i) => (
-                                <Input
-                                    key={i}
-                                    id={`code-${i}`}
-                                    maxLength={1}
-                                    inputMode="numeric"
-                                    value={c}
-                                    onChange={(e) => handleCodeChange(i, e.target.value)}
-                                    className="w-12 h-12 text-xl text-center font-semibold"
-                                    disabled={loading}
-                                />
-                            ))}
-                        </div>
-
-                        {errors.otp && (
-                            <p className="text-red-500 text-sm text-center">{errors.otp.message}</p>
-                        )}
-                    </div>
-
-                    <Button
-                        type="submit"
-                        disabled={loading || codes.join("").length !== 5}
-                        className="w-full bg-blue-600 text-white"
-                    >
-                        {loading ? "Verifying..." : "Verify OTP"}
-                    </Button>
+                        <Button
+                            type="submit"
+                            disabled={loading || form.formState.isSubmitting || codes.join("").length !== 5}
+                            className="w-full"
+                        >
+                            {loading || form.formState.isSubmitting ? "Verifying..." : "Verify OTP"}
+                        </Button>
+                    </FieldGroup>
                 </form>
             </CardContent>
         </Card>

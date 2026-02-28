@@ -124,7 +124,7 @@
 
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../hooks/useAuth";
 
@@ -148,18 +148,20 @@ import {
 
 import Link from "next/link";
 import { toast } from "sonner";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 export default function SignupForm() {
     const router = useRouter();
     const { signup, loading } = useAuth();
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        reset,
-    } = useForm<SignupFormData>({
+    const form = useForm<SignupFormData>({
         resolver: zodResolver(signupFormSchema),
+        mode: "onBlur",
+        defaultValues: {
+            name: "",
+            email: "",
+            phoneNumber: "",
+        },
     });
 
     const onSubmit = async (data: SignupFormData) => {
@@ -173,7 +175,7 @@ export default function SignupForm() {
                     toast.success("Signup successful! OTP sent.");
                     router.push(ROUTES.AUTH.VERIFICATION);
 
-                    reset();
+                    form.reset();
                 },
 
                 onError: (err: any) => {
@@ -184,7 +186,7 @@ export default function SignupForm() {
     };
 
     return (
-        <Card className="border-0 shadow-lg">
+        <Card className="border shadow-none rounded-md">
             <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl">Create an account</CardTitle>
                 <CardDescription>
@@ -193,70 +195,64 @@ export default function SignupForm() {
             </CardHeader>
 
             <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <FieldGroup>
+                        <Field>
+                            <FieldLabel>Name</FieldLabel>
+                            <Controller
+                                name="name"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input {...field} placeholder="Full Name" disabled={loading} minLength={2} maxLength={80} />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
 
-                    {/* Name */}
-                    <div className="space-y-2">
-                        <label>Name</label>
-                        <Input
-                            {...register("name")}
-                            placeholder="Full Name"
-                            disabled={loading}
-                        />
-                        {errors.name && (
-                            <p className="text-red-500 text-sm">
-                                {errors.name.message}
-                            </p>
-                        )}
-                    </div>
+                        <Field>
+                            <FieldLabel>Email</FieldLabel>
+                            <Controller
+                                name="email"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input type="email" {...field} placeholder="Email" disabled={loading} maxLength={120} />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
 
-                    {/* Email */}
-                    <div className="space-y-2">
-                        <label>Email</label>
-                        <Input
-                            type="email"
-                            {...register("email")}
-                            placeholder="Email"
-                            disabled={loading}
-                        />
-                        {errors.email && (
-                            <p className="text-red-500 text-sm">
-                                {errors.email.message}
-                            </p>
-                        )}
-                    </div>
+                        <Field>
+                            <FieldLabel>Phone Number</FieldLabel>
+                            <Controller
+                                name="phoneNumber"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input type="text" {...field} placeholder="Phone Number" disabled={loading} inputMode="numeric" maxLength={15} />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
 
-                    {/* Phone */}
-                    <div className="space-y-2">
-                        <label>Phone Number</label>
-                        <Input
-                            type="text"
-                            {...register("phoneNumber")}
-                            placeholder="Phone Number"
-                            disabled={loading}
-                        />
-                        {errors.phoneNumber && (
-                            <p className="text-red-500 text-sm">
-                                {errors.phoneNumber.message}
-                            </p>
-                        )}
-                    </div>
+                        <Button type="submit" className="w-full" disabled={loading || form.formState.isSubmitting}>
+                            {loading || form.formState.isSubmitting ? "Creating account..." : "Sign up"}
+                        </Button>
 
-                    {/* Submit */}
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Creating account..." : "Sign up"}
-                    </Button>
-
-                    {/* Redirect */}
-                    <p className="text-center text-sm text-muted-foreground">
-                        Already have an account?{" "}
-                        <Link
-                            href={ROUTES.AUTH.LOG_IN}
-                            className="text-primary hover:underline font-medium"
-                        >
-                            Sign in
-                        </Link>
-                    </p>
+                        <p className="text-center text-sm text-muted-foreground">
+                            Already have an account?{" "}
+                            <Link
+                                href={ROUTES.AUTH.LOG_IN}
+                                className="text-primary hover:underline font-medium"
+                            >
+                                Sign in
+                            </Link>
+                        </p>
+                    </FieldGroup>
                 </form>
             </CardContent>
         </Card>

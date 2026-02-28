@@ -7,12 +7,12 @@ import { env } from "@/lib/config/env";
 import { toAppError } from "@/lib/utils/error";
 
 const leadSchema = z.object({
-    name: z.string().min(2),
+    name: z.string().trim().min(2).max(80),
     phone: z.string().regex(/^[6-9]\d{9}$/),
-    email: z.string().email().optional(),
-    course: z.string().optional(),
-    message: z.string().optional(),
-    source: z.string().optional(),
+    email: z.string().trim().max(120).email().optional(),
+    course: z.string().trim().max(120).optional(),
+    message: z.string().trim().max(1024).optional(),
+    source: z.string().trim().max(50).optional(),
 });
 
 type RouteContext = {

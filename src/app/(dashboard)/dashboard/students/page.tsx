@@ -207,7 +207,7 @@ export default function StudentsPage() {
         <main className="p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold">Students</h1>
+                    <h1 className=" text-2xl font-semibold">Students</h1>
                     <p className="text-muted-foreground text-sm mt-1">{students.length} total students</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -218,7 +218,7 @@ export default function StudentsPage() {
                 </div>
             </div>
 
-            <div className="mt-4 rounded-md border">
+            <div className="mt-4 rounded border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -286,15 +286,15 @@ export default function StudentsPage() {
                     <div className="space-y-4 py-2">
                         <div className="space-y-2">
                             <Label>Name *</Label>
-                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Student name" />
+                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Student name" minLength={2} maxLength={80} />
                         </div>
                         <div className="space-y-2">
                             <Label>Phone *</Label>
-                            <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone number" />
+                            <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone number" inputMode="numeric" maxLength={14} />
                         </div>
                         <div className="space-y-2">
                             <Label>Email</Label>
-                            <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email (optional)" />
+                            <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email (optional)" maxLength={120} />
                         </div>
                         <div className="space-y-2">
                             <Label>Course</Label>

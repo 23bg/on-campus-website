@@ -123,7 +123,7 @@ export default function BatchesPage() {
         <main className="p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold flex items-center gap-2">
+                    <h1 className=" text-2xl font-semibold flex items-center gap-2">
                         <Layers className="h-6 w-6" /> Batches
                     </h1>
                     <p className="text-muted-foreground text-sm mt-1">{batches.length} total batches</p>
@@ -137,7 +137,7 @@ export default function BatchesPage() {
                 <p className="mt-4 text-sm text-muted-foreground">Add courses first before creating batches.</p>
             ) : null}
 
-            <div className="mt-4 rounded-md border">
+            <div className="mt-4 rounded border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -209,7 +209,7 @@ export default function BatchesPage() {
                         </div>
                         <div className="space-y-2">
                             <Label>Batch Name *</Label>
-                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Morning Batch, Weekend Batch" />
+                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Morning Batch, Weekend Batch" minLength={2} maxLength={120} />
                         </div>
                         <div className="space-y-2">
                             <Label>Start Date</Label>
@@ -217,7 +217,7 @@ export default function BatchesPage() {
                         </div>
                         <div className="space-y-2">
                             <Label>Schedule</Label>
-                            <Input value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} placeholder="e.g. Mon-Fri 9AM-12PM" />
+                            <Input value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} placeholder="e.g. Mon-Fri 9AM-12PM" maxLength={120} />
                         </div>
                         <div className="space-y-2">
                             <Label>Teacher</Label>
