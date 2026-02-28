@@ -46,6 +46,8 @@ export async function PUT(req: NextRequest) {
             timings?: string;
             logo?: string;
             banner?: string;
+            heroImage?: string;
+            googleMapLink?: string;
             socialLinks?: {
                 website?: string;
                 instagram?: string;

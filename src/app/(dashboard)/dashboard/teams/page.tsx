@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 type TeamMember = {
     id: string;
@@ -16,10 +20,26 @@ type SessionUser = {
     role: "OWNER" | "MANAGER" | "VIEWER";
 };
 
+const teamMemberSchema = z.object({
+    email: z.string().trim().max(120, "Email cannot exceed 120 characters.").email("Enter a valid email."),
+    name: z.string().trim().min(2, "Name must be at least 2 characters.").max(80, "Name cannot exceed 80 characters."),
+    role: z.enum(["MANAGER", "VIEWER"]),
+});
+
+type TeamMemberFormValues = z.infer<typeof teamMemberSchema>;
+
 export default function DashboardTeamsPage() {
     const [members, setMembers] = useState<TeamMember[]>([]);
     const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
-    const [form, setForm] = useState({ email: "", name: "", role: "MANAGER" as "MANAGER" | "VIEWER" });
+    const form = useForm<TeamMemberFormValues>({
+        resolver: zodResolver(teamMemberSchema),
+        mode: "onBlur",
+        defaultValues: {
+            email: "",
+            name: "",
+            role: "MANAGER",
+        },
+    });
     const [loading, setLoading] = useState(true);
 
     const load = async () => {
@@ -40,9 +60,9 @@ export default function DashboardTeamsPage() {
 
     const canManage = sessionUser?.role === "OWNER";
 
-    const createMember = async () => {
-        await api.post(API.INTERNAL.TEAMS.ROOT, form);
-        setForm({ email: "", name: "", role: "MANAGER" });
+    const createMember = async (values: TeamMemberFormValues) => {
+        await api.post(API.INTERNAL.TEAMS.ROOT, values);
+        form.reset({ email: "", name: "", role: "MANAGER" });
         await load();
     };
 
@@ -58,35 +78,76 @@ export default function DashboardTeamsPage() {
 
     return (
         <main className="p-6">
-            <h1 className="font-heading text-2xl font-semibold">Teams</h1>
+            <h1 className=" text-2xl font-semibold">Teams</h1>
             <p className="font-sans mt-2 text-muted-foreground">Manage team members and roles for your institute.</p>
 
             {canManage ? (
-                <div className="mt-6 grid gap-3 rounded border p-4 md:grid-cols-4">
-                    <input
-                        value={form.email}
-                        onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                        placeholder="Email"
-                        className="rounded border px-3 py-2"
-                    />
-                    <input
-                        value={form.name}
-                        onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                        placeholder="Name"
-                        className="rounded border px-3 py-2"
-                    />
-                    <select
-                        value={form.role}
-                        onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value as "MANAGER" | "VIEWER" }))}
-                        className="rounded border px-3 py-2"
-                    >
-                        <option value="MANAGER">Manager</option>
-                        <option value="VIEWER">Viewer</option>
-                    </select>
-                    <button onClick={createMember} className="rounded bg-primary px-4 py-2 text-primary-foreground">
-                        Add Member
-                    </button>
-                </div>
+                <form onSubmit={form.handleSubmit(createMember)} className="mt-6 rounded border p-4">
+                    <FieldGroup className="md:grid-cols-4">
+                        <Field>
+                            <FieldLabel>Email</FieldLabel>
+                            <Controller
+                                name="email"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <input
+                                            {...field}
+                                            type="email"
+                                            placeholder="Email"
+                                            maxLength={120}
+                                            className="rounded border px-3 py-2 w-full"
+                                        />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Name</FieldLabel>
+                            <Controller
+                                name="name"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <input
+                                            {...field}
+                                            placeholder="Name"
+                                            minLength={2}
+                                            maxLength={80}
+                                            className="rounded border px-3 py-2 w-full"
+                                        />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Role</FieldLabel>
+                            <Controller
+                                name="role"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <select {...field} className="rounded border px-3 py-2 w-full">
+                                            <option value="MANAGER">Manager</option>
+                                            <option value="VIEWER">Viewer</option>
+                                        </select>
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field className="self-end">
+                            <button type="submit" className="rounded bg-primary px-4 py-2 text-primary-foreground w-full">
+                                Add Member
+                            </button>
+                        </Field>
+                    </FieldGroup>
+                </form>
             ) : null}
 
             {loading ? (

@@ -15,10 +15,10 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     return (
-        <SidebarProvider className="rounded overflow-hidden h-screen">
+        <SidebarProvider className=" overflow-hidden h-screen">
             <DashboardAppSidebar />
 
-            <SidebarInset className="border shadow-xl bg-background ">
+            <SidebarInset className="border shadow-none bg-background ">
                 <DashboardHeader />
 
                 {/* MAIN CONTENT */}
@@ -26,6 +26,7 @@ export default function DashboardLayout({
                     <div className="h-screen">
                         <ScrollArea className="h-full">
                             {children}
+                            <div className="h-30"></div>
                         </ScrollArea>
                     </div>
                 </main>
@@ -33,7 +34,7 @@ export default function DashboardLayout({
                 {/* FOOTER */}
                 <footer className="
                     border-t bg-background dark:bg-zinc-900/40
-                    backdrop-blur-sm rounded-b-2xl
+                    backdrop-blur-sm rounded-b-lg
                 ">
                     <div className="
                         flex flex-col sm:flex-row justify-between items-center

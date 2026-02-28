@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import api from "@/lib/axios";
 import { API } from "@/constants/api";
-import TeamForm, { TeamFormState } from "@/modules/team/components/TeamForm";
+import TeamForm, { TeamFormValues as TeamFormState } from "@/modules/team/forms/TeamForm";
 import TeamTable, { TeamRow } from "@/modules/team/components/TeamTable";
 
 const emptyForm: TeamFormState = {
@@ -98,24 +98,14 @@ export default function TeamPage() {
         setOpen(true);
     };
 
-    const save = async () => {
-        if (!form.name.trim()) {
-            toast.error("Name is required");
-            return;
-        }
-
-        if (form.role !== "TEACHER" && !form.email.trim()) {
-            toast.error("Email is required for team members");
-            return;
-        }
-
+    const save = async (values: TeamFormState) => {
         setSaving(true);
         try {
-            if (form.role === "TEACHER") {
+            if (values.role === "TEACHER") {
                 const payload = {
-                    name: form.name,
-                    subject: form.subjects || undefined,
-                    bio: form.bio || undefined,
+                    name: values.name,
+                    subject: values.subjects || undefined,
+                    bio: values.bio || undefined,
                 };
 
                 if (editing?.source === "teacher") {
@@ -124,14 +114,14 @@ export default function TeamPage() {
                     await api.post(API.INTERNAL.TEACHERS.ROOT, payload);
                 }
             } else {
-                const mappedRole = form.role === "VIEWER" ? "VIEWER" : "MANAGER";
+                const mappedRole = values.role === "VIEWER" ? "VIEWER" : "MANAGER";
 
                 if (editing?.source === "team") {
                     await api.patch(API.INTERNAL.TEAMS.BY_ID(editing.id), { role: mappedRole });
                 } else {
                     await api.post(API.INTERNAL.TEAMS.ROOT, {
-                        name: form.name,
-                        email: form.email,
+                        name: values.name,
+                        email: values.email,
                         role: mappedRole,
                     });
                 }
@@ -165,13 +155,13 @@ export default function TeamPage() {
         <main className="p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold">Team</h1>
+                    <h1 className=" text-2xl font-semibold">Team</h1>
                     <p className="text-sm text-muted-foreground mt-1">Manage owners, managers, counselors, teachers, and viewers.</p>
                 </div>
                 {canManage ? <Button onClick={openCreate}>Add Team Member</Button> : null}
             </div>
 
-            <div className="mt-4 rounded-md border p-3 text-sm">
+            <div className="mt-4 rounded border p-3 text-sm">
                 <p className="font-medium mb-2">Role Access</p>
                 <p><span className="font-medium">OWNER</span> — Full control over team, data, and billing.</p>
                 <p><span className="font-medium">EDITOR</span> — Manage leads, students, courses, batches, and fees.</p>
@@ -189,11 +179,13 @@ export default function TeamPage() {
                     <DialogHeader>
                         <DialogTitle>{editing ? "Edit Team Member" : "Add Team Member"}</DialogTitle>
                     </DialogHeader>
-                    <TeamForm form={form} onChange={setForm} />
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button disabled={saving} onClick={save}>{saving ? "Saving..." : editing ? "Update" : "Create"}</Button>
-                    </DialogFooter>
+                    <TeamForm
+                        initialValues={form}
+                        saving={saving}
+                        isEdit={Boolean(editing)}
+                        onCancel={() => setOpen(false)}
+                        onSubmit={save}
+                    />
                 </DialogContent>
             </Dialog>
         </main>

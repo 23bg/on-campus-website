@@ -45,7 +45,7 @@ export default function DefaultersPage() {
         <main className="p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold flex items-center gap-2">
+                    <h1 className=" text-2xl font-semibold flex items-center gap-2">
                         <AlertTriangle className="h-6 w-6 text-red-600" /> Fee Defaulters
                     </h1>
                     <p className="text-muted-foreground text-sm mt-1">

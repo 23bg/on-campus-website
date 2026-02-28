@@ -67,7 +67,7 @@ export default function PaymentsPage() {
     return (
         <main className="p-6 space-y-4">
             <div>
-                <h1 className="font-heading text-2xl font-semibold">Payments</h1>
+                <h1 className=" text-2xl font-semibold">Payments</h1>
                 <p className="text-sm text-muted-foreground mt-1">Track all fee collections with filters.</p>
             </div>
 
@@ -102,7 +102,7 @@ export default function PaymentsPage() {
                     <p className="text-sm text-muted-foreground mb-3">
                         Showing {filteredRows.length} payments • Total {`₹${totalAmount.toLocaleString("en-IN")}`}
                     </p>
-                    <div className="rounded-md border">
+                    <div className="rounded border">
                         <Table>
                             <TableHeader>
                                 <TableRow>

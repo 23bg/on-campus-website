@@ -33,10 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${jakarta.variable} font-sans antialiased`}
-      >
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${jakarta.variable}`}
+    >
+      <body>
         <ThemeProvider>
           <ReduxProvider>
             <NextTopLoader
@@ -47,7 +49,9 @@ export default function RootLayout({
             <main>{children}</main>
             <Toaster
               duration={3000}
-              position={"bottom-right"}
+              position={"top-center"}
+              richColors
+              expand={false}
             />
           </ReduxProvider>
         </ThemeProvider>

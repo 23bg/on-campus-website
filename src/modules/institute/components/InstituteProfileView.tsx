@@ -26,7 +26,7 @@ export default function InstituteProfileView({ data, onEdit }: InstituteProfileV
         <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold">{data.name || "Institute Profile"}</h1>
+                    <h1 className=" text-2xl font-semibold">{data.name || "Institute Profile"}</h1>
                     <p className="text-sm text-muted-foreground mt-1">Public slug: /i/{data.slug || "your-slug"}</p>
                 </div>
                 <div className="flex gap-2">

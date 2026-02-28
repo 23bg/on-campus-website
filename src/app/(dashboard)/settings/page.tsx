@@ -133,7 +133,7 @@ export default function SettingsPage() {
     return (
         <main className="p-6 space-y-6">
             <div>
-                <h1 className="font-heading text-2xl font-semibold">Settings</h1>
+                <h1 className=" text-2xl font-semibold">Settings</h1>
                 <p className="mt-1 text-sm text-muted-foreground">Manage appearance, notifications, and dashboard behavior.</p>
             </div>
 
@@ -281,10 +281,10 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Students</p><p className="text-lg font-semibold">{dataCounts.students}</p></div>
-                        <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Leads</p><p className="text-lg font-semibold">{dataCounts.leads}</p></div>
-                        <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Courses</p><p className="text-lg font-semibold">{dataCounts.courses}</p></div>
-                        <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Payments</p><p className="text-lg font-semibold">{dataCounts.payments}</p></div>
+                        <div className="rounded border p-3"><p className="text-xs text-muted-foreground">Students</p><p className="text-lg font-semibold">{dataCounts.students}</p></div>
+                        <div className="rounded border p-3"><p className="text-xs text-muted-foreground">Leads</p><p className="text-lg font-semibold">{dataCounts.leads}</p></div>
+                        <div className="rounded border p-3"><p className="text-xs text-muted-foreground">Courses</p><p className="text-lg font-semibold">{dataCounts.courses}</p></div>
+                        <div className="rounded border p-3"><p className="text-xs text-muted-foreground">Payments</p><p className="text-lg font-semibold">{dataCounts.payments}</p></div>
                     </div>
 
                     <Button variant="outline" onClick={exportData} disabled={exporting}>

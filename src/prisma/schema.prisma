@@ -58,6 +58,8 @@ model Institute {
     timings         String?
     logo            String?
     banner          String?
+    heroImage       String?
+    googleMapLink   String?
     websiteUrl      String?
     instagramUrl    String?
     facebookUrl     String?

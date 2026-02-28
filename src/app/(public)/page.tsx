@@ -9,8 +9,9 @@ import Demo from "@/components/landing/Demo";
 import Pricing from "@/components/landing/Pricing";
 import FAQ from "@/components/landing/FAQ";
 import CTA from "@/components/landing/CTA";
-import Footer from "@/components/landing/Footer";
+import UseCases from "../../components/landing/UseCases";
 import LandingHeader from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 
 export const metadata: Metadata = {
     title: "OnCampus - Admission CRM for Coaching Institutes",
@@ -23,10 +24,11 @@ export default function LandingPage() {
         <main className="dark:bg-zinc-900">
             <LandingHeader />
             <Hero />
-            <Trust />
             <Problem />
             <Solution />
             <Features />
+            <UseCases />
+            <Trust />
             <HowItWorks />
             <Demo />
             <Pricing />

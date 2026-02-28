@@ -112,7 +112,7 @@ export default function LeadsPage() {
         <main className="p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold">Leads</h1>
+                    <h1 className=" text-2xl font-semibold">Leads</h1>
                     <p className="text-muted-foreground text-sm mt-1">{leads.length} total leads</p>
                 </div>
             </div>
@@ -123,7 +123,7 @@ export default function LeadsPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-3 md:grid-cols-5">
-                        <Input placeholder="Search name or phone" value={query} onChange={(e) => setQuery(e.target.value)} />
+                        <Input placeholder="Search name or phone" value={query} onChange={(e) => setQuery(e.target.value)} maxLength={120} />
                         <Select value={status} onValueChange={setStatus}>
                             <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
                             <SelectContent>
@@ -138,7 +138,7 @@ export default function LeadsPage() {
                 </CardContent>
             </Card>
 
-            <div className="mt-4 rounded-md border">
+            <div className="mt-4 rounded border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -217,7 +217,7 @@ export default function LeadsPage() {
                         </div>
                         <div className="space-y-2">
                             <Label>Notes</Label>
-                            <Textarea rows={5} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Called parent, interested in NEET, follow-up on Sunday..." />
+                            <Textarea rows={5} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Called parent, interested in NEET, follow-up on Sunday..." maxLength={1024} />
                         </div>
                     </div>
                     <DialogFooter>

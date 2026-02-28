@@ -1,8 +1,6 @@
 ﻿import type { Metadata } from "next";
 import Pricing from "../../../components/landing/Pricing";
 import CTA from "../../../components/landing/CTA";
-import Footer from "../../../components/landing/Footer";
-import LandingHeader from "@/components/landing/Header";
 
 export const metadata: Metadata = {
     title: "Pricing - OnCampus",
@@ -11,12 +9,10 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
     return (
-        <>
-            <LandingHeader />
+        <main>
             <Pricing />
             <CTA />
-            <Footer />
-        </>
+        </main>
     );
 }
 

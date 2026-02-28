@@ -4,7 +4,7 @@ import { authService } from "@/features/auth/services/auth.service";
 import { toAppError } from "@/lib/utils/error";
 
 const schema = z.object({
-    email: z.string().email(),
+    email: z.email(),
 });
 
 export async function POST(req: NextRequest) {

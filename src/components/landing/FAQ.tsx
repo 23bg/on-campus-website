@@ -7,24 +7,28 @@
 
 const faqs = [
     {
-        q: "Do I need a website?",
-        a: "No. OnCampus provides your institute page.",
-    },
-    {
-        q: "Can students submit enquiry?",
-        a: "Yes via QR or link.",
-    },
-    {
-        q: "Is this mobile friendly?",
-        a: "Yes.",
-    },
-    {
         q: "Is there a free trial?",
-        a: "Yes.",
+        a: "Yes. You can start a free trial before choosing a paid plan.",
     },
     {
-        q: "Can I export students?",
-        a: "Yes Excel export.",
+        q: "Can I cancel anytime?",
+        a: "Yes. You can cancel subscription from billing settings any time.",
+    },
+    {
+        q: "Is payment secure?",
+        a: "Yes. Payments are processed securely using Razorpay.",
+    },
+    {
+        q: "Will my data be safe?",
+        a: "OnCampus uses authenticated access and scoped institute workspaces for data safety.",
+    },
+    {
+        q: "Do you support multi-user teams?",
+        a: "Yes. Team plans support multiple users with role-based access.",
+    },
+    {
+        q: "Do you handle student fee payments?",
+        a: "Yes. You can track fee collections and payment records inside OnCampus.",
     },
 ];
 

@@ -159,7 +159,7 @@ export default function FeesPage() {
         <main className="p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-semibold flex items-center gap-2">
+                    <h1 className=" text-2xl font-semibold flex items-center gap-2">
                         <IndianRupee className="h-6 w-6" /> Fee Management
                     </h1>
                     <p className="text-muted-foreground text-sm mt-1">{plans.length} fee plans</p>
@@ -344,11 +344,11 @@ export default function FeesPage() {
                         </div>
                         <div className="space-y-2">
                             <Label>Reference</Label>
-                            <Input value={paymentForm.reference} onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })} placeholder="Txn ID / receipt no. (optional)" />
+                            <Input value={paymentForm.reference} onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })} placeholder="Txn ID / receipt no. (optional)" maxLength={120} />
                         </div>
                         <div className="space-y-2">
                             <Label>Note</Label>
-                            <Textarea value={paymentForm.note} onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })} placeholder="e.g. Cash payment, UPI, Cheque #123" rows={2} />
+                            <Textarea value={paymentForm.note} onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })} placeholder="e.g. Cash payment, UPI, Cheque #123" rows={2} maxLength={1024} />
                         </div>
                     </div>
                     <DialogFooter>
