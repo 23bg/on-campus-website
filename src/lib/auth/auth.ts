@@ -18,8 +18,18 @@ export type SessionPayload = {
 
 const getJwtSecret = (): string => requireEnv("JWT_SECRET");
 
+const stripJwtMetaClaims = <T extends Record<string, unknown>>(payload: T): T => {
+    const { exp: _exp, iat: _iat, nbf: _nbf, jti: _jti, ...rest } = payload as T & {
+        exp?: number;
+        iat?: number;
+        nbf?: number;
+        jti?: string;
+    };
+    return rest as T;
+};
+
 export const createSessionToken = (payload: SessionPayload): string =>
-    jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
+    jwt.sign(stripJwtMetaClaims(payload), getJwtSecret(), { expiresIn: "7d" });
 
 export const verifySessionToken = (token: string): SessionPayload | null => {
     try {

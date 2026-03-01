@@ -27,9 +27,15 @@ type InstitutePublicViewProps = {
         banner?: string | null;
         phone?: string | null;
         whatsapp?: string | null;
-        address?: string | null;
-        city?: string | null;
-        state?: string | null;
+        address?: {
+            addressLine1?: string | null;
+            addressLine2?: string | null;
+            city?: string | null;
+            state?: string | null;
+            region?: string | null;
+            postalCode?: string | null;
+            country?: string | null;
+        } | null;
         website?: string | null;
         googleMapLink?: string | null;
         socialLinks?: {
@@ -46,7 +52,17 @@ export default function InstitutePublicView({ slug, institute }: InstitutePublic
     const initials = (institute.name || "I").slice(0, 1).toUpperCase();
     const instituteName = institute.name || "Institute";
     const heroImage = institute.heroImage || institute.banner || FALLBACK_HERO;
-    const addressText = [institute.address, institute.city, institute.state].filter(Boolean).join(", ") || "-";
+    const addressText = [
+        institute.address?.addressLine1,
+        institute.address?.addressLine2,
+        institute.address?.city,
+        institute.address?.state,
+        institute.address?.region,
+        institute.address?.postalCode,
+        institute.address?.country,
+    ]
+        .filter(Boolean)
+        .join(", ") || "-";
     const website = institute.website || institute.socialLinks?.website || null;
 
     const whatsappRaw = institute.whatsapp || institute.phone || "";
@@ -91,7 +107,7 @@ export default function InstitutePublicView({ slug, institute }: InstitutePublic
                     )}
                     <div className="text-white">
                         <h1 className="text-3xl font-bold">{instituteName}</h1>
-                        <p className="text-sm opacity-90">{[institute.city, institute.state].filter(Boolean).join(" ")}</p>
+                        <p className="text-sm opacity-90">{[institute.address?.city, institute.address?.state].filter(Boolean).join(" ")}</p>
                     </div>
                 </div>
             </section>

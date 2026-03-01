@@ -8,9 +8,9 @@ export type NavItem = {
 export const PUBLIC_NAV_ITEMS: NavItem[] = [
     { labelKey: "home", href: ROUTES.HOME },
     { labelKey: "features", href: ROUTES.FEATURES },
-    { labelKey: "useCases", href: ROUTES.USE_CASES },
     { labelKey: "pricing", href: ROUTES.PRICING },
     { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
+    { labelKey: "useCases", href: ROUTES.USE_CASES },
     { labelKey: "resources", href: ROUTES.RESOURCES },
 ];
 

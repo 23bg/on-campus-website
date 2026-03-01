@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,12 +28,14 @@ type Student = {
 
 type StudentForm = { name: string; phone: string; email: string; courseId: string; batchId: string; admissionDate: string; fees: string };
 const emptyForm: StudentForm = { name: "", phone: "", email: "", courseId: "", batchId: "", admissionDate: "", fees: "" };
+type PortalCredentialForm = { username: string; email: string; password: string };
 type UploadResult = {
     inserted: number;
     errors: Array<{ row: number; message: string }>;
 };
 
 export default function StudentsPage() {
+    const searchParams = useSearchParams();
     const [students, setStudents] = useState<Student[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
     const [batches, setBatches] = useState<Batch[]>([]);
@@ -48,7 +51,17 @@ export default function StudentsPage() {
     const [uploading, setUploading] = useState(false);
     const [uploadFileName, setUploadFileName] = useState<string | null>(null);
     const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [portalCredentials, setPortalCredentials] = useState<PortalCredentialForm>({ username: "", email: "", password: "" });
+    const [updatingPortalCredentials, setUpdatingPortalCredentials] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const query = searchParams.get("query") ?? "";
+        if (query && !searchQuery) {
+            setSearchQuery(query);
+        }
+    }, [searchParams, searchQuery]);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -95,6 +108,20 @@ export default function StudentsPage() {
     const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
     const batchMap = Object.fromEntries(batches.map((b) => [b.id, b.name]));
     const filteredBatches = form.courseId ? batches.filter((b) => b.courseId === form.courseId) : batches;
+    const visibleStudents = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return students;
+
+        return students.filter((student) => {
+            const courseName = student.courseId ? (courseMap[student.courseId]?.name ?? "") : "";
+            const batchName = student.batchId ? (batchMap[student.batchId] ?? "") : "";
+
+            return [student.name, student.phone, student.email ?? "", courseName, batchName]
+                .join(" ")
+                .toLowerCase()
+                .includes(q);
+        });
+    }, [students, searchQuery, courseMap, batchMap]);
 
     const handleCourseChange = (courseId: string) => {
         const course = courseMap[courseId];
@@ -165,7 +192,31 @@ export default function StudentsPage() {
 
     const openView = (student: Student) => {
         setSelectedStudent(student);
+        setPortalCredentials({
+            username: student.phone,
+            email: student.email ?? "",
+            password: "",
+        });
         setViewDialogOpen(true);
+    };
+
+    const updatePortalCredentials = async () => {
+        if (!selectedStudent) return;
+        if (!portalCredentials.password.trim()) {
+            toast.error("Enter a new password to reset credentials");
+            return;
+        }
+
+        setUpdatingPortalCredentials(true);
+        try {
+            await api.patch(`/students/${selectedStudent.id}/portal-credentials`, portalCredentials);
+            toast.success("Student portal credentials updated");
+            setPortalCredentials((prev) => ({ ...prev, password: "" }));
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Failed to update portal credentials");
+        } finally {
+            setUpdatingPortalCredentials(false);
+        }
     };
 
     const onUpload = async (file: File) => {
@@ -208,9 +259,15 @@ export default function StudentsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className=" text-2xl font-semibold">Students</h1>
-                    <p className="text-muted-foreground text-sm mt-1">{students.length} total students</p>
+                    <p className="text-muted-foreground text-sm mt-1">{visibleStudents.length} shown • {students.length} total students</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Input
+                        value={searchQuery}
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                        placeholder="Search student, phone, course, batch"
+                        className="w-72"
+                    />
                     <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
                         <Upload className="mr-2 h-4 w-4" /> Upload CSV
                     </Button>
@@ -240,21 +297,21 @@ export default function StudentsPage() {
                                     <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
                                 </TableCell>
                             </TableRow>
-                        ) : students.length === 0 ? (
+                        ) : visibleStudents.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                                    No students yet. Add your first student.
+                                    No matching students found.
                                 </TableCell>
                             </TableRow>
-                        ) : students.map((student, index) => {
+                        ) : visibleStudents.map((student, index) => {
                             const fee = feeSummaries[student.id];
                             return (
                                 <TableRow key={student.id}>
                                     <TableCell>{index + 1}</TableCell>
-                                    <TableCell className="font-medium">{student.name}</TableCell>
+                                    <TableCell className="font-medium max-w-[180px] truncate" title={student.name}>{student.name}</TableCell>
                                     <TableCell>{student.phone}</TableCell>
-                                    <TableCell>{student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}</TableCell>
-                                    <TableCell>{student.batchId ? (batchMap[student.batchId] ?? "-") : "-"}</TableCell>
+                                    <TableCell className="max-w-[180px] truncate" title={student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}>{student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}</TableCell>
+                                    <TableCell className="max-w-[180px] truncate" title={student.batchId ? (batchMap[student.batchId] ?? "-") : "-"}>{student.batchId ? (batchMap[student.batchId] ?? "-") : "-"}</TableCell>
                                     <TableCell className="text-right">{formatCurrency(fee?.totalFees ?? 0)}</TableCell>
                                     <TableCell className="text-right text-green-600">{formatCurrency(fee?.totalPaid ?? 0)}</TableCell>
                                     <TableCell className="text-right text-red-600">{formatCurrency(fee?.totalPending ?? 0)}</TableCell>
@@ -425,6 +482,34 @@ export default function StudentsPage() {
                             <div className="flex justify-between gap-4"><span className="text-muted-foreground">Total Fees</span><span>{formatCurrency(feeSummaries[selectedStudent.id]?.totalFees ?? 0)}</span></div>
                             <div className="flex justify-between gap-4"><span className="text-muted-foreground">Paid</span><span className="text-green-600">{formatCurrency(feeSummaries[selectedStudent.id]?.totalPaid ?? 0)}</span></div>
                             <div className="flex justify-between gap-4"><span className="text-muted-foreground">Pending</span><span className="text-red-600">{formatCurrency(feeSummaries[selectedStudent.id]?.totalPending ?? 0)}</span></div>
+
+                            <div className="mt-4 rounded border p-3 space-y-2">
+                                <p className="font-medium">Student Portal Credentials</p>
+                                <p className="text-xs text-muted-foreground">Institute can manually set/reset student login credentials.</p>
+                                <div className="grid gap-2 md:grid-cols-2">
+                                    <Input
+                                        placeholder="Username"
+                                        value={portalCredentials.username}
+                                        onChange={(event) => setPortalCredentials((prev) => ({ ...prev, username: event.target.value }))}
+                                    />
+                                    <Input
+                                        placeholder="Email"
+                                        value={portalCredentials.email}
+                                        onChange={(event) => setPortalCredentials((prev) => ({ ...prev, email: event.target.value }))}
+                                    />
+                                </div>
+                                <div className="flex gap-2">
+                                    <Input
+                                        type="password"
+                                        placeholder="New Password"
+                                        value={portalCredentials.password}
+                                        onChange={(event) => setPortalCredentials((prev) => ({ ...prev, password: event.target.value }))}
+                                    />
+                                    <Button onClick={updatePortalCredentials} disabled={updatingPortalCredentials}>
+                                        {updatingPortalCredentials ? "Saving..." : "Reset"}
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     ) : null}
                     <DialogFooter>

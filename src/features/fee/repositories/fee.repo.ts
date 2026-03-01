@@ -30,9 +30,9 @@ export const feeRepository = {
             orderBy: { createdAt: "desc" },
         }),
 
-    listPlansByStudent: async (studentId: string) =>
+    listPlansByStudent: async (instituteId: string, studentId: string) =>
         prisma.feePlan.findMany({
-            where: { studentId },
+            where: { instituteId, studentId },
             orderBy: { createdAt: "desc" },
         }),
 
@@ -72,6 +72,11 @@ export const feeRepository = {
         prisma.feeInstallment.findMany({
             where: { feePlanId },
             orderBy: { paidOn: "desc" },
+        }),
+
+    findInstallmentById: async (installmentId: string) =>
+        prisma.feeInstallment.findUnique({
+            where: { id: installmentId },
         }),
 
     updateInstallment: async (installmentId: string, data: { status?: "PENDING" | "PAID" | "OVERDUE"; paidOn?: Date | null; amount?: number; note?: string }) =>
@@ -223,8 +228,8 @@ export const feeRepository = {
         studentId?: string;
         method?: string;
         limit?: number;
-    }) =>
-        prisma.payment.findMany({
+    }) => {
+        const payments = await prisma.payment.findMany({
             where: {
                 instituteId: input.instituteId,
                 ...(input.studentId ? { studentId: input.studentId } : {}),
@@ -238,18 +243,28 @@ export const feeRepository = {
                     }
                     : {}),
             },
-            include: {
-                student: {
-                    select: {
-                        id: true,
-                        name: true,
-                        phone: true,
-                    },
-                },
-            },
             orderBy: { paidOn: "desc" },
             ...(input.limit ? { take: input.limit } : {}),
-        }),
+        });
+
+        const studentIds = [...new Set(payments.map((payment) => payment.studentId))];
+        const students = studentIds.length
+            ? await prisma.student.findMany({
+                where: { id: { in: studentIds }, instituteId: input.instituteId },
+                select: { id: true, name: true, phone: true },
+            })
+            : [];
+        const studentMap = Object.fromEntries(students.map((student) => [student.id, student]));
+
+        return payments.map((payment) => ({
+            ...payment,
+            student: studentMap[payment.studentId] ?? {
+                id: payment.studentId,
+                name: "Unknown",
+                phone: "",
+            },
+        }));
+    },
 
     countFeesDueOnDate: async (instituteId: string, start: Date, end: Date) => {
         const plans = await prisma.feePlan.findMany({

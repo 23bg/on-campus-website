@@ -46,7 +46,7 @@ describe("/api/v1/students", () => {
     });
 
     it("POST creates student", async () => {
-        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "EDITOR" });
         mockStudentService.createStudent.mockResolvedValue({ id: "s1" });
 
         const request = new Request("http://localhost/api/v1/students", {
@@ -68,7 +68,7 @@ describe("/api/v1/students", () => {
     });
 
     it("POST returns service errors", async () => {
-        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "EDITOR" });
         mockStudentService.createStudent.mockRejectedValue(new AppError("Duplicate", 409, "DUPLICATE_STUDENT"));
 
         const request = new Request("http://localhost/api/v1/students", {

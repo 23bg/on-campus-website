@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, IndianRupee, AlertTriangle, GraduationCap, UserPlus, Users } from "lucide-react";
@@ -37,6 +41,24 @@ type Metrics = {
             phone: string;
         };
     }>;
+    followUpOverview?: {
+        todayCount: number;
+        overdueCount: number;
+        todaysFollowUps: Array<{
+            id: string;
+            name: string;
+            phone: string;
+            followUpAt?: string | null;
+            status: string;
+        }>;
+        overdueFollowUps: Array<{
+            id: string;
+            name: string;
+            phone: string;
+            followUpAt?: string | null;
+            status: string;
+        }>;
+    };
 };
 
 type Defaulter = {
@@ -54,6 +76,9 @@ export default function DashboardPage() {
     const [metrics, setMetrics] = useState<Metrics | null>(null);
     const [defaulters, setDefaulters] = useState<Defaulter[]>([]);
     const [loading, setLoading] = useState(true);
+    const [announcementTitle, setAnnouncementTitle] = useState("");
+    const [announcementBody, setAnnouncementBody] = useState("");
+    const [postingAnnouncement, setPostingAnnouncement] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -74,6 +99,28 @@ export default function DashboardPage() {
     }, []);
 
     const formatCurrency = (v: number) => `₹${v.toLocaleString("en-IN")}`;
+
+    const postAnnouncement = async () => {
+        if (!announcementTitle.trim() || !announcementBody.trim()) {
+            toast.error("Title and message are required");
+            return;
+        }
+
+        setPostingAnnouncement(true);
+        try {
+            await api.post("/announcements", {
+                title: announcementTitle,
+                body: announcementBody,
+            });
+            setAnnouncementTitle("");
+            setAnnouncementBody("");
+            toast.success("Announcement posted");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Failed to post announcement");
+        } finally {
+            setPostingAnnouncement(false);
+        }
+    };
 
     // Reordered: Fees first (money), then admissions, leads, students
     const cards = [
@@ -135,7 +182,93 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
 
+                    <Card className="mt-6">
+                        <CardHeader>
+                            <CardTitle className="text-base">Post Announcement</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <Input
+                                placeholder="Announcement title"
+                                value={announcementTitle}
+                                onChange={(event) => setAnnouncementTitle(event.target.value)}
+                                maxLength={120}
+                            />
+                            <Textarea
+                                placeholder="Holiday notice, exam schedule, batch update..."
+                                value={announcementBody}
+                                onChange={(event) => setAnnouncementBody(event.target.value)}
+                                rows={3}
+                                maxLength={1000}
+                            />
+                            <div className="flex justify-end">
+                                <Button onClick={postAnnouncement} disabled={postingAnnouncement}>
+                                    {postingAnnouncement ? "Posting..." : "Post Announcement"}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Today&apos;s Follow-ups</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {!metrics?.followUpOverview?.todaysFollowUps?.length ? (
+                                    <p className="text-sm text-muted-foreground">No follow-ups scheduled for today.</p>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Phone</TableHead>
+                                                <TableHead>Date</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {metrics.followUpOverview.todaysFollowUps.map((lead) => (
+                                                <TableRow key={lead.id}>
+                                                    <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                                    <TableCell>{lead.phone}</TableCell>
+                                                    <TableCell>{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base text-red-600">Overdue Follow-ups</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {!metrics?.followUpOverview?.overdueFollowUps?.length ? (
+                                    <p className="text-sm text-muted-foreground">No overdue follow-ups.</p>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Phone</TableHead>
+                                                <TableHead>Due</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {metrics.followUpOverview.overdueFollowUps.map((lead) => (
+                                                <TableRow key={lead.id}>
+                                                    <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                                    <TableCell>{lead.phone}</TableCell>
+                                                    <TableCell className="text-red-600">{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-base">Recent Leads</CardTitle>
@@ -155,7 +288,7 @@ export default function DashboardPage() {
                                         <TableBody>
                                             {metrics.recentLeads.map((lead) => (
                                                 <TableRow key={lead.id}>
-                                                    <TableCell className="font-medium">{lead.name}</TableCell>
+                                                    <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
                                                     <TableCell>{lead.phone}</TableCell>
                                                     <TableCell>{lead.status}</TableCell>
                                                 </TableRow>
@@ -185,9 +318,9 @@ export default function DashboardPage() {
                                         <TableBody>
                                             {metrics.recentPayments.map((payment) => (
                                                 <TableRow key={payment.id}>
-                                                    <TableCell className="font-medium">{payment.student.name}</TableCell>
+                                                    <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
                                                     <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
-                                                    <TableCell>{payment.method || "-"}</TableCell>
+                                                    <TableCell className="max-w-[140px] truncate" title={payment.method || "-"}>{payment.method || "-"}</TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -224,9 +357,9 @@ export default function DashboardPage() {
                                         {defaulters.map((d, index) => (
                                             <TableRow key={d.studentId}>
                                                 <TableCell>{index + 1}</TableCell>
-                                                <TableCell className="font-medium">{d.studentName}</TableCell>
+                                                <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
                                                 <TableCell>{d.phone}</TableCell>
-                                                <TableCell>{d.courseName}</TableCell>
+                                                <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
                                                 <TableCell className="text-right">{formatCurrency(d.totalFees)}</TableCell>
                                                 <TableCell className="text-right text-green-600">{formatCurrency(d.totalPaid)}</TableCell>
                                                 <TableCell className="text-right font-medium text-red-600">{formatCurrency(d.pending)}</TableCell>

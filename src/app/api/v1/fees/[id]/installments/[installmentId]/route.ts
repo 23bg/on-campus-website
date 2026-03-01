@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
+import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { feeService } from "@/features/fee/services/fee.service";
 import { toAppError } from "@/lib/utils/error";
 
@@ -16,12 +17,19 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
             );
         }
 
+        if (!canWriteInstituteData(session.role)) {
+            return NextResponse.json(
+                { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
+                { status: 403 }
+            );
+        }
+
         const { installmentId } = await context.params;
         const body = await req.json();
 
         const data = body.status === "PAID"
-            ? await feeService.markInstallmentPaid(installmentId)
-            : await feeService.updateInstallmentStatus(installmentId, body.status);
+            ? await feeService.markInstallmentPaid(session.instituteId, installmentId)
+            : await feeService.updateInstallmentStatus(session.instituteId, installmentId, body.status);
 
         return NextResponse.json({ success: true, data });
     } catch (error) {
@@ -43,8 +51,15 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
             );
         }
 
+        if (!canWriteInstituteData(session.role)) {
+            return NextResponse.json(
+                { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
+                { status: 403 }
+            );
+        }
+
         const { installmentId } = await context.params;
-        const data = await feeService.deleteInstallment(installmentId);
+        const data = await feeService.deleteInstallment(session.instituteId, installmentId);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

@@ -42,6 +42,16 @@
         PUBLIC: {
             LEAD: (slug: string) => `/public/${slug}/lead`,
         },
+        STUDENT_AUTH: {
+            LOGIN: '/student-auth/login',
+            LOGOUT: '/student-auth/logout',
+        },
+        STUDENT_PORTAL: {
+            ME: '/student-portal/me',
+        },
+        ANNOUNCEMENTS: {
+            ROOT: '/announcements',
+        },
         BILLING: {
             ROOT: '/billing',
         },
@@ -78,6 +88,8 @@
         LEADS: {
             ROOT: '/leads',
             BY_ID: (id: string) => `/leads/${id}`,
+            TIMELINE: (id: string) => `/leads/${id}/timeline`,
         },
+        SEARCH: '/search',
     },
 }

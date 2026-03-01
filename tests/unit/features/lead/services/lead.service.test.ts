@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/utils/error";
 
-const { mockLeadRepo, mockStudentRepo, mockInstituteRepo } = vi.hoisted(() => ({
+const { mockLeadRepo, mockStudentRepo, mockInstituteRepo, mockLeadActivityService } = vi.hoisted(() => ({
     mockLeadRepo: {
         create: vi.fn(),
+        findByPhoneInInstitute: vi.fn(),
         updateStatus: vi.fn(),
         findByIdInInstitute: vi.fn(),
         updateByIdInInstitute: vi.fn(),
@@ -15,6 +16,10 @@ const { mockLeadRepo, mockStudentRepo, mockInstituteRepo } = vi.hoisted(() => ({
     },
     mockInstituteRepo: {
         findBySlug: vi.fn(),
+    },
+    mockLeadActivityService: {
+        log: vi.fn(),
+        listByLead: vi.fn(),
     },
 }));
 
@@ -30,6 +35,10 @@ vi.mock("@/features/institute/repositories/institute.repo", () => ({
     instituteRepository: mockInstituteRepo,
 }));
 
+vi.mock("@/features/lead/services/lead-activity.service", () => ({
+    leadActivityService: mockLeadActivityService,
+}));
+
 import { leadService } from "@/features/lead/services/lead.service";
 
 describe("leadService", () => {
@@ -38,6 +47,7 @@ describe("leadService", () => {
     });
 
     it("creates lead with NEW status", async () => {
+        mockLeadRepo.findByPhoneInInstitute.mockResolvedValue(null);
         mockLeadRepo.create.mockResolvedValue({ id: "l1" });
         await leadService.createLead({
             instituteId: "inst1",
@@ -46,6 +56,21 @@ describe("leadService", () => {
             email: "r@test.com",
         });
         expect(mockLeadRepo.create).toHaveBeenCalledWith(expect.objectContaining({ status: "NEW" }));
+    });
+
+    it("throws duplicate lead error for same phone in institute", async () => {
+        mockLeadRepo.findByPhoneInInstitute.mockResolvedValue({ id: "existing-lead", phone: "9876543210" });
+
+        await expect(
+            leadService.createLead({
+                instituteId: "inst1",
+                name: "Rahul",
+                phone: "9876543210",
+            })
+        ).rejects.toMatchObject<AppError>({
+            statusCode: 409,
+            code: "DUPLICATE_LEAD",
+        });
     });
 
     it("throws for missing institute in create by slug", async () => {
@@ -117,6 +142,27 @@ describe("leadService", () => {
             email: "",
             source: "",
             status: "NEW",
+        });
+    });
+
+    it("returns lead timeline entries for existing lead", async () => {
+        mockLeadRepo.findByIdInInstitute.mockResolvedValue({ id: "l1" });
+        mockLeadActivityService.listByLead.mockResolvedValue([
+            { activityType: "LEAD_CREATED", title: "Lead created", createdAt: "2026-03-01T00:00:00.000Z" },
+        ]);
+
+        const result = await leadService.getLeadTimeline("inst1", "l1");
+
+        expect(mockLeadActivityService.listByLead).toHaveBeenCalledWith("inst1", "l1");
+        expect(result).toHaveLength(1);
+    });
+
+    it("throws when timeline requested for missing lead", async () => {
+        mockLeadRepo.findByIdInInstitute.mockResolvedValue(null);
+
+        await expect(leadService.getLeadTimeline("inst1", "missing")).rejects.toMatchObject<AppError>({
+            statusCode: 404,
+            code: "LEAD_NOT_FOUND",
         });
     });
 });

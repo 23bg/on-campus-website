@@ -166,11 +166,11 @@ export default function BatchesPage() {
                         ) : batches.map((batch, index) => (
                             <TableRow key={batch.id}>
                                 <TableCell>{index + 1}</TableCell>
-                                <TableCell className="font-medium">{batch.name}</TableCell>
-                                <TableCell>{courseMap[batch.courseId] ?? "-"}</TableCell>
+                                <TableCell className="font-medium max-w-[180px] truncate" title={batch.name}>{batch.name}</TableCell>
+                                <TableCell className="max-w-[180px] truncate" title={courseMap[batch.courseId] ?? "-"}>{courseMap[batch.courseId] ?? "-"}</TableCell>
                                 <TableCell>{batch.startDate ? new Date(batch.startDate).toLocaleDateString() : "-"}</TableCell>
-                                <TableCell>{batch.schedule || "-"}</TableCell>
-                                <TableCell>{batch.teacherId ? (teacherMap[batch.teacherId] ?? "-") : "-"}</TableCell>
+                                <TableCell className="max-w-[180px] truncate" title={batch.schedule || "-"}>{batch.schedule || "-"}</TableCell>
+                                <TableCell className="max-w-[180px] truncate" title={batch.teacherId ? (teacherMap[batch.teacherId] ?? "-") : "-"}>{batch.teacherId ? (teacherMap[batch.teacherId] ?? "-") : "-"}</TableCell>
                                 <TableCell>
                                     <div className="flex gap-1">
                                         <Button variant="ghost" size="icon" onClick={() => openEdit(batch)}>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
+import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { leadService } from "@/features/lead/services/lead.service";
 import { toAppError } from "@/lib/utils/error";
 
@@ -14,6 +15,13 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
             return NextResponse.json(
                 { success: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } },
                 { status: 401 }
+            );
+        }
+
+        if (!canWriteInstituteData(session.role)) {
+            return NextResponse.json(
+                { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
+                { status: 403 }
             );
         }
 

@@ -20,8 +20,8 @@ export const PLAN_CONFIG: Record<PlanType, PlanConfig> = {
         key: "TEAM",
         name: "Growth System",
         priceMonthly: 1999,
-        userLimit: 5,
-        tagline: "For admission teams and counselors",
+        userLimit: 10,
+        tagline: "For institutes with admission staff",
     },
 };
 

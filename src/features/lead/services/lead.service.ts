@@ -3,6 +3,7 @@ import { leadRepository } from "@/features/lead/repositories/lead.repo";
 import { studentRepository } from "@/features/student/repositories/student.repo";
 import { instituteRepository } from "@/features/institute/repositories/institute.repo";
 import { AppError } from "@/lib/utils/error";
+import { leadActivityService } from "@/features/lead/services/lead-activity.service";
 
 const leadInputSchema = z.object({
     instituteId: z.string().min(1),
@@ -25,11 +26,38 @@ const listInputSchema = z.object({
 export const leadService = {
     async createLead(payload: unknown) {
         const input = leadInputSchema.parse(payload);
-        return leadRepository.create({
+        const duplicate = await leadRepository.findByPhoneInInstitute(input.instituteId, input.phone);
+        if (duplicate) {
+            throw new AppError("Lead already exists with this mobile number", 409, "DUPLICATE_LEAD", {
+                existingLeadId: duplicate.id,
+                existingPhone: duplicate.phone,
+            });
+        }
+
+        const created = await leadRepository.create({
             ...input,
             followUpAt: input.followUpAt ? new Date(input.followUpAt) : undefined,
             status: "NEW",
         });
+
+        await leadActivityService.log({
+            leadId: created.id,
+            instituteId: created.instituteId,
+            activityType: "LEAD_CREATED",
+            title: "Lead created",
+        });
+
+        if (created.followUpAt) {
+            await leadActivityService.log({
+                leadId: created.id,
+                instituteId: created.instituteId,
+                activityType: "FOLLOWUP_SCHEDULED",
+                title: "Follow-up scheduled",
+                description: `Next follow-up on ${created.followUpAt.toISOString().slice(0, 10)}`,
+            });
+        }
+
+        return created;
     },
 
     async createLeadBySlug(
@@ -55,11 +83,26 @@ export const leadService = {
     },
 
     async updateStatus(instituteId: string, leadId: string, status: string) {
+        const beforeUpdate = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        if (!beforeUpdate) {
+            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+        }
+
         await leadRepository.updateStatus({ instituteId, leadId, status });
         const updated = await leadRepository.findByIdInInstitute(instituteId, leadId);
 
         if (!updated) {
             throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+        }
+
+        if (beforeUpdate.status !== status) {
+            await leadActivityService.log({
+                leadId: updated.id,
+                instituteId,
+                activityType: "STATUS_CHANGED",
+                title: "Status changed",
+                description: `${beforeUpdate.status} → ${status}`,
+            });
         }
 
         if (status === "ADMITTED") {
@@ -73,6 +116,13 @@ export const leadService = {
                 name: updated.name,
                 phone: updated.phone,
                 email: updated.email ?? undefined,
+            });
+
+            await leadActivityService.log({
+                leadId: updated.id,
+                instituteId,
+                activityType: "CONVERTED_TO_STUDENT",
+                title: "Converted to student",
             });
         }
 
@@ -96,6 +146,11 @@ export const leadService = {
             return this.updateStatus(instituteId, leadId, payload.status);
         }
 
+        const existing = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        if (!existing) {
+            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+        }
+
         if (payload.message !== undefined && payload.message !== null) {
             z.string().trim().max(1024).parse(payload.message);
         }
@@ -117,7 +172,49 @@ export const leadService = {
             throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
         }
 
+        if (
+            payload.message !== undefined &&
+            payload.message !== null &&
+            payload.message.trim().length > 0 &&
+            payload.message !== (existing.message ?? "")
+        ) {
+            await leadActivityService.log({
+                leadId: updated.id,
+                instituteId,
+                activityType: "NOTE_ADDED",
+                title: "Note added",
+            });
+        }
+
+        if (existing.followUpAt?.toISOString() !== updated.followUpAt?.toISOString()) {
+            if (updated.followUpAt) {
+                await leadActivityService.log({
+                    leadId: updated.id,
+                    instituteId,
+                    activityType: "FOLLOWUP_SCHEDULED",
+                    title: "Follow-up scheduled",
+                    description: `Next follow-up on ${updated.followUpAt.toISOString().slice(0, 10)}`,
+                });
+            } else if (existing.followUpAt && !updated.followUpAt) {
+                await leadActivityService.log({
+                    leadId: updated.id,
+                    instituteId,
+                    activityType: "FOLLOWUP_COMPLETED",
+                    title: "Follow-up completed",
+                });
+            }
+        }
+
         return updated;
+    },
+
+    async getLeadTimeline(instituteId: string, leadId: string) {
+        const lead = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        if (!lead) {
+            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+        }
+
+        return leadActivityService.listByLead(instituteId, leadId);
     },
 
     async searchLeads(

@@ -114,14 +114,24 @@ export const feeService = {
         });
     },
 
-    async markInstallmentPaid(installmentId: string) {
+    async markInstallmentPaid(instituteId: string, installmentId: string) {
+        const installment = await feeRepository.findInstallmentById(installmentId);
+        if (!installment || installment.instituteId !== instituteId) {
+            throw new AppError("Installment not found", 404, "INSTALLMENT_NOT_FOUND");
+        }
+
         return feeRepository.updateInstallment(installmentId, {
             status: "PAID",
             paidOn: new Date(),
         });
     },
 
-    async updateInstallmentStatus(installmentId: string, status: "PENDING" | "PAID" | "OVERDUE") {
+    async updateInstallmentStatus(instituteId: string, installmentId: string, status: "PENDING" | "PAID" | "OVERDUE") {
+        const installment = await feeRepository.findInstallmentById(installmentId);
+        if (!installment || installment.instituteId !== instituteId) {
+            throw new AppError("Installment not found", 404, "INSTALLMENT_NOT_FOUND");
+        }
+
         return feeRepository.updateInstallment(installmentId, {
             status,
             paidOn: status === "PAID" ? new Date() : null,
@@ -132,14 +142,19 @@ export const feeService = {
         return feeRepository.listInstallmentsByPlan(feePlanId);
     },
 
-    async deleteInstallment(installmentId: string) {
+    async deleteInstallment(instituteId: string, installmentId: string) {
+        const installment = await feeRepository.findInstallmentById(installmentId);
+        if (!installment || installment.instituteId !== instituteId) {
+            throw new AppError("Installment not found", 404, "INSTALLMENT_NOT_FOUND");
+        }
+
         await feeRepository.removeInstallment(installmentId);
         return { success: true };
     },
 
     // Student payment summary
-    async getStudentPaymentSummary(studentId: string) {
-        const plans = await feeRepository.listPlansByStudent(studentId);
+    async getStudentPaymentSummary(instituteId: string, studentId: string) {
+        const plans = await feeRepository.listPlansByStudent(instituteId, studentId);
         let totalFees = 0;
         let totalPaid = 0;
 

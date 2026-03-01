@@ -20,9 +20,14 @@ type InstituteProfile = {
     description: string;
     phone: string;
     whatsapp: string;
+    addressLine1: string;
+    addressLine2: string;
     city: string;
     state: string;
-    address: string;
+    region: string;
+    postalCode: string;
+    country: string;
+    countryCode: string;
     timings: string;
     logo: string;
     heroImage: string;
@@ -75,9 +80,14 @@ const instituteProfileSchema = z.object({
     description: z.string().trim().max(1024, "Description cannot exceed 1024 characters."),
     phone: optionalIndianPhoneSchema,
     whatsapp: optionalIndianPhoneSchema,
+    addressLine1: optionalTextWithMinMax(5, 240, "Address line 1 must be at least 5 characters.", "Address line 1 cannot exceed 240 characters."),
+    addressLine2: z.string().trim().max(240, "Address line 2 cannot exceed 240 characters."),
     city: optionalTextWithMinMax(2, 60, "City must be at least 2 characters.", "City cannot exceed 60 characters."),
     state: optionalTextWithMinMax(2, 60, "State must be at least 2 characters.", "State cannot exceed 60 characters."),
-    address: optionalTextWithMinMax(5, 240, "Address must be at least 5 characters.", "Address cannot exceed 240 characters."),
+    region: z.string().trim().max(60, "Region cannot exceed 60 characters."),
+    postalCode: z.string().trim().max(12, "Postal code cannot exceed 12 characters."),
+    country: z.string().trim().max(60, "Country cannot exceed 60 characters."),
+    countryCode: z.string().trim().max(8, "Country code cannot exceed 8 characters."),
     timings: z.string().trim().max(80, "Timings cannot exceed 80 characters."),
     logo: optionalUrlSchema,
     heroImage: optionalUrlSchema,
@@ -92,7 +102,7 @@ const instituteProfileSchema = z.object({
 export default function DashboardProfilePage() {
     const defaultValues: InstituteProfile = {
         name: "", slug: "", description: "", phone: "", whatsapp: "",
-        city: "", state: "", address: "", timings: "", logo: "", heroImage: "", googleMapLink: "",
+        addressLine1: "", addressLine2: "", city: "", state: "", region: "", postalCode: "", country: "India", countryCode: "", timings: "", logo: "", heroImage: "", googleMapLink: "",
         website: "", instagram: "", facebook: "", youtube: "", linkedin: "",
     };
 
@@ -119,9 +129,14 @@ export default function DashboardProfilePage() {
                 description: d.description ?? "",
                 phone: d.phone ?? "",
                 whatsapp: d.whatsapp ?? "",
-                city: d.city ?? "",
-                state: d.state ?? "",
-                address: d.address ?? "",
+                addressLine1: d.address?.addressLine1 ?? "",
+                addressLine2: d.address?.addressLine2 ?? "",
+                city: d.address?.city ?? "",
+                state: d.address?.state ?? "",
+                region: d.address?.region ?? "",
+                postalCode: d.address?.postalCode ?? "",
+                country: d.address?.country ?? "India",
+                countryCode: d.address?.countryCode ?? "",
                 timings: d.timings ?? "",
                 logo: d.logo ?? "",
                 heroImage: d.heroImage ?? d.banner ?? "",
@@ -141,6 +156,16 @@ export default function DashboardProfilePage() {
         try {
             await api.put(API.INTERNAL.INSTITUTE.ROOT, {
                 ...form,
+                address: {
+                    addressLine1: form.addressLine1,
+                    addressLine2: form.addressLine2,
+                    city: form.city,
+                    state: form.state,
+                    region: form.region,
+                    postalCode: form.postalCode,
+                    country: form.country,
+                    countryCode: form.countryCode,
+                },
                 banner: form.heroImage,
                 socialLinks: {
                     website: form.website,
@@ -213,6 +238,33 @@ export default function DashboardProfilePage() {
                             )} />
                         </Field>
                         <Field>
+                            <FieldLabel>Address Line 1</FieldLabel>
+                            <Controller name="addressLine1" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="Street, building, area" minLength={5} maxLength={240} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Address Line 2</FieldLabel>
+                            <Controller name="addressLine2" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="Landmark (optional)" maxLength={240} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Timings</FieldLabel>
+                            <Controller name="timings" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="e.g. Mon-Sat 9AM-6PM" maxLength={80} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
                             <FieldLabel>City</FieldLabel>
                             <Controller name="city" control={control} render={({ field, fieldState }) => (
                                 <>
@@ -231,19 +283,37 @@ export default function DashboardProfilePage() {
                             )} />
                         </Field>
                         <Field>
-                            <FieldLabel>Timings</FieldLabel>
-                            <Controller name="timings" control={control} render={({ field, fieldState }) => (
+                            <FieldLabel>Region</FieldLabel>
+                            <Controller name="region" control={control} render={({ field, fieldState }) => (
                                 <>
-                                    <Input {...field} placeholder="e.g. Mon-Sat 9AM-6PM" maxLength={80} />
+                                    <Input {...field} placeholder="Region (optional)" maxLength={60} />
                                     <FieldError errors={[fieldState.error]} />
                                 </>
                             )} />
                         </Field>
-                        <Field className="md:col-span-2">
-                            <FieldLabel>Address</FieldLabel>
-                            <Controller name="address" control={control} render={({ field, fieldState }) => (
+                        <Field>
+                            <FieldLabel>Postal Code</FieldLabel>
+                            <Controller name="postalCode" control={control} render={({ field, fieldState }) => (
                                 <>
-                                    <InputGroupTextarea {...field} placeholder="Full address" rows={3} minLength={5} maxLength={240} />
+                                    <Input {...field} placeholder="Postal / ZIP" maxLength={12} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Country</FieldLabel>
+                            <Controller name="country" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="India" maxLength={60} />
+                                    <FieldError errors={[fieldState.error]} />
+                                </>
+                            )} />
+                        </Field>
+                        <Field>
+                            <FieldLabel>Country Code</FieldLabel>
+                            <Controller name="countryCode" control={control} render={({ field, fieldState }) => (
+                                <>
+                                    <Input {...field} placeholder="IN" maxLength={8} />
                                     <FieldError errors={[fieldState.error]} />
                                 </>
                             )} />

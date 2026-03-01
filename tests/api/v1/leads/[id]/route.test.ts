@@ -38,7 +38,7 @@ describe("PATCH /api/v1/leads/[id]", () => {
     });
 
     it("returns bad request when payload is empty", async () => {
-        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "MANAGER" });
 
         const request = new Request("http://localhost/api/v1/leads/l1", {
             method: "PATCH",
@@ -54,8 +54,26 @@ describe("PATCH /api/v1/leads/[id]", () => {
         expect(body.error.code).toBe("INVALID_PAYLOAD");
     });
 
+    it("returns forbidden for viewer role", async () => {
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "VIEWER" });
+
+        const request = new Request("http://localhost/api/v1/leads/l1", {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ status: "CONTACTED" }),
+        });
+
+        const response = await PATCH(request as never, { params: Promise.resolve({ id: "l1" }) });
+        const body = await response.json();
+
+        expect(response.status).toBe(403);
+        expect(body.success).toBe(false);
+        expect(body.error.code).toBe("FORBIDDEN");
+        expect(mockLeadService.updateLead).not.toHaveBeenCalled();
+    });
+
     it("updates lead when payload is valid", async () => {
-        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "MANAGER" });
         mockLeadService.updateLead.mockResolvedValue({ id: "l1", status: "ADMITTED" });
 
         const request = new Request("http://localhost/api/v1/leads/l1", {

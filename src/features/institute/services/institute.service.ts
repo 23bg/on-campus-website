@@ -16,8 +16,24 @@ const instituteNameSchema = z.string().trim().min(2, "Institute name must be at 
 const slugInputSchema = z.string().trim().min(2, "Slug must be at least 2 characters").max(80, "Slug cannot exceed 80 characters");
 const descriptionSchema = z.string().trim().max(1024, "Description cannot exceed 1024 characters").optional().or(z.literal(""));
 const cityStateSchema = z.string().trim().min(2, "Must be at least 2 characters").max(60, "Cannot exceed 60 characters").optional().or(z.literal(""));
-const addressSchema = z.string().trim().min(5, "Address must be at least 5 characters").max(240, "Address cannot exceed 240 characters").optional().or(z.literal(""));
+const addressLineSchema = z.string().trim().min(5, "Address line 1 must be at least 5 characters").max(240, "Address line 1 cannot exceed 240 characters").optional().or(z.literal(""));
+const addressLine2Schema = z.string().trim().max(240, "Address line 2 cannot exceed 240 characters").optional().or(z.literal(""));
+const regionSchema = z.string().trim().max(60, "Region cannot exceed 60 characters").optional().or(z.literal(""));
+const postalCodeSchema = z.string().trim().min(4, "Postal code must be at least 4 characters").max(12, "Postal code cannot exceed 12 characters").optional().or(z.literal(""));
+const countrySchema = z.string().trim().min(2, "Country must be at least 2 characters").max(60, "Country cannot exceed 60 characters").optional().or(z.literal(""));
+const countryCodeSchema = z.string().trim().max(8, "Country code cannot exceed 8 characters").optional().or(z.literal(""));
 const timingsSchema = z.string().trim().max(80, "Timings cannot exceed 80 characters").optional().or(z.literal(""));
+
+type AddressInput = {
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    state?: string;
+    region?: string;
+    postalCode?: string;
+    country?: string;
+    countryCode?: string;
+};
 
 const normalizeSlug = (name: string): string =>
     name
@@ -41,12 +57,133 @@ const normalizeIndianPhone = (value: string | undefined): string | undefined => 
     return digitsOnly;
 };
 
+const normalizeText = (value: string | undefined): string | null | undefined => {
+    if (value === undefined) return undefined;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+};
+
+const hasAnyAddressInput = (address: AddressInput): boolean =>
+    Object.values(address).some((value) => value !== undefined);
+
+const toAddressInput = (payload: {
+    address?: AddressInput | string;
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    state?: string;
+    region?: string;
+    postalCode?: string;
+    country?: string;
+    countryCode?: string;
+}): AddressInput => {
+    const fromObject = typeof payload.address === "object" && payload.address !== null ? payload.address : {};
+    const fromString = typeof payload.address === "string" ? payload.address : undefined;
+
+    return {
+        addressLine1: payload.addressLine1 ?? fromObject.addressLine1 ?? fromString,
+        addressLine2: payload.addressLine2 ?? fromObject.addressLine2,
+        city: payload.city ?? fromObject.city,
+        state: payload.state ?? fromObject.state,
+        region: payload.region ?? fromObject.region,
+        postalCode: payload.postalCode ?? fromObject.postalCode,
+        country: payload.country ?? fromObject.country,
+        countryCode: payload.countryCode ?? fromObject.countryCode,
+    };
+};
+
+const validateAddressInput = (address: AddressInput) => {
+    if (address.addressLine1 !== undefined) {
+        addressLineSchema.parse(address.addressLine1);
+    }
+    if (address.addressLine2 !== undefined) {
+        addressLine2Schema.parse(address.addressLine2);
+    }
+    if (address.city !== undefined) {
+        cityStateSchema.parse(address.city);
+    }
+    if (address.state !== undefined) {
+        cityStateSchema.parse(address.state);
+    }
+    if (address.region !== undefined) {
+        regionSchema.parse(address.region);
+    }
+    if (address.postalCode !== undefined) {
+        postalCodeSchema.parse(address.postalCode);
+    }
+    if (address.country !== undefined) {
+        countrySchema.parse(address.country);
+    }
+    if (address.countryCode !== undefined) {
+        countryCodeSchema.parse(address.countryCode);
+    }
+};
+
+const mergeAddress = (
+    current: {
+        addressLine1?: string | null;
+        addressLine2?: string | null;
+        city?: string | null;
+        state?: string | null;
+        region?: string | null;
+        postalCode?: string | null;
+        country?: string | null;
+        countryCode?: string | null;
+    } | null | undefined,
+    incoming: AddressInput
+) => {
+    const merged = {
+        addressLine1: normalizeText(incoming.addressLine1) ?? current?.addressLine1 ?? null,
+        addressLine2: normalizeText(incoming.addressLine2) ?? current?.addressLine2 ?? null,
+        city: normalizeText(incoming.city) ?? current?.city ?? null,
+        state: normalizeText(incoming.state) ?? current?.state ?? null,
+        region: normalizeText(incoming.region) ?? current?.region ?? null,
+        postalCode: normalizeText(incoming.postalCode) ?? current?.postalCode ?? null,
+        country: normalizeText(incoming.country) ?? current?.country ?? "India",
+        countryCode: normalizeText(incoming.countryCode) ?? current?.countryCode ?? null,
+    };
+
+    const hasContent = Object.values(merged).some((value) => Boolean(value));
+    return hasContent ? merged : null;
+};
+
+const addressToText = (address: {
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    region?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+} | null | undefined): string =>
+    [
+        address?.addressLine1,
+        address?.addressLine2,
+        address?.city,
+        address?.state,
+        address?.region,
+        address?.postalCode,
+        address?.country,
+    ]
+        .filter((value): value is string => Boolean(value && value.trim().length > 0))
+        .join(", ");
+
 const withSocialLinks = <T extends {
     websiteUrl?: string | null;
     instagramUrl?: string | null;
     facebookUrl?: string | null;
     youtubeUrl?: string | null;
     linkedinUrl?: string | null;
+    address?: {
+        addressLine1?: string | null;
+        addressLine2?: string | null;
+        city?: string | null;
+        state?: string | null;
+        region?: string | null;
+        postalCode?: string | null;
+        country?: string | null;
+        countryCode?: string | null;
+    } | null;
 }>(institute: T) => ({
     ...institute,
     socialLinks: {
@@ -56,6 +193,7 @@ const withSocialLinks = <T extends {
         youtube: institute.youtubeUrl ?? "",
         linkedin: institute.linkedinUrl ?? "",
     },
+    addressText: addressToText(institute.address),
 });
 
 const hasText = (value: string | null | undefined): boolean => Boolean(value && value.trim().length > 0);
@@ -91,9 +229,15 @@ export const instituteService = {
             description?: string;
             phone?: string;
             whatsapp?: string;
+            address?: AddressInput | string;
+            addressLine1?: string;
+            addressLine2?: string;
             city?: string;
             state?: string;
-            address?: string;
+            region?: string;
+            postalCode?: string;
+            country?: string;
+            countryCode?: string;
             timings?: string;
             logo?: string;
             banner?: string;
@@ -134,14 +278,9 @@ export const instituteService = {
         if (payload.description !== undefined) {
             descriptionSchema.parse(payload.description);
         }
-        if (payload.city !== undefined) {
-            cityStateSchema.parse(payload.city);
-        }
-        if (payload.state !== undefined) {
-            cityStateSchema.parse(payload.state);
-        }
-        if (payload.address !== undefined) {
-            addressSchema.parse(payload.address);
+        const incomingAddress = toAddressInput(payload);
+        if (hasAnyAddressInput(incomingAddress)) {
+            validateAddressInput(incomingAddress);
         }
         if (payload.timings !== undefined) {
             timingsSchema.parse(payload.timings);
@@ -179,15 +318,15 @@ export const instituteService = {
 
         const effectiveName = payload.name ?? current.name ?? "";
         const effectivePhone = normalizedPhone ?? current.phone;
-        const effectiveCity = payload.city ?? current.city;
-        const effectiveState = payload.state ?? current.state;
-        const effectiveAddress = payload.address ?? current.address;
+        const nextAddress = hasAnyAddressInput(incomingAddress)
+            ? mergeAddress(current.address, incomingAddress)
+            : current.address;
         const isOnboarded =
             hasText(effectiveName) &&
             hasText(effectivePhone) &&
-            hasText(effectiveCity) &&
-            hasText(effectiveState) &&
-            hasText(effectiveAddress);
+            hasText(nextAddress?.city) &&
+            hasText(nextAddress?.state) &&
+            hasText(nextAddress?.addressLine1);
 
         const updated = await instituteRepository.updateById(instituteId, {
             name: payload.name,
@@ -195,9 +334,9 @@ export const instituteService = {
             description: payload.description || null,
             phone: normalizedPhone || null,
             whatsapp: normalizedWhatsapp || null,
-            city: payload.city || null,
-            state: payload.state || null,
-            address: payload.address || null,
+            address: hasAnyAddressInput(incomingAddress)
+                ? mergeAddress(current.address, incomingAddress)
+                : undefined,
             timings: payload.timings || null,
             logo: payload.logo || null,
             banner: payload.banner || null,
@@ -219,9 +358,15 @@ export const instituteService = {
         payload: {
             name: string;
             phone: string;
-            city: string;
-            state: string;
-            address: string;
+            address: AddressInput | string;
+            addressLine1?: string;
+            addressLine2?: string;
+            city?: string;
+            state?: string;
+            region?: string;
+            postalCode?: string;
+            country?: string;
+            countryCode?: string;
             whatsapp?: string;
             description?: string;
             website?: string;
@@ -243,17 +388,21 @@ export const instituteService = {
             phoneSchema.parse(normalizedWhatsapp);
         }
 
-        const requiredFields = [payload.name, payload.city, payload.state, payload.address];
-        requiredFields.forEach((field) => {
-            if (!field || !field.trim()) {
-                throw new AppError("Name, city, state and address are required", 400, "ONBOARDING_REQUIRED_FIELDS");
-            }
-        });
+        const incomingAddress = toAddressInput(payload);
+
+        if (!payload.name.trim()) {
+            throw new AppError("Name is required", 400, "ONBOARDING_REQUIRED_FIELDS");
+        }
+        if (!incomingAddress.addressLine1?.trim() || !incomingAddress.city?.trim() || !incomingAddress.state?.trim()) {
+            throw new AppError(
+                "Name, address line 1, city and state are required",
+                400,
+                "ONBOARDING_REQUIRED_FIELDS"
+            );
+        }
 
         instituteNameSchema.parse(payload.name);
-        cityStateSchema.parse(payload.city);
-        cityStateSchema.parse(payload.state);
-        addressSchema.parse(payload.address);
+        validateAddressInput(incomingAddress);
         if (payload.description !== undefined) {
             descriptionSchema.parse(payload.description);
         }
@@ -272,9 +421,16 @@ export const instituteService = {
             slug: nextSlug,
             phone: normalizedPhone,
             whatsapp: normalizedWhatsapp || null,
-            city: payload.city.trim(),
-            state: payload.state.trim(),
-            address: payload.address.trim(),
+            address: {
+                addressLine1: incomingAddress.addressLine1?.trim() || null,
+                addressLine2: incomingAddress.addressLine2?.trim() || null,
+                city: incomingAddress.city?.trim() || null,
+                state: incomingAddress.state?.trim() || null,
+                region: incomingAddress.region?.trim() || null,
+                postalCode: incomingAddress.postalCode?.trim() || null,
+                country: incomingAddress.country?.trim() || "India",
+                countryCode: incomingAddress.countryCode?.trim() || null,
+            },
             description: payload.description?.trim() || null,
             websiteUrl: payload.website?.trim() || null,
             facebookUrl: payload.facebook?.trim() || null,
@@ -292,7 +448,17 @@ export const instituteService = {
         if (!institute) {
             throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
         }
-        const courses = await courseRepository.listByInstitute(institute.id);
-        return { ...withSocialLinks(institute), courses };
+        const [courses, users] = await Promise.all([
+            courseRepository.listByInstitute(institute.id),
+            userRepository.listByInstitute(institute.id),
+        ]);
+        const teachers = users
+            .filter((user) => Boolean(user.subject?.trim() || user.bio?.trim()))
+            .map((user) => ({
+                id: user.id,
+                name: user.name ?? "Teacher",
+                subject: user.subject ?? null,
+            }));
+        return { ...withSocialLinks(institute), courses, teachers };
     },
 };

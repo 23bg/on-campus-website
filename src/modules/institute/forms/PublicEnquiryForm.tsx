@@ -56,6 +56,12 @@ export default function PublicEnquiryForm({ slug }: PublicEnquiryFormProps) {
             toast.success("Enquiry submitted successfully");
             form.reset();
         } catch (error: any) {
+            const code = error?.response?.data?.error?.code;
+            if (code === "DUPLICATE_LEAD") {
+                toast.warning("Lead already exists. Open the existing record from dashboard search using this mobile number.");
+                return;
+            }
+
             toast.error(error?.response?.data?.error?.message ?? "Failed to submit enquiry");
         }
     };

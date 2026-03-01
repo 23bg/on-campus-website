@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
+import { canManageBilling } from "@/lib/auth/permissions";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
 import { toAppError } from "@/lib/utils/error";
 import { isPlanType } from "@/config/plans";
@@ -32,6 +33,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 { success: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } },
                 { status: 401 }
+            );
+        }
+
+        if (!canManageBilling(session.role)) {
+            return NextResponse.json(
+                { success: false, error: { code: "FORBIDDEN", message: "Only owner can manage billing" } },
+                { status: 403 }
             );
         }
 

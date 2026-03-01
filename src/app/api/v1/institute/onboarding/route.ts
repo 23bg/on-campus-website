@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/lib/auth/auth";
+import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { instituteService } from "@/features/institute/services/institute.service";
 import { toAppError } from "@/lib/utils/error";
 
@@ -13,12 +14,34 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        if (!canWriteInstituteData(session.role)) {
+            return NextResponse.json(
+                { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
+                { status: 403 }
+            );
+        }
+
         const body = (await req.json()) as {
             name: string;
             phone: string;
-            city: string;
-            state: string;
-            address: string;
+            address: {
+                addressLine1?: string;
+                addressLine2?: string;
+                city?: string;
+                state?: string;
+                region?: string;
+                postalCode?: string;
+                country?: string;
+                countryCode?: string;
+            } | string;
+            addressLine1?: string;
+            addressLine2?: string;
+            city?: string;
+            state?: string;
+            region?: string;
+            postalCode?: string;
+            country?: string;
+            countryCode?: string;
             whatsapp?: string;
             description?: string;
             website?: string;

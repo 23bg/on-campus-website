@@ -19,9 +19,14 @@ export const instituteProfileSchema = z.object({
     description: z.string().trim().max(1024, "Description cannot exceed 1024 characters."),
     phone: z.string().trim().refine((value) => !value || /^\d{10,15}$/.test(value.replace(/\D/g, "")), "Phone must be 10 to 15 digits."),
     whatsapp: z.string().trim().refine((value) => !value || /^\d{10,15}$/.test(value.replace(/\D/g, "")), "WhatsApp must be 10 to 15 digits."),
+    addressLine1: z.string().trim().max(240, "Address line 1 cannot exceed 240 characters.").refine((value) => !value || value.length >= 5, "Address line 1 must be at least 5 characters."),
+    addressLine2: z.string().trim().max(240, "Address line 2 cannot exceed 240 characters."),
     city: z.string().trim().max(60, "City cannot exceed 60 characters.").refine((value) => !value || value.length >= 2, "City must be at least 2 characters."),
     state: z.string().trim().max(60, "State cannot exceed 60 characters.").refine((value) => !value || value.length >= 2, "State must be at least 2 characters."),
-    address: z.string().trim().max(240, "Address cannot exceed 240 characters.").refine((value) => !value || value.length >= 5, "Address must be at least 5 characters."),
+    region: z.string().trim().max(60, "Region cannot exceed 60 characters."),
+    postalCode: z.string().trim().max(12, "Postal code cannot exceed 12 characters."),
+    country: z.string().trim().max(60, "Country cannot exceed 60 characters."),
+    countryCode: z.string().trim().max(8, "Country code cannot exceed 8 characters."),
     timings: z.string().trim().max(120, "Timings cannot exceed 120 characters."),
     logo: z.string().trim().max(2048, "Logo URL cannot exceed 2048 characters.").refine((value) => !value || z.url().safeParse(value).success, "Please enter a valid URL."),
     banner: z.string().trim().max(2048, "Banner URL cannot exceed 2048 characters.").refine((value) => !value || z.url().safeParse(value).success, "Please enter a valid URL."),
@@ -55,6 +60,16 @@ export default function InstituteProfileForm({ initialValues, onCancel, onSaved 
         try {
             await api.put(API.INTERNAL.INSTITUTE.ROOT, {
                 ...values,
+                address: {
+                    addressLine1: values.addressLine1,
+                    addressLine2: values.addressLine2,
+                    city: values.city,
+                    state: values.state,
+                    region: values.region,
+                    postalCode: values.postalCode,
+                    country: values.country,
+                    countryCode: values.countryCode,
+                },
                 socialLinks: {
                     website: values.website,
                     instagram: values.instagram,
@@ -136,6 +151,48 @@ export default function InstituteProfileForm({ initialValues, onCancel, onSaved 
                         </Field>
 
                         <Field>
+                            <FieldLabel>Address Line 1</FieldLabel>
+                            <Controller
+                                name="addressLine1"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input {...field} minLength={5} maxLength={240} placeholder="Street, building, area" />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Address Line 2</FieldLabel>
+                            <Controller
+                                name="addressLine2"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input {...field} maxLength={240} placeholder="Landmark (optional)" />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Timings</FieldLabel>
+                            <Controller
+                                name="timings"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input {...field} maxLength={120} placeholder="e.g. Mon-Sat 9AM-6PM" />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
                             <FieldLabel>City</FieldLabel>
                             <Controller
                                 name="city"
@@ -164,13 +221,13 @@ export default function InstituteProfileForm({ initialValues, onCancel, onSaved 
                         </Field>
 
                         <Field>
-                            <FieldLabel>Timings</FieldLabel>
+                            <FieldLabel>Region</FieldLabel>
                             <Controller
-                                name="timings"
+                                name="region"
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <>
-                                        <Input {...field} maxLength={120} placeholder="e.g. Mon-Sat 9AM-6PM" />
+                                        <Input {...field} maxLength={60} placeholder="Region (optional)" />
                                         <FieldError errors={[fieldState.error]} />
                                     </>
                                 )}
@@ -178,15 +235,41 @@ export default function InstituteProfileForm({ initialValues, onCancel, onSaved 
                         </Field>
 
                         <Field>
-                            <FieldLabel>Address</FieldLabel>
+                            <FieldLabel>Postal Code</FieldLabel>
                             <Controller
-                                name="address"
+                                name="postalCode"
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <>
-                                        <InputGroup>
-                                            <InputGroupTextarea {...field} rows={2} minLength={5} maxLength={240} />
-                                        </InputGroup>
+                                        <Input {...field} maxLength={12} placeholder="Postal / ZIP" />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Country</FieldLabel>
+                            <Controller
+                                name="country"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input {...field} maxLength={60} placeholder="India" />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Country Code</FieldLabel>
+                            <Controller
+                                name="countryCode"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input {...field} maxLength={8} placeholder="IN" />
                                         <FieldError errors={[fieldState.error]} />
                                     </>
                                 )}

@@ -77,10 +77,10 @@ export default function LandingHeader() {
                         </SheetContent>
                     </Sheet>
 
-                    <Button asChild variant="ghost" size="sm">
+                    <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
                         <Link href={ROUTES.AUTH.LOG_IN}>{tCommon("login")}</Link>
                     </Button>
-                    <Button asChild size="sm">
+                    <Button asChild size="sm" className="hidden md:inline-flex">
                         <Link href={ROUTES.AUTH.SIGN_UP}>{tCommon("startFreeTrial")}</Link>
                     </Button>
                 </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ type CourseForm = { name: string; banner: string; duration: string; defaultFees:
 const emptyForm: CourseForm = { name: "", banner: "", duration: "", defaultFees: "", description: "" };
 
 export default function CoursesPage() {
+    const searchParams = useSearchParams();
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -34,6 +36,14 @@ export default function CoursesPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [form, setForm] = useState<CourseForm>(emptyForm);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    useEffect(() => {
+        const query = searchParams.get("query") ?? "";
+        if (query && !searchQuery) {
+            setSearchQuery(query);
+        }
+    }, [searchParams, searchQuery]);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -113,6 +123,18 @@ export default function CoursesPage() {
         return `₹${value.toLocaleString("en-IN")}`;
     };
 
+    const visibleCourses = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return courses;
+
+        return courses.filter((course) =>
+            [course.name, course.duration ?? "", course.description ?? ""]
+                .join(" ")
+                .toLowerCase()
+                .includes(q)
+        );
+    }, [courses, searchQuery]);
+
     return (
         <main className="p-6">
             <div className="flex items-center justify-between">
@@ -120,9 +142,17 @@ export default function CoursesPage() {
                     <h1 className=" text-2xl font-semibold flex items-center gap-2">
                         <BookOpen className="h-6 w-6" /> Courses
                     </h1>
-                    <p className="text-muted-foreground text-sm mt-1">{courses.length} total courses</p>
+                    <p className="text-muted-foreground text-sm mt-1">{visibleCourses.length} shown • {courses.length} total courses</p>
                 </div>
-                <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Course</Button>
+                <div className="flex items-center gap-2">
+                    <Input
+                        value={searchQuery}
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                        placeholder="Search course or duration"
+                        className="w-72"
+                    />
+                    <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Course</Button>
+                </div>
             </div>
 
             <div className="mt-4 rounded border">
@@ -145,20 +175,20 @@ export default function CoursesPage() {
                                     <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
                                 </TableCell>
                             </TableRow>
-                        ) : courses.length === 0 ? (
+                        ) : visibleCourses.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                                    No courses yet. Add your first course.
+                                    No matching courses found.
                                 </TableCell>
                             </TableRow>
-                        ) : courses.map((course, index) => (
+                        ) : visibleCourses.map((course, index) => (
                             <TableRow key={course.id}>
                                 <TableCell>{index + 1}</TableCell>
-                                <TableCell className="font-medium">{course.name}</TableCell>
+                                <TableCell className="font-medium max-w-[220px] truncate" title={course.name}>{course.name}</TableCell>
                                 <TableCell>{course.banner ? "Added" : "-"}</TableCell>
-                                <TableCell>{course.duration || "-"}</TableCell>
+                                <TableCell className="max-w-[140px] truncate" title={course.duration || "-"}>{course.duration || "-"}</TableCell>
                                 <TableCell>{formatCurrency(course.defaultFees)}</TableCell>
-                                <TableCell className="max-w-[200px] truncate">{course.description || "-"}</TableCell>
+                                <TableCell className="max-w-[220px] truncate" title={course.description || "-"}>{course.description || "-"}</TableCell>
                                 <TableCell>
                                     <div className="flex gap-1">
                                         <Button variant="ghost" size="icon" onClick={() => openEdit(course)}>
