@@ -16,6 +16,7 @@ import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, PhoneCall } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type Lead = {
     id: string;
@@ -45,6 +46,8 @@ const STATUS_COLORS: Record<string, string> = {
     DROPPED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
+const PAGE_SIZE = 10;
+
 export default function LeadsPage() {
     const searchParams = useSearchParams();
     const isMobile = useIsMobile();
@@ -60,6 +63,7 @@ export default function LeadsPage() {
     const [savingDetails, setSavingDetails] = useState(false);
     const [timelineLoading, setTimelineLoading] = useState(false);
     const [timeline, setTimeline] = useState<LeadActivity[]>([]);
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         const q = searchParams.get("query") ?? "";
@@ -92,6 +96,12 @@ export default function LeadsPage() {
     useEffect(() => {
         loadLeads();
     }, [loadLeads]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [status, query, from, to, leads.length]);
+
+    const paginatedLeads = leads.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const updateStatus = async (leadId: string, nextStatus: string) => {
         try {
@@ -181,7 +191,7 @@ export default function LeadsPage() {
                             No leads yet. Share your institute page to start collecting enquiries.
                         </div>
                     ) : (
-                        leads.map((lead) => (
+                        paginatedLeads.map((lead) => (
                             <Card key={lead.id}>
                                 <CardContent className="pt-4 space-y-3">
                                     <div className="flex items-start justify-between gap-2">
@@ -229,77 +239,86 @@ export default function LeadsPage() {
                     )}
                 </div>
             ) : (
-                <div className="mt-4 rounded border overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Sr. No.</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Phone</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Course</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Follow-up</TableHead>
-                                <TableHead>Notes</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loading ? (
+                <>
+                    <div className="mt-4 rounded border overflow-x-auto">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={10} className="text-center py-8">
-                                        <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
-                                    </TableCell>
+                                    <TableHead>Sr. No.</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Phone</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Course</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Follow-up</TableHead>
+                                    <TableHead>Notes</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Action</TableHead>
                                 </TableRow>
-                            ) : leads.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                                        No leads yet. Share your institute page to start collecting enquiries.
-                                    </TableCell>
-                                </TableRow>
-                            ) : leads.map((lead, index) => (
-                                <TableRow key={lead.id}>
-                                    <TableCell>{index + 1}</TableCell>
-                                    <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                    <TableCell>{lead.phone}</TableCell>
-                                    <TableCell className="max-w-[220px] truncate" title={lead.email || "-"}>{lead.email || "-"}</TableCell>
-                                    <TableCell className="max-w-[180px] truncate" title={lead.course || "-"}>{lead.course || "-"}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="secondary" className={STATUS_COLORS[lead.status] ?? ""}>
-                                            {lead.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-xs text-muted-foreground">
-                                        {lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}
-                                    </TableCell>
-                                    <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground" title={lead.message || "-"}>{lead.message || "-"}</TableCell>
-                                    <TableCell className="text-muted-foreground text-xs">
-                                        {new Date(lead.createdAt).toLocaleDateString()}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
-                                                <SelectTrigger className="h-8 w-[130px]">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                            <Button variant="outline" size="sm" onClick={() => openDetails(lead)}>Notes</Button>
-                                            <Button asChild size="icon" variant="outline" className="h-8 w-8">
-                                                <a href={`tel:${lead.phone}`} aria-label={`Call ${lead.name}`}>
-                                                    <PhoneCall className="h-4 w-4" />
-                                                </a>
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
+                            </TableHeader>
+                            <TableBody>
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={10} className="text-center py-8">
+                                            <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : leads.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                                            No leads yet. Share your institute page to start collecting enquiries.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : paginatedLeads.map((lead, index) => (
+                                    <TableRow key={lead.id}>
+                                        <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
+                                        <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                        <TableCell>{lead.phone}</TableCell>
+                                        <TableCell className="max-w-[220px] truncate" title={lead.email || "-"}>{lead.email || "-"}</TableCell>
+                                        <TableCell className="max-w-[180px] truncate" title={lead.course || "-"}>{lead.course || "-"}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="secondary" className={STATUS_COLORS[lead.status] ?? ""}>
+                                                {lead.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">
+                                            {lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}
+                                        </TableCell>
+                                        <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground" title={lead.message || "-"}>{lead.message || "-"}</TableCell>
+                                        <TableCell className="text-muted-foreground text-xs">
+                                            {new Date(lead.createdAt).toLocaleDateString()}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
+                                                    <SelectTrigger className="h-8 w-[130px]">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                                <Button variant="outline" size="sm" onClick={() => openDetails(lead)}>Notes</Button>
+                                                <Button asChild size="icon" variant="outline" className="h-8 w-8">
+                                                    <a href={`tel:${lead.phone}`} aria-label={`Call ${lead.name}`}>
+                                                        <PhoneCall className="h-4 w-4" />
+                                                    </a>
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <TablePaginationControls
+                        className="mt-3"
+                        page={page}
+                        pageSize={PAGE_SIZE}
+                        totalItems={leads.length}
+                        onPageChange={setPage}
+                    />
+                </>
             )}
 
             <Dialog open={Boolean(editingLead)} onOpenChange={(open) => !open && setEditingLead(null)}>
