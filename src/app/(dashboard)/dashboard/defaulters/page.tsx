@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type Defaulter = {
     studentId: string;
@@ -19,9 +20,12 @@ type Defaulter = {
     dueDate?: string | null;
 };
 
+const PAGE_SIZE = 10;
+
 export default function DefaultersPage() {
     const [defaulters, setDefaulters] = useState<Defaulter[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         const load = async () => {
@@ -40,6 +44,11 @@ export default function DefaultersPage() {
     const formatCurrency = (v: number) => `₹${v.toLocaleString("en-IN")}`;
 
     const totalPending = defaulters.reduce((s, d) => s + d.pending, 0);
+    const paginatedDefaulters = defaulters.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    useEffect(() => {
+        setPage(1);
+    }, [defaulters.length]);
 
     return (
         <main className="p-6">
@@ -66,7 +75,8 @@ export default function DefaultersPage() {
                     ) : defaulters.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-8">No fee defaulters. All fees are up to date!</p>
                     ) : (
-                        <Table>
+                        <>
+                            <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Sr. No.</TableHead>
@@ -80,9 +90,9 @@ export default function DefaultersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {defaulters.map((d, index) => (
+                                {paginatedDefaulters.map((d, index) => (
                                     <TableRow key={d.studentId}>
-                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
                                         <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
                                         <TableCell>{d.phone}</TableCell>
                                         <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
@@ -93,7 +103,15 @@ export default function DefaultersPage() {
                                     </TableRow>
                                 ))}
                             </TableBody>
-                        </Table>
+                            </Table>
+                            <TablePaginationControls
+                                className="mt-3"
+                                page={page}
+                                pageSize={PAGE_SIZE}
+                                totalItems={defaulters.length}
+                                onPageChange={setPage}
+                            />
+                        </>
                     )}
                 </CardContent>
             </Card>
