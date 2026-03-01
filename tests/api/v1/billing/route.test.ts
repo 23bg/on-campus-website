@@ -52,7 +52,7 @@ describe("/api/v1/billing", () => {
     });
 
     it("POST rejects invalid action", async () => {
-        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "OWNER" });
 
         const request = new Request("http://localhost/api/v1/billing", {
             method: "POST",
@@ -69,7 +69,7 @@ describe("/api/v1/billing", () => {
     });
 
     it("POST rejects invalid plan", async () => {
-        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "OWNER" });
 
         const request = new Request("http://localhost/api/v1/billing", {
             method: "POST",
@@ -86,7 +86,7 @@ describe("/api/v1/billing", () => {
     });
 
     it("POST creates subscription for valid action", async () => {
-        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "OWNER" });
         mockSubscriptionService.createRazorpaySubscription.mockResolvedValue({
             razorpaySubId: "sub_123",
             reused: false,
@@ -107,7 +107,7 @@ describe("/api/v1/billing", () => {
     });
 
     it("POST returns service failure status", async () => {
-        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
+        mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "OWNER" });
         mockSubscriptionService.createRazorpaySubscription.mockRejectedValue(
             new AppError("Provider down", 503, "PROVIDER_DOWN")
         );

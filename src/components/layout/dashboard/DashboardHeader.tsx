@@ -7,6 +7,7 @@ import ThemeToggle from "@/components/theme-toggle";
 import ImraboChat from "@/modules/ai/components/ImraboChat";
 import UserMenu from "@/modules/auth/components/UserMenu";
 import ROUTES from "@/constants/routes";
+import GlobalSearch from "@/components/layout/dashboard/GlobalSearch";
 
 const routeLabelMap: Record<string, string> = {
     dashboard: "Dashboard",
@@ -71,6 +72,7 @@ export default function DashboardHeader() {
             </div>
 
             <div className="flex items-center gap-3">
+                <GlobalSearch />
                 <ImraboChat />
                 <ThemeToggle />
                 <UserMenu />

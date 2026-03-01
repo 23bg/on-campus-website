@@ -83,9 +83,9 @@ export default function DefaultersPage() {
                                 {defaulters.map((d, index) => (
                                     <TableRow key={d.studentId}>
                                         <TableCell>{index + 1}</TableCell>
-                                        <TableCell className="font-medium">{d.studentName}</TableCell>
+                                        <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
                                         <TableCell>{d.phone}</TableCell>
-                                        <TableCell>{d.courseName}</TableCell>
+                                        <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
                                         <TableCell className="text-right">{formatCurrency(d.totalFees)}</TableCell>
                                         <TableCell className="text-right text-green-600">{formatCurrency(d.totalPaid)}</TableCell>
                                         <TableCell className="text-right font-medium text-red-600">{formatCurrency(d.pending)}</TableCell>

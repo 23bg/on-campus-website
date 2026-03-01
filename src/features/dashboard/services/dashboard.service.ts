@@ -28,6 +28,8 @@ export const dashboardService = {
             feesDueToday,
             recentLeads,
             recentPayments,
+            todaysFollowUps,
+            overdueFollowUps,
         ] = await Promise.all([
             prisma.lead.aggregateRaw({
                 pipeline: [
@@ -101,6 +103,38 @@ export const dashboardService = {
                 },
             }),
             feeRepository.listPaymentsByInstitute({ instituteId, limit: 5 }),
+            prisma.lead.findMany({
+                where: {
+                    instituteId,
+                    followUpAt: { gte: todayStart, lt: tomorrowStart },
+                    status: { notIn: ["ADMITTED", "DROPPED"] },
+                },
+                orderBy: { followUpAt: "asc" },
+                take: 20,
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true,
+                    followUpAt: true,
+                    status: true,
+                },
+            }),
+            prisma.lead.findMany({
+                where: {
+                    instituteId,
+                    followUpAt: { lt: todayStart },
+                    status: { notIn: ["ADMITTED", "DROPPED"] },
+                },
+                orderBy: { followUpAt: "asc" },
+                take: 20,
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true,
+                    followUpAt: true,
+                    status: true,
+                },
+            }),
         ]);
 
         const leadsThisMonth = parseAggregateCount(leadsAgg);
@@ -126,6 +160,12 @@ export const dashboardService = {
             },
             recentLeads,
             recentPayments,
+            followUpOverview: {
+                todayCount: todaysFollowUps.length,
+                overdueCount: overdueFollowUps.length,
+                todaysFollowUps,
+                overdueFollowUps,
+            },
         };
     },
 };

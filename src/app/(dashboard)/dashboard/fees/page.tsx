@@ -265,7 +265,7 @@ export default function FeesPage() {
                                                 <TableCell>{index + 1}</TableCell>
                                                 <TableCell className="font-medium">{formatCurrency(payment.amount)}</TableCell>
                                                 <TableCell>{payment.paidOn ? new Date(payment.paidOn).toLocaleDateString() : "-"}</TableCell>
-                                                <TableCell className="text-muted-foreground text-sm">{payment.note || "-"}</TableCell>
+                                                <TableCell className="max-w-60 truncate text-muted-foreground text-sm" title={payment.note || "-"}>{payment.note || "-"}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

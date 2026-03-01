@@ -83,6 +83,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
                 error: {
                     code: appError.code,
                     message: appError.message,
+                    details: appError.details,
                 },
             },
             { status: appError.statusCode }

@@ -26,72 +26,74 @@ enum PlanType {
 }
 
 model User {
-    id             String     @id @default(auto()) @map("_id") @db.ObjectId
-    email          String     @unique
+    id             String    @id @default(auto()) @map("_id") @db.ObjectId
+    email          String    @unique
     name           String?
-    role           UserRole   @default(OWNER)
-    instituteId    String?    @db.ObjectId
-    institute      Institute? @relation(fields: [instituteId], references: [id])
-    emailVerified  Boolean    @default(false)
+    role           UserRole  @default(OWNER)
+    instituteId    String?   @db.ObjectId
+    subject        String?
+    bio            String?
+    emailVerified  Boolean   @default(false)
     otpHash        String?
-    otpResendCount Int        @default(0)
-    otpAttempts    Int        @default(0)
+    otpResendCount Int       @default(0)
+    otpAttempts    Int       @default(0)
     lastOtpSentAt  DateTime?
     otpExpiresAt   DateTime?
-    otpPending     Boolean    @default(false)
+    otpPending     Boolean   @default(false)
     deletedAt      DateTime?
-    createdAt      DateTime   @default(now())
-    updatedAt      DateTime   @updatedAt
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
 
     @@index([instituteId])
+    @@map("users")
 }
 
 model Institute {
-    id              String             @id @default(auto()) @map("_id") @db.ObjectId
-    name            String?
-    description     String?
-    phone           String?
-    whatsapp        String?
-    city            String?
-    state           String?
-    address         String?
-    timings         String?
-    logo            String?
-    banner          String?
-    heroImage       String?
-    googleMapLink   String?
-    websiteUrl      String?
-    instagramUrl    String?
-    facebookUrl     String?
-    youtubeUrl      String?
-    linkedinUrl     String?
-    isOnboarded     Boolean            @default(false)
-    slug            String?            @unique
-    users           User[]
-    leads           Lead[]
-    students        Student[]
-    teachers        Teacher[]
-    courses         Course[]
-    batches         Batch[]
-    payments        Payment[]
-    feePlans        FeePlan[]
-    settings        InstituteSettings?
-    subscription    Subscription?
-    deletedAt       DateTime?
-    createdAt       DateTime           @default(now())
-    updatedAt       DateTime           @updatedAt
-    feeInstallments FeeInstallment[]
+    id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+    name                String?
+    description         String?
+    phone               String?
+    whatsapp            String?
+    address             Address?
+    timings             String?
+    leadWhatsappEnabled Boolean   @default(false)
+    autoReplyEnabled    Boolean   @default(false)
+    logo                String?
+    banner              String?
+    heroImage           String?
+    googleMapLink       String?
+    websiteUrl          String?
+    instagramUrl        String?
+    facebookUrl         String?
+    youtubeUrl          String?
+    linkedinUrl         String?
+    isOnboarded         Boolean   @default(false)
+    slug                String?   @unique
+    deletedAt           DateTime?
+    createdAt           DateTime  @default(now())
+    updatedAt           DateTime  @updatedAt
 
     @@index([phone])
+    @@map("institutes")
+}
+
+type Address {
+    addressLine1 String?
+    addressLine2 String?
+    city         String?
+    state        String?
+    region       String?
+    postalCode   String?
+    country      String?
+    countryCode  String?
 }
 
 model Subscription {
     id               String             @id @default(auto()) @map("_id") @db.ObjectId
     instituteId      String             @unique @db.ObjectId
-    institute        Institute          @relation(fields: [instituteId], references: [id])
     razorpaySubId    String?
-    planType         PlanType?          @default(SOLO)
-    userLimit        Int?               @default(1)
+    planType         PlanType           @default(SOLO)
+    userLimit        Int                @default(1)
     trialEndsAt      DateTime?
     status           SubscriptionStatus @default(TRIAL)
     currentPeriodEnd DateTime?
@@ -100,14 +102,20 @@ model Subscription {
     updatedAt        DateTime           @updatedAt
 
     @@index([status])
-    @@index([planType])
-    @@index([razorpaySubId])
+    @@map("subscriptions")
+}
+
+type LeadActivity {
+    activityType String
+    title        String
+    description  String?
+    actorUserId  String?
+    createdAt    DateTime
 }
 
 model Lead {
-    id          String    @id @default(auto()) @map("_id") @db.ObjectId
-    instituteId String    @db.ObjectId
-    institute   Institute @relation(fields: [instituteId], references: [id])
+    id          String         @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String         @db.ObjectId
     name        String
     phone       String
     email       String?
@@ -115,23 +123,21 @@ model Lead {
     course      String?
     message     String?
     followUpAt  DateTime?
-    status      String    @default("NEW")
-    createdBy   String?   @db.ObjectId
+    status      String         @default("NEW")
+    createdBy   String?        @db.ObjectId
     deletedAt   DateTime?
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    activities  LeadActivity[]
+    createdAt   DateTime       @default(now())
+    updatedAt   DateTime       @updatedAt
 
     @@unique([instituteId, phone])
-    @@index([instituteId, createdAt])
-    @@index([instituteId, status])
-    @@index([phone])
-    @@index([email])
+    @@index([instituteId])
+    @@map("leads")
 }
 
 model Course {
     id          String    @id @default(auto()) @map("_id") @db.ObjectId
     instituteId String    @db.ObjectId
-    institute   Institute @relation(fields: [instituteId], references: [id])
     name        String
     slug        String?
     banner      String?
@@ -140,103 +146,74 @@ model Course {
     description String?
     createdBy   String?   @db.ObjectId
     deletedAt   DateTime?
-    batches     Batch[]
-    students    Student[]
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
     @@index([instituteId])
+    @@map("courses")
 }
 
 model Batch {
     id          String    @id @default(auto()) @map("_id") @db.ObjectId
     instituteId String    @db.ObjectId
-    institute   Institute @relation(fields: [instituteId], references: [id])
     courseId    String    @db.ObjectId
-    course      Course    @relation(fields: [courseId], references: [id])
     name        String
     slug        String?
     startDate   DateTime?
     schedule    String?
     teacherId   String?   @db.ObjectId
-    teacher     Teacher?  @relation(fields: [teacherId], references: [id])
     createdBy   String?   @db.ObjectId
     deletedAt   DateTime?
-    students    Student[]
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
     @@index([instituteId])
     @@index([courseId])
+    @@map("batches")
 }
 
 model Student {
-    id            String    @id @default(auto()) @map("_id") @db.ObjectId
-    instituteId   String    @db.ObjectId
-    institute     Institute @relation(fields: [instituteId], references: [id])
-    name          String
-    phone         String
-    email         String?
-    courseId      String?   @db.ObjectId
-    course        Course?   @relation(fields: [courseId], references: [id])
-    batchId       String?   @db.ObjectId
-    batch         Batch?    @relation(fields: [batchId], references: [id])
-    createdBy     String?   @db.ObjectId
-    deletedAt     DateTime?
-    payments      Payment[]
-    feePlans      FeePlan[]
-    admissionDate DateTime  @default(now())
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @updatedAt
+    id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId        String    @db.ObjectId
+    name               String
+    phone              String
+    email              String?
+    courseId           String?   @db.ObjectId
+    batchId            String?   @db.ObjectId
+    createdBy          String?   @db.ObjectId
+    portalUsername     String?
+    portalEmail        String?
+    portalPasswordHash String?
+    portalActive       Boolean   @default(true)
+    admissionDate      DateTime  @default(now())
+    deletedAt          DateTime?
+    createdAt          DateTime  @default(now())
+    updatedAt          DateTime  @updatedAt
 
     @@unique([instituteId, phone])
     @@index([instituteId])
-    @@index([instituteId, admissionDate])
-    @@index([phone])
-    @@index([email])
-}
-
-model Teacher {
-    id          String    @id @default(auto()) @map("_id") @db.ObjectId
-    instituteId String    @db.ObjectId
-    institute   Institute @relation(fields: [instituteId], references: [id])
-    name        String
-    slug        String?
-    subject     String?
-    bio         String?
-    createdBy   String?   @db.ObjectId
-    deletedAt   DateTime?
-    batches     Batch[]
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
-
-    @@index([instituteId])
+    @@map("students")
 }
 
 model FeePlan {
-    id           String           @id @default(auto()) @map("_id") @db.ObjectId
-    studentId    String           @db.ObjectId
-    student      Student          @relation(fields: [studentId], references: [id])
-    instituteId  String           @db.ObjectId
-    institute    Institute        @relation(fields: [instituteId], references: [id])
-    totalAmount  Float
-    dueDate      DateTime?
-    createdBy    String?          @db.ObjectId
-    deletedAt    DateTime?
-    installments FeeInstallment[]
-    createdAt    DateTime         @default(now())
-    updatedAt    DateTime         @updatedAt
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    studentId   String    @db.ObjectId
+    instituteId String    @db.ObjectId
+    totalAmount Float
+    dueDate     DateTime?
+    createdBy   String?   @db.ObjectId
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
     @@index([studentId])
-    @@index([instituteId])
+    @@map("feeplans")
 }
 
 model FeeInstallment {
     id          String            @id @default(auto()) @map("_id") @db.ObjectId
     feePlanId   String            @db.ObjectId
-    feePlan     FeePlan           @relation(fields: [feePlanId], references: [id])
     instituteId String            @db.ObjectId
-    institute   Institute         @relation(fields: [instituteId], references: [id])
     amount      Float
     paidOn      DateTime?
     note        String?
@@ -247,38 +224,38 @@ model FeeInstallment {
     updatedAt   DateTime          @updatedAt
 
     @@index([feePlanId])
-    @@index([instituteId])
+    @@map("feeinstallments")
 }
 
 model Payment {
     id          String    @id @default(auto()) @map("_id") @db.ObjectId
     instituteId String    @db.ObjectId
-    institute   Institute @relation(fields: [instituteId], references: [id])
     studentId   String    @db.ObjectId
-    student     Student   @relation(fields: [studentId], references: [id])
     amount      Float
     method      String?
     reference   String?
     createdBy   String?   @db.ObjectId
-    deletedAt   DateTime?
     paidOn      DateTime  @default(now())
+    deletedAt   DateTime?
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
 
     @@index([studentId])
     @@index([instituteId])
-    @@index([instituteId, paidOn])
+    @@map("payments")
 }
 
-model InstituteSettings {
-    id                  String    @id @default(auto()) @map("_id") @db.ObjectId
-    instituteId         String    @unique @db.ObjectId
-    institute           Institute @relation(fields: [instituteId], references: [id])
-    leadWhatsappEnabled Boolean   @default(false)
-    autoReplyEnabled    Boolean   @default(false)
-    deletedAt           DateTime?
-    createdAt           DateTime  @default(now())
-    updatedAt           DateTime  @updatedAt
+model StudentAnnouncement {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String   @db.ObjectId
+    batchId     String?  @db.ObjectId
+    title       String
+    body        String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@index([instituteId])
+    @@map("studentannouncements")
 }
 
 enum InstallmentStatus {

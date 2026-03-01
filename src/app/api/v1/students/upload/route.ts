@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
+import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { studentService } from "@/features/student/services/student.service";
 import { courseRepository } from "@/features/course/repositories/course.repo";
 import { batchRepository } from "@/features/batch/repositories/batch.repo";
@@ -12,6 +13,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 { success: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } },
                 { status: 401 }
+            );
+        }
+
+        if (!canWriteInstituteData(session.role)) {
+            return NextResponse.json(
+                { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
+                { status: 403 }
             );
         }
 

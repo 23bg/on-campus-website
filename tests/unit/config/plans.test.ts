@@ -7,10 +7,10 @@ describe("plans config", () => {
     });
 
     it("has valid pricing and user limits", () => {
-        expect(PLAN_CONFIG.SOLO.priceMonthly).toBe(499);
+        expect(PLAN_CONFIG.SOLO.priceMonthly).toBe(999);
         expect(PLAN_CONFIG.SOLO.userLimit).toBe(1);
-        expect(PLAN_CONFIG.TEAM.priceMonthly).toBe(999);
-        expect(PLAN_CONFIG.TEAM.userLimit).toBe(5);
+        expect(PLAN_CONFIG.TEAM.priceMonthly).toBe(1999);
+        expect(PLAN_CONFIG.TEAM.userLimit).toBe(10);
     });
 
     it("validates plan type inputs", () => {

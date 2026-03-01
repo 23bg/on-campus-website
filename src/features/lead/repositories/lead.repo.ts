@@ -83,6 +83,7 @@ export const leadRepository = {
                             { name: { contains: input.query, mode: "insensitive" } },
                             { phone: { contains: input.query, mode: "insensitive" } },
                             { email: { contains: input.query, mode: "insensitive" } },
+                            { course: { contains: input.query, mode: "insensitive" } },
                         ],
                     }
                     : {}),

@@ -5,9 +5,16 @@ type UpdateInstituteInput = {
     description?: string | null;
     phone?: string | null;
     whatsapp?: string | null;
-    city?: string | null;
-    state?: string | null;
-    address?: string | null;
+    address?: {
+        addressLine1?: string | null;
+        addressLine2?: string | null;
+        city?: string | null;
+        state?: string | null;
+        region?: string | null;
+        postalCode?: string | null;
+        country?: string | null;
+        countryCode?: string | null;
+    } | null;
     timings?: string | null;
     logo?: string | null;
     banner?: string | null;
@@ -25,14 +32,7 @@ type UpdateInstituteInput = {
 export const instituteRepository = {
     findById: async (id: string) => prisma.institute.findUnique({ where: { id } }),
 
-    findBySlug: async (slug: string) =>
-        prisma.institute.findUnique({
-            where: { slug },
-            include: {
-                teachers: true,
-                subscription: true,
-            },
-        }),
+    findBySlug: async (slug: string) => prisma.institute.findUnique({ where: { slug } }),
 
     isSlugTaken: async (slug: string, excludeInstituteId?: string) => {
         const existing = await prisma.institute.findUnique({ where: { slug } });

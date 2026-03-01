@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
-import { Loader2 } from "lucide-react";
+import { Loader2, PhoneCall } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Lead = {
     id: string;
@@ -28,6 +30,13 @@ type Lead = {
     createdAt: string;
 };
 
+type LeadActivity = {
+    activityType: string;
+    title: string;
+    description?: string;
+    createdAt: string;
+};
+
 const STATUS_OPTIONS = ["NEW", "CONTACTED", "ADMITTED", "DROPPED"] as const;
 const STATUS_COLORS: Record<string, string> = {
     NEW: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -37,6 +46,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function LeadsPage() {
+    const searchParams = useSearchParams();
+    const isMobile = useIsMobile();
     const [leads, setLeads] = useState<Lead[]>([]);
     const [status, setStatus] = useState("all");
     const [query, setQuery] = useState("");
@@ -47,6 +58,15 @@ export default function LeadsPage() {
     const [notes, setNotes] = useState("");
     const [followUpAt, setFollowUpAt] = useState("");
     const [savingDetails, setSavingDetails] = useState(false);
+    const [timelineLoading, setTimelineLoading] = useState(false);
+    const [timeline, setTimeline] = useState<LeadActivity[]>([]);
+
+    useEffect(() => {
+        const q = searchParams.get("query") ?? "";
+        if (q && !query) {
+            setQuery(q);
+        }
+    }, [searchParams, query]);
 
     const queryString = useMemo(() => {
         const params = new URLSearchParams();
@@ -87,6 +107,18 @@ export default function LeadsPage() {
         setEditingLead(lead);
         setNotes(lead.message ?? "");
         setFollowUpAt(lead.followUpAt ? lead.followUpAt.slice(0, 10) : "");
+        setTimelineLoading(true);
+        api
+            .get(API.INTERNAL.LEADS.TIMELINE(lead.id))
+            .then((response) => {
+                setTimeline(response.data?.data ?? []);
+            })
+            .catch(() => {
+                setTimeline([]);
+            })
+            .finally(() => {
+                setTimelineLoading(false);
+            });
     };
 
     const saveDetails = async () => {
@@ -138,72 +170,137 @@ export default function LeadsPage() {
                 </CardContent>
             </Card>
 
-            <div className="mt-4 rounded border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Sr. No.</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Course</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Follow-up</TableHead>
-                            <TableHead>Notes</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={10} className="text-center py-8">
-                                    <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
-                                </TableCell>
-                            </TableRow>
-                        ) : leads.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                                    No leads yet. Share your institute page to start collecting enquiries.
-                                </TableCell>
-                            </TableRow>
-                        ) : leads.map((lead, index) => (
-                            <TableRow key={lead.id}>
-                                <TableCell>{index + 1}</TableCell>
-                                <TableCell className="font-medium">{lead.name}</TableCell>
-                                <TableCell>{lead.phone}</TableCell>
-                                <TableCell>{lead.email || "-"}</TableCell>
-                                <TableCell>{lead.course || "-"}</TableCell>
-                                <TableCell>
-                                    <Badge variant="secondary" className={STATUS_COLORS[lead.status] ?? ""}>
-                                        {lead.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-xs text-muted-foreground">
-                                    {lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}
-                                </TableCell>
-                                <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground">{lead.message || "-"}</TableCell>
-                                <TableCell className="text-muted-foreground text-xs">
-                                    {new Date(lead.createdAt).toLocaleDateString()}
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex items-center gap-2">
+            {isMobile ? (
+                <div className="mt-4 space-y-3">
+                    {loading ? (
+                        <div className="rounded border py-8">
+                            <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                        </div>
+                    ) : leads.length === 0 ? (
+                        <div className="rounded border py-8 text-center text-sm text-muted-foreground">
+                            No leads yet. Share your institute page to start collecting enquiries.
+                        </div>
+                    ) : (
+                        leads.map((lead) => (
+                            <Card key={lead.id}>
+                                <CardContent className="pt-4 space-y-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div>
+                                            <p className="font-semibold text-sm">{lead.name}</p>
+                                            <p className="text-xs text-muted-foreground">{lead.phone}</p>
+                                        </div>
+                                        <Badge variant="secondary" className={STATUS_COLORS[lead.status] ?? ""}>
+                                            {lead.status}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <p className="text-muted-foreground">Course</p>
+                                        <p>{lead.course || "-"}</p>
+                                        <p className="text-muted-foreground">Follow-up</p>
+                                        <p>{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</p>
+                                    </div>
+
+                                    <p className="text-xs text-muted-foreground line-clamp-2">{lead.message || "No notes added."}</p>
+
+                                    <div className="space-y-2">
                                         <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
-                                            <SelectTrigger className="h-8 w-[130px]">
+                                            <SelectTrigger className="h-9 w-full">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
-                                        <Button variant="outline" size="sm" onClick={() => openDetails(lead)}>Notes</Button>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <Button variant="outline" size="sm" onClick={() => openDetails(lead)}>Details</Button>
+                                            <Button asChild size="sm">
+                                                <a href={`tel:${lead.phone}`}>
+                                                    <PhoneCall className="h-4 w-4 mr-1" />
+                                                    Call
+                                                </a>
+                                            </Button>
+                                        </div>
                                     </div>
-                                </TableCell>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
+                </div>
+            ) : (
+                <div className="mt-4 rounded border overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Sr. No.</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Phone</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Course</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Follow-up</TableHead>
+                                <TableHead>Notes</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Action</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={10} className="text-center py-8">
+                                        <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                                    </TableCell>
+                                </TableRow>
+                            ) : leads.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                                        No leads yet. Share your institute page to start collecting enquiries.
+                                    </TableCell>
+                                </TableRow>
+                            ) : leads.map((lead, index) => (
+                                <TableRow key={lead.id}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                    <TableCell>{lead.phone}</TableCell>
+                                    <TableCell className="max-w-[220px] truncate" title={lead.email || "-"}>{lead.email || "-"}</TableCell>
+                                    <TableCell className="max-w-[180px] truncate" title={lead.course || "-"}>{lead.course || "-"}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="secondary" className={STATUS_COLORS[lead.status] ?? ""}>
+                                            {lead.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-xs text-muted-foreground">
+                                        {lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}
+                                    </TableCell>
+                                    <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground" title={lead.message || "-"}>{lead.message || "-"}</TableCell>
+                                    <TableCell className="text-muted-foreground text-xs">
+                                        {new Date(lead.createdAt).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <Select value={lead.status} onValueChange={(v) => updateStatus(lead.id, v)}>
+                                                <SelectTrigger className="h-8 w-[130px]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            <Button variant="outline" size="sm" onClick={() => openDetails(lead)}>Notes</Button>
+                                            <Button asChild size="icon" variant="outline" className="h-8 w-8">
+                                                <a href={`tel:${lead.phone}`} aria-label={`Call ${lead.name}`}>
+                                                    <PhoneCall className="h-4 w-4" />
+                                                </a>
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
 
             <Dialog open={Boolean(editingLead)} onOpenChange={(open) => !open && setEditingLead(null)}>
                 <DialogContent>
@@ -218,6 +315,25 @@ export default function LeadsPage() {
                         <div className="space-y-2">
                             <Label>Notes</Label>
                             <Textarea rows={5} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Called parent, interested in NEET, follow-up on Sunday..." maxLength={1024} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Activity Timeline</Label>
+                            <div className="rounded border p-3 max-h-48 overflow-auto space-y-2">
+                                {timelineLoading ? (
+                                    <p className="text-xs text-muted-foreground">Loading timeline...</p>
+                                ) : timeline.length === 0 ? (
+                                    <p className="text-xs text-muted-foreground">No activity history available.</p>
+                                ) : (
+                                    timeline.map((item, index) => (
+                                        <div key={`${item.activityType}-${item.createdAt}-${index}`} className="text-xs border-b last:border-0 pb-2 last:pb-0">
+                                            <p className="font-medium">{item.title}</p>
+                                            {item.description ? <p className="text-muted-foreground">{item.description}</p> : null}
+                                            <p className="text-muted-foreground">{new Date(item.createdAt).toLocaleString()}</p>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>

@@ -118,7 +118,7 @@ describe("subscriptionService", () => {
         mockUserRepo.countByInstitute.mockResolvedValue(3);
         const summary = await subscriptionService.getBillingSummary("inst1");
         expect(summary.planType).toBe("TEAM");
-        expect(summary.planAmount).toBe(999);
+        expect(summary.planAmount).toBe(1999);
         expect(summary.usersUsed).toBe(3);
         expect(summary.userLimit).toBe(5);
     });

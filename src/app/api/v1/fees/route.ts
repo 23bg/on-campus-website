@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
+import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { feeService } from "@/features/fee/services/fee.service";
 import { toAppError } from "@/lib/utils/error";
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
 
         const studentId = req.nextUrl.searchParams.get("studentId");
         if (studentId) {
-            const data = await feeService.getStudentPaymentSummary(studentId);
+            const data = await feeService.getStudentPaymentSummary(session.instituteId, studentId);
             return NextResponse.json({ success: true, data });
         }
 
@@ -37,6 +38,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 { success: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } },
                 { status: 401 }
+            );
+        }
+
+        if (!canWriteInstituteData(session.role)) {
+            return NextResponse.json(
+                { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
+                { status: 403 }
             );
         }
 

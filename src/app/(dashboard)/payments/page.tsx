@@ -132,12 +132,12 @@ export default function PaymentsPage() {
                                     filteredRows.map((payment, index) => (
                                         <TableRow key={payment.id}>
                                             <TableCell>{index + 1}</TableCell>
-                                            <TableCell className="font-medium">{payment.student.name}</TableCell>
+                                            <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
                                             <TableCell>{payment.student.phone}</TableCell>
                                             <TableCell className="text-right">{`₹${payment.amount.toLocaleString("en-IN")}`}</TableCell>
                                             <TableCell>{new Date(payment.paidOn).toLocaleDateString()}</TableCell>
-                                            <TableCell>{payment.method || "-"}</TableCell>
-                                            <TableCell>{payment.reference || "-"}</TableCell>
+                                            <TableCell className="max-w-[140px] truncate" title={payment.method || "-"}>{payment.method || "-"}</TableCell>
+                                            <TableCell className="max-w-[180px] truncate" title={payment.reference || "-"}>{payment.reference || "-"}</TableCell>
                                         </TableRow>
                                     ))
                                 )}

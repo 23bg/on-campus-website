@@ -123,9 +123,9 @@ export default function TeachersPage() {
                         ) : teachers.map((teacher, index) => (
                             <TableRow key={teacher.id}>
                                 <TableCell>{index + 1}</TableCell>
-                                <TableCell className="font-medium">{teacher.name}</TableCell>
-                                <TableCell>{teacher.subject || "-"}</TableCell>
-                                <TableCell className="max-w-[200px] truncate">{teacher.bio || "-"}</TableCell>
+                                <TableCell className="font-medium max-w-[180px] truncate" title={teacher.name}>{teacher.name}</TableCell>
+                                <TableCell className="max-w-[180px] truncate" title={teacher.subject || "-"}>{teacher.subject || "-"}</TableCell>
+                                <TableCell className="max-w-[220px] truncate" title={teacher.bio || "-"}>{teacher.bio || "-"}</TableCell>
                                 <TableCell>
                                     <div className="flex gap-1">
                                         <Button variant="ghost" size="icon" onClick={() => openEdit(teacher)}>

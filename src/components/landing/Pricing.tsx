@@ -1,13 +1,27 @@
-﻿import Link from "next/link";
+﻿"use client";
+
+import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { PLAN_CONFIG } from "@/config/plans";
 import { useTranslations } from "next-intl";
 
 export default function Pricing() {
     const t = useTranslations("pricing");
     const tCommon = useTranslations("common");
+    const [yearlyBilling, setYearlyBilling] = useState(false);
+
+    const yearlyMonthsCharged = 11;
+    const scaleMonthlyPrice = Number(t("scalePrice"));
+    const billingSuffix = yearlyBilling ? t("yearlyPriceSuffix") : t("monthlyPriceSuffix");
+
+    const getDisplayPrice = (monthlyPrice: number) => {
+        const amount = yearlyBilling ? monthlyPrice * yearlyMonthsCharged : monthlyPrice;
+        return amount.toLocaleString("en-IN");
+    };
 
     const starterFeatures = [
         t("starterFeature1"),
@@ -73,14 +87,43 @@ export default function Pricing() {
                     {t("coreSystemLine")}
                 </div>
 
+                <div className="mt-8 flex items-center justify-center gap-3">
+                    <span className={`text-sm ${!yearlyBilling ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {t("monthlyToggle")}
+                    </span>
+                    <Switch
+                        checked={yearlyBilling}
+                        onCheckedChange={setYearlyBilling}
+                        aria-label={t("billingSwitchAria")}
+                    />
+                    <span className={`text-sm ${yearlyBilling ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {t("yearlyToggle")}
+                    </span>
+                    <Badge variant="secondary">{t("yearlyBadge")}</Badge>
+                </div>
+
+                <div className="mt-8 rounded-lg border bg-background p-6">
+                    <h3 className="text-xl font-semibold text-center">{t("sectionUnlimitedUsage")}</h3>
+                    <p className="mt-2 text-center text-muted-foreground">{t("unlimitedUsageLine")}</p>
+                    <p className="mt-1 text-center text-sm text-muted-foreground">{t("unlimitedUsageHint")}</p>
+                    <div className="mt-5 grid gap-2 md:grid-cols-2 lg:grid-cols-3 text-sm text-muted-foreground">
+                        <p>• {t("unlimitedItem1")}</p>
+                        <p>• {t("unlimitedItem2")}</p>
+                        <p>• {t("unlimitedItem3")}</p>
+                        <p>• {t("unlimitedItem4")}</p>
+                        <p>• {t("unlimitedItem5")}</p>
+                        <p>• {t("unlimitedItem6")}</p>
+                    </div>
+                </div>
+
                 <div className="mt-14 grid gap-8 lg:grid-cols-3">
                     <Card className="border rounded-lg">
                         <CardHeader>
                             <CardTitle className="text-4xl font-semibold">
-                                ₹{PLAN_CONFIG.SOLO.priceMonthly}
+                                ₹{getDisplayPrice(PLAN_CONFIG.SOLO.priceMonthly)}
                             </CardTitle>
                             <p className="text-muted-foreground text-sm">
-                                {t("starterPriceSuffix")}
+                                {billingSuffix}
                             </p>
                             <p className="text-lg font-semibold">{t("starterPlan")}</p>
                             <p className="text-muted-foreground text-sm">{t("starterSubtext")}</p>
@@ -116,14 +159,14 @@ export default function Pricing() {
                         <CardHeader>
                             <div className="flex justify-between">
                                 <CardTitle className="text-4xl font-semibold">
-                                    ₹{PLAN_CONFIG.TEAM.priceMonthly}
+                                    ₹{getDisplayPrice(PLAN_CONFIG.TEAM.priceMonthly)}
                                 </CardTitle>
                                 <Badge>
                                     {t("mostPopular")}
                                 </Badge>
                             </div>
                             <p className="text-muted-foreground text-sm">
-                                {t("growthPriceSuffix")}
+                                {billingSuffix}
                             </p>
                             <p className="text-lg font-semibold">{t("growthPlan")}</p>
                             <p className="text-muted-foreground text-sm">{t("growthSubtext")}</p>
@@ -156,8 +199,8 @@ export default function Pricing() {
 
                     <Card className="border rounded-lg">
                         <CardHeader>
-                            <CardTitle className="text-4xl font-semibold">₹{t("scalePrice")}</CardTitle>
-                            <p className="text-muted-foreground text-sm">{t("scalePriceSuffix")}</p>
+                            <CardTitle className="text-4xl font-semibold">₹{getDisplayPrice(scaleMonthlyPrice)}</CardTitle>
+                            <p className="text-muted-foreground text-sm">{billingSuffix}</p>
                             <p className="text-lg font-semibold">{t("scalePlan")}</p>
                             <p className="text-muted-foreground text-sm">{t("scaleSubtext")}</p>
                             <p className="text-xs text-muted-foreground">{t("scaleUsers")}</p>
@@ -204,20 +247,22 @@ export default function Pricing() {
                                 <Row
                                     name={t("tableUsers")}
                                     solo="1"
-                                    team="5"
-                                    scale="15"
+                                    team="10"
+                                    scale="Unlimited"
                                 />
                                 <Row name={t("tablePublicPage")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableUnlimitedLeads")} solo="✓" team="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedStudents")} solo="✓" team="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedCourses")} solo="✓" team="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedEnquiries")} solo="✓" team="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedFollowUps")} solo="✓" team="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedNotes")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableLeadPipeline")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableStudentRecords")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableExcelImport")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableRazorpay")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableRoles")} solo="—" team="✓" scale="✓" />
                                 <Row name={t("tableLeadOwnership")} solo="—" team="✓" scale="✓" />
-                                <Row name={t("tablePrioritySupport")} solo="—" team="—" scale="✓" />
-                                <Row name={t("tableAdvancedReporting")} solo="—" team="—" scale="✓" />
-                                <Row name={t("tableDedicatedOnboarding")} solo="—" team="—" scale="✓" />
                             </tbody>
                         </table>
                     </div>

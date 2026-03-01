@@ -15,9 +15,14 @@ import { Loader2 } from "lucide-react";
 type OnboardingForm = {
     name: string;
     phone: string;
+    addressLine1: string;
+    addressLine2: string;
     city: string;
     state: string;
-    address: string;
+    region: string;
+    postalCode: string;
+    country: string;
+    countryCode: string;
     whatsapp: string;
     description: string;
     website: string;
@@ -37,9 +42,14 @@ export default function OnboardingIndexPage() {
     const [form, setForm] = useState<OnboardingForm>({
         name: "",
         phone: "",
+        addressLine1: "",
+        addressLine2: "",
         city: "",
         state: "",
-        address: "",
+        region: "",
+        postalCode: "",
+        country: "India",
+        countryCode: "",
         whatsapp: "",
         description: "",
         website: "",
@@ -63,9 +73,14 @@ export default function OnboardingIndexPage() {
                 setForm({
                     name: data.name ?? "",
                     phone: data.phone ?? "",
-                    city: data.city ?? "",
-                    state: data.state ?? "",
-                    address: data.address ?? "",
+                    addressLine1: data.address?.addressLine1 ?? "",
+                    addressLine2: data.address?.addressLine2 ?? "",
+                    city: data.address?.city ?? "",
+                    state: data.address?.state ?? "",
+                    region: data.address?.region ?? "",
+                    postalCode: data.address?.postalCode ?? "",
+                    country: data.address?.country ?? "India",
+                    countryCode: data.address?.countryCode ?? "",
                     whatsapp: data.whatsapp ?? "",
                     description: data.description ?? "",
                     website: data.socialLinks?.website ?? "",
@@ -93,9 +108,9 @@ export default function OnboardingIndexPage() {
         if (!form.phone.trim()) next.phone = "Phone number is required";
         else if (!/^(\+?91[\s-]?)?[6-9]\d{9}$/.test(form.phone.replace(/[\s-]/g, "")))
             next.phone = "Enter a valid Indian mobile number";
+        if (!form.addressLine1.trim()) next.addressLine1 = "Address line 1 is required";
         if (!form.city.trim()) next.city = "City is required";
         if (!form.state.trim()) next.state = "State is required";
-        if (!form.address.trim()) next.address = "Address is required";
         setErrors(next);
         return Object.keys(next).length === 0;
     };
@@ -104,7 +119,19 @@ export default function OnboardingIndexPage() {
         if (!validate()) return;
         setSaving(true);
         try {
-            await api.post(API.INTERNAL.INSTITUTE.ONBOARDING, form);
+            await api.post(API.INTERNAL.INSTITUTE.ONBOARDING, {
+                ...form,
+                address: {
+                    addressLine1: form.addressLine1,
+                    addressLine2: form.addressLine2,
+                    city: form.city,
+                    state: form.state,
+                    region: form.region,
+                    postalCode: form.postalCode,
+                    country: form.country,
+                    countryCode: form.countryCode,
+                },
+            });
 
             toast.success("Institute setup complete!");
             router.push("/dashboard");
@@ -150,6 +177,15 @@ export default function OnboardingIndexPage() {
                                 {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                             </div>
                             <div className="space-y-2">
+                                <Label htmlFor="addressLine1">Address Line 1 *</Label>
+                                <Input id="addressLine1" value={form.addressLine1} onChange={(e) => setValue("addressLine1", e.target.value)} placeholder="Street, building, area" />
+                                {errors.addressLine1 && <p className="text-sm text-destructive">{errors.addressLine1}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="addressLine2">Address Line 2</Label>
+                                <Input id="addressLine2" value={form.addressLine2} onChange={(e) => setValue("addressLine2", e.target.value)} placeholder="Landmark (optional)" />
+                            </div>
+                            <div className="space-y-2">
                                 <Label htmlFor="city">City *</Label>
                                 <Input id="city" value={form.city} onChange={(e) => setValue("city", e.target.value)} placeholder="e.g. Jaipur" />
                                 {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}
@@ -159,10 +195,21 @@ export default function OnboardingIndexPage() {
                                 <Input id="state" value={form.state} onChange={(e) => setValue("state", e.target.value)} placeholder="e.g. Rajasthan" />
                                 {errors.state && <p className="text-sm text-destructive">{errors.state}</p>}
                             </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor="address">Address *</Label>
-                                <Textarea id="address" value={form.address} onChange={(e) => setValue("address", e.target.value)} placeholder="Full address" rows={3} />
-                                {errors.address && <p className="text-sm text-destructive">{errors.address}</p>}
+                            <div className="space-y-2">
+                                <Label htmlFor="region">Region</Label>
+                                <Input id="region" value={form.region} onChange={(e) => setValue("region", e.target.value)} placeholder="Region (optional)" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="postalCode">Postal Code</Label>
+                                <Input id="postalCode" value={form.postalCode} onChange={(e) => setValue("postalCode", e.target.value)} placeholder="e.g. 302001" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="country">Country</Label>
+                                <Input id="country" value={form.country} onChange={(e) => setValue("country", e.target.value)} placeholder="India" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="countryCode">Country Code</Label>
+                                <Input id="countryCode" value={form.countryCode} onChange={(e) => setValue("countryCode", e.target.value)} placeholder="IN" />
                             </div>
                         </div>
 
