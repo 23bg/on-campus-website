@@ -11,17 +11,17 @@ type PlanConfig = {
 export const PLAN_CONFIG: Record<PlanType, PlanConfig> = {
     SOLO: {
         key: "SOLO",
-        name: "Solo",
-        priceMonthly: 499,
+        name: "Starter System",
+        priceMonthly: 999,
         userLimit: 1,
-        tagline: "For individual educators",
+        tagline: "For independent institute owners",
     },
     TEAM: {
         key: "TEAM",
-        name: "Team",
-        priceMonthly: 999,
+        name: "Growth System",
+        priceMonthly: 1999,
         userLimit: 5,
-        tagline: "For growing institutes",
+        tagline: "For admission teams and counselors",
     },
 };
 

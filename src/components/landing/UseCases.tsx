@@ -1,27 +1,18 @@
-const useCases = [
-    {
-        title: "NEET / JEE Coaching",
-        description: "Track high-volume enquiries by source and follow up consistently until admissions close.",
-    },
-    {
-        title: "Tuition Classes",
-        description: "Organize daily walk-ins and calls in one lead pipeline without juggling multiple spreadsheets.",
-    },
-    {
-        title: "Computer Training Institutes",
-        description: "Manage course-wise enquiries and student records with clear conversion visibility.",
-    },
-    {
-        title: "Skill Academies",
-        description: "Run practical admission operations for short-term programs with a simple team workflow.",
-    },
-];
+import { useTranslations } from "next-intl";
 
 export default function UseCases() {
+    const t = useTranslations("useCasesSection");
+    const useCases = [
+        { title: t("item1Title"), description: t("item1Description") },
+        { title: t("item2Title"), description: t("item2Description") },
+        { title: t("item3Title"), description: t("item3Description") },
+        { title: t("item4Title"), description: t("item4Description") },
+    ];
+
     return (
         <section className="w-full border-b">
             <div className="mx-auto w-full max-w-7xl px-4 py-14 md:px-6">
-                <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Built for Real Institute Workflows</h2>
+                <h2 className="text-2xl font-bold tracking-tight md:text-3xl">{t("title")}</h2>
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                     {useCases.map((useCase) => (
                         <article key={useCase.title} className="rounded-lg border p-5">

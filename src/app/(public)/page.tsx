@@ -1,4 +1,5 @@
 ﻿import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Hero from "@/components/landing/Hero";
 import Trust from "@/components/landing/Trust";
 import Problem from "@/components/landing/Problem";
@@ -13,11 +14,14 @@ import UseCases from "../../components/landing/UseCases";
 import LandingHeader from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 
-export const metadata: Metadata = {
-    title: "OnCampus - Admission CRM for Coaching Institutes",
-    description:
-        "OnCampus helps coaching institutes capture enquiries and manage student admissions.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getTranslations("pages");
+
+    return {
+        title: t("landingMetaTitle"),
+        description: t("landingMetaDescription"),
+    };
+}
 
 export default function LandingPage() {
     return (

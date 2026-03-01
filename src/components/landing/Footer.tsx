@@ -6,9 +6,11 @@ import {
     MessageCircle,
     MapPin
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function Footer() {
     const year = new Date().getFullYear();
+    const t = useTranslations("footer");
 
     return (
         <footer className="w-full border-t bg-background">
@@ -18,9 +20,9 @@ export default function Footer() {
                     {/* Brand Column */}
                     <div className="space-y-4 lg:col-span-2">
                         <div>
-                            <p className="text-xl font-bold tracking-tight">OnCampus</p>
+                            <p className="text-xl font-bold tracking-tight">{t("brand")}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Admission CRM for Indian Coaching Institutes
+                                {t("tagline")}
                             </p>
                         </div>
 
@@ -28,11 +30,11 @@ export default function Footer() {
                         <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
                                 <span>🇮🇳</span>
-                                <span>Built in India</span>
+                                <span>{t("builtInIndia")}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <MapPin size={14} />
-                                <span>Secure Payments via Razorpay</span>
+                                <span>{t("securePayments")}</span>
                             </div>
                         </div>
 
@@ -64,15 +66,15 @@ export default function Footer() {
                         </div>
 
                         <p className="pt-4 text-xs text-muted-foreground">
-                            © {year} OnCampus. All rights reserved.
+                            {t("copyright", { year })}
                         </p>
                     </div>
 
                     {/* Dynamic Footer Groups */}
                     {FOOTER_GROUPS.map((group) => (
-                        <nav key={group.title} className="space-y-3 text-sm">
+                        <nav key={group.titleKey} className="space-y-3 text-sm">
                             <p className="font-medium text-foreground">
-                                {group.title}
+                                {t(group.titleKey)}
                             </p>
                             <ul className="space-y-2">
                                 {group.links.map((item) => (
@@ -81,7 +83,7 @@ export default function Footer() {
                                             href={item.href}
                                             className="text-muted-foreground hover:text-foreground transition"
                                         >
-                                            {item.label}
+                                            {t(item.labelKey)}
                                         </Link>
                                     </li>
                                 ))}

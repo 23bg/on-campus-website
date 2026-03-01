@@ -1,49 +1,49 @@
 import ROUTES from "@/constants/routes";
 
 export type NavItem = {
-    label: string;
+    labelKey: string;
     href: string;
 };
 
 export const PUBLIC_NAV_ITEMS: NavItem[] = [
-    { label: "Home", href: ROUTES.HOME },
-    { label: "Features", href: ROUTES.FEATURES },
-    { label: "Use Cases", href: ROUTES.USE_CASES },
-    { label: "Pricing", href: ROUTES.PRICING },
-    { label: "Demo", href: ROUTES.DEMO_INSTITUTE },
-    { label: "Resources", href: ROUTES.RESOURCES },
+    { labelKey: "home", href: ROUTES.HOME },
+    { labelKey: "features", href: ROUTES.FEATURES },
+    { labelKey: "useCases", href: ROUTES.USE_CASES },
+    { labelKey: "pricing", href: ROUTES.PRICING },
+    { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
+    { labelKey: "resources", href: ROUTES.RESOURCES },
 ];
 
-export const FOOTER_GROUPS: Array<{ title: string; links: NavItem[] }> = [
+export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
     {
-        title: "Product",
+        titleKey: "groupProduct",
         links: [
-            { label: "Features", href: ROUTES.FEATURES },
-            { label: "Pricing", href: ROUTES.PRICING },
-            { label: "Demo", href: ROUTES.DEMO_INSTITUTE },
+            { labelKey: "features", href: ROUTES.FEATURES },
+            { labelKey: "pricing", href: ROUTES.PRICING },
+            { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
         ],
     },
     {
-        title: "Use Cases",
+        titleKey: "groupUseCases",
         links: [
-            { label: "JEE/NEET Institutes", href: "/use-cases/jee-neet-coaching" },
-            { label: "Tuition Classes", href: "/use-cases/tuition-classes" },
-            { label: "Computer Training Centers", href: "/use-cases/computer-training" },
-            { label: "Skill Institutes", href: "/use-cases/skill-centers" },
+            { labelKey: "jeeNeetInstitutes", href: "/use-cases/jee-neet-coaching" },
+            { labelKey: "tuitionClasses", href: "/use-cases/tuition-classes" },
+            { labelKey: "computerTrainingCenters", href: "/use-cases/computer-training" },
+            { labelKey: "skillInstitutes", href: "/use-cases/skill-centers" },
         ],
     },
     {
-        title: "Company",
+        titleKey: "groupCompany",
         links: [
-            { label: "About", href: ROUTES.ABOUT },
-            { label: "Contact", href: ROUTES.CONTACT },
+            { labelKey: "about", href: ROUTES.ABOUT },
+            { labelKey: "contact", href: ROUTES.CONTACT },
         ],
     },
     {
-        title: "Legal",
+        titleKey: "groupLegal",
         links: [
-            { label: "Privacy Policy", href: ROUTES.PRIVACY },
-            { label: "Terms", href: ROUTES.TERMS },
+            { labelKey: "privacyPolicy", href: ROUTES.PRIVACY },
+            { labelKey: "terms", href: ROUTES.TERMS },
         ],
     },
 ];

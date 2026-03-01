@@ -58,7 +58,7 @@ export default function BillingPage() {
         setCreating(true);
         try {
             await api.post(API.INTERNAL.BILLING.ROOT, { action: "create-subscription", planType });
-            toast.success(planType === "TEAM" ? "Team plan initiated" : "Solo plan initiated");
+            toast.success(planType === "TEAM" ? "Growth plan initiated" : "Starter plan initiated");
             await loadSummary();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
@@ -93,7 +93,7 @@ export default function BillingPage() {
                             <CardTitle className="flex items-center gap-2">
                                 <CreditCard className="h-5 w-5" /> Subscription Plan
                             </CardTitle>
-                            <CardDescription className="mt-1">{summary?.planName ?? "Solo"} — ₹{summary?.planAmount ?? 499}/month</CardDescription>
+                            <CardDescription className="mt-1">{summary?.planName ?? "Starter System"} — ₹{summary?.planAmount ?? PLAN_CONFIG.SOLO.priceMonthly}/month</CardDescription>
                         </div>
                         <Badge variant="secondary" className={STATUS_COLORS[summary?.status ?? "TRIAL"] ?? ""}>
                             {summary?.status ?? "TRIAL"}
@@ -140,7 +140,7 @@ export default function BillingPage() {
                                 void createSubscription("SOLO");
                             }}
                         >
-                            {creating && selectedPlan === "SOLO" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Solo (₹${PLAN_CONFIG.SOLO.priceMonthly})`}
+                            {creating && selectedPlan === "SOLO" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Starter (₹${PLAN_CONFIG.SOLO.priceMonthly})`}
                         </Button>
                         <Button
                             variant={selectedPlan === "TEAM" ? "default" : "outline"}
@@ -150,7 +150,7 @@ export default function BillingPage() {
                                 void createSubscription("TEAM");
                             }}
                         >
-                            {creating && selectedPlan === "TEAM" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Team (₹${PLAN_CONFIG.TEAM.priceMonthly})`}
+                            {creating && selectedPlan === "TEAM" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Growth (₹${PLAN_CONFIG.TEAM.priceMonthly})`}
                         </Button>
                     </div>
                 </CardContent>
