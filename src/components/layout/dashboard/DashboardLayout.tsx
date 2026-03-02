@@ -8,50 +8,55 @@ import {
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DashboardHeader from "@/components/layout/dashboard/DashboardHeader";
+import DashboardShowcaseTour from "@/components/dashboard/DashboardShowcaseTour";
 
 export default function DashboardLayout({
     children,
+    showFirstLoginShowcase = false,
 }: {
     children: React.ReactNode;
+    showFirstLoginShowcase?: boolean;
 }) {
     return (
-        <SidebarProvider className=" overflow-hidden h-screen">
-            <DashboardAppSidebar />
+        <DashboardShowcaseTour enabled={showFirstLoginShowcase}>
+            <SidebarProvider className=" overflow-hidden h-screen">
+                <DashboardAppSidebar />
 
-            <SidebarInset className="border shadow-none bg-background ">
-                <DashboardHeader />
+                <SidebarInset className="border shadow-none bg-background ">
+                    <DashboardHeader />
 
-                {/* MAIN CONTENT */}
-                <main className="overflow-hidden">
-                    <div className="h-screen">
-                        <ScrollArea className="h-full">
-                            {children}
-                            <div className="h-30"></div>
-                        </ScrollArea>
-                    </div>
-                </main>
+                    {/* MAIN CONTENT */}
+                    <main className="overflow-hidden">
+                        <div className="h-screen">
+                            <ScrollArea className="h-full">
+                                {children}
+                                <div className="h-30"></div>
+                            </ScrollArea>
+                        </div>
+                    </main>
 
-                {/* FOOTER */}
-                <footer className="
+                    {/* FOOTER */}
+                    <footer className="
                     border-t bg-background dark:bg-zinc-900/40
                     backdrop-blur-sm rounded-b-lg
                 ">
-                    <div className="
+                        <div className="
                         flex flex-col sm:flex-row justify-between items-center
                         gap-2 px-6 py-3 text-xs text-muted-foreground
                     ">
-                        <span>©2026 OnCampus, built for modern coaching institutes.</span>
+                            <span>©2026 OnCampus, built for modern coaching institutes.</span>
 
-                        <div className="flex gap-3">
-                            <Link href="#" className="hover:text-primary transition">License</Link>
-                            <Link href="#" className="hover:text-primary transition">More Themes</Link>
-                            <Link href="#" className="hover:text-primary transition">Documentation</Link>
-                            <Link href="#" className="hover:text-primary transition">Support</Link>
+                            <div className="flex gap-3">
+                                <Link href="#" className="hover:text-primary transition">License</Link>
+                                <Link href="#" className="hover:text-primary transition">More Themes</Link>
+                                <Link href="#" className="hover:text-primary transition">Documentation</Link>
+                                <Link href="#" className="hover:text-primary transition">Support</Link>
+                            </div>
                         </div>
-                    </div>
-                </footer>
-            </SidebarInset>
-        </SidebarProvider>
+                    </footer>
+                </SidebarInset>
+            </SidebarProvider>
+        </DashboardShowcaseTour>
     );
 }
 

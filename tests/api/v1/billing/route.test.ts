@@ -36,7 +36,7 @@ describe("/api/v1/billing", () => {
     it("GET returns billing summary", async () => {
         mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1" });
         mockSubscriptionService.getBillingSummary.mockResolvedValue({
-            planType: "SOLO",
+            planType: "STARTER",
             status: "TRIAL",
             usersUsed: 1,
             userLimit: 1,
@@ -88,14 +88,17 @@ describe("/api/v1/billing", () => {
     it("POST creates subscription for valid action", async () => {
         mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "OWNER" });
         mockSubscriptionService.createRazorpaySubscription.mockResolvedValue({
-            razorpaySubId: "sub_123",
+            subscriptionId: "sub_123",
+            key: "rzp_test_123",
+            planType: "GROWTH",
+            interval: "MONTHLY",
             reused: false,
         });
 
         const request = new Request("http://localhost/api/v1/billing", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ action: "create-subscription", planType: "TEAM" }),
+            body: JSON.stringify({ action: "create-subscription", planType: "GROWTH", interval: "MONTHLY" }),
         });
 
         const response = await POST(request as never);
@@ -103,7 +106,7 @@ describe("/api/v1/billing", () => {
 
         expect(response.status).toBe(200);
         expect(body.success).toBe(true);
-        expect(mockSubscriptionService.createRazorpaySubscription).toHaveBeenCalledWith("inst1", "TEAM");
+        expect(mockSubscriptionService.createRazorpaySubscription).toHaveBeenCalledWith("inst1", "GROWTH", "MONTHLY");
     });
 
     it("POST returns service failure status", async () => {
@@ -115,7 +118,7 @@ describe("/api/v1/billing", () => {
         const request = new Request("http://localhost/api/v1/billing", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ action: "create-subscription", planType: "SOLO" }),
+            body: JSON.stringify({ action: "create-subscription", planType: "STARTER" }),
         });
 
         const response = await POST(request as never);

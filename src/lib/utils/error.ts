@@ -1,4 +1,6 @@
-﻿export class AppError extends Error {
+﻿import { logger, serializeError } from "@/lib/logger";
+
+export class AppError extends Error {
     public readonly statusCode: number;
     public readonly code: string;
     public readonly details?: unknown;
@@ -14,7 +16,19 @@
 
 export const toAppError = (error: unknown): AppError => {
     if (error instanceof AppError) return error;
-    if (error instanceof Error) return new AppError(error.message);
+    if (error instanceof Error) {
+        logger.error({
+            event: "unexpected_error_mapped",
+            error: serializeError(error),
+        });
+        return new AppError(error.message);
+    }
+
+    logger.error({
+        event: "unknown_non_error_mapped",
+        error: serializeError(error),
+    });
+
     return new AppError("Unknown error");
 };
 

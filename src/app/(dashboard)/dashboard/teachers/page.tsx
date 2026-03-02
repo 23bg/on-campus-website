@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, Pencil, Trash2, Plus } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type Teacher = {
     id: string;
@@ -21,6 +22,7 @@ type Teacher = {
 
 type TeacherForm = { name: string; subject: string; bio: string };
 const emptyForm: TeacherForm = { name: "", subject: "", bio: "" };
+const PAGE_SIZE = 10;
 
 export default function TeachersPage() {
     const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -29,6 +31,7 @@ export default function TeachersPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState<TeacherForm>(emptyForm);
+    const [page, setPage] = useState(1);
 
     const load = async () => {
         setLoading(true);
@@ -43,6 +46,12 @@ export default function TeachersPage() {
     };
 
     useEffect(() => { load(); }, []);
+
+    useEffect(() => {
+        setPage(1);
+    }, [teachers.length]);
+
+    const paginatedTeachers = teachers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const openCreate = () => {
         setEditingId(null);
@@ -120,9 +129,9 @@ export default function TeachersPage() {
                                     No teachers yet. Add your first teacher.
                                 </TableCell>
                             </TableRow>
-                        ) : teachers.map((teacher, index) => (
+                        ) : paginatedTeachers.map((teacher, index) => (
                             <TableRow key={teacher.id}>
-                                <TableCell>{index + 1}</TableCell>
+                                <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
                                 <TableCell className="font-medium max-w-[180px] truncate" title={teacher.name}>{teacher.name}</TableCell>
                                 <TableCell className="max-w-[180px] truncate" title={teacher.subject || "-"}>{teacher.subject || "-"}</TableCell>
                                 <TableCell className="max-w-[220px] truncate" title={teacher.bio || "-"}>{teacher.bio || "-"}</TableCell>
@@ -141,6 +150,13 @@ export default function TeachersPage() {
                     </TableBody>
                 </Table>
             </div>
+            <TablePaginationControls
+                className="mt-3"
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalItems={teachers.length}
+                onPageChange={setPage}
+            />
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>

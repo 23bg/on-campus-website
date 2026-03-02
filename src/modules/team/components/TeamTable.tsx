@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 export type TeamRow = {
     id: string;
@@ -23,7 +25,17 @@ type TeamTableProps = {
     onDelete: (member: TeamRow) => void;
 };
 
+const PAGE_SIZE = 10;
+
 export default function TeamTable({ rows, canManage, onEdit, onDelete }: TeamTableProps) {
+    const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        setPage(1);
+    }, [rows.length]);
+
+    const paginatedRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
     const displayRole = (role: TeamRow["role"]) => {
         if (role === "MANAGER") return "EDITOR";
         if (role === "COUNSELOR") return "EDITOR";
@@ -52,9 +64,9 @@ export default function TeamTable({ rows, canManage, onEdit, onDelete }: TeamTab
                             <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No team members found.</TableCell>
                         </TableRow>
                     ) : (
-                        rows.map((member, index) => (
+                        paginatedRows.map((member, index) => (
                             <TableRow key={`${member.source}-${member.id}`}>
-                                <TableCell>{index + 1}</TableCell>
+                                <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
                                 <TableCell className="font-medium">{member.name}</TableCell>
                                 <TableCell>{member.phone || "-"}</TableCell>
                                 <TableCell>{member.email || "-"}</TableCell>
@@ -77,6 +89,13 @@ export default function TeamTable({ rows, canManage, onEdit, onDelete }: TeamTab
                     )}
                 </TableBody>
             </Table>
+            <TablePaginationControls
+                className="mt-3"
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalItems={rows.length}
+                onPageChange={setPage}
+            />
         </div>
     );
 }

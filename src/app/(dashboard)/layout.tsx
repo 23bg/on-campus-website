@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { instituteService } from "@/features/institute/services/institute.service";
+import { userRepository } from "@/features/auth/repositories/user.repo";
 
 export const metadata: Metadata = {
     title: "Dashboard",
@@ -26,6 +27,8 @@ export default async function AppLayout({
         redirect("/onboarding");
     }
 
-    return <DashboardLayout>{children}</DashboardLayout>;
+    const user = await userRepository.findById(session.userId);
+
+    return <DashboardLayout showFirstLoginShowcase={Boolean(user?.firstLogin)}>{children}</DashboardLayout>;
 }
 

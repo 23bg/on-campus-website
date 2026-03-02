@@ -5,6 +5,7 @@ import { leadService } from "@/features/lead/services/lead.service";
 import { enforceRateLimit } from "@/lib/utils/rateLimit";
 import { env } from "@/lib/config/env";
 import { toAppError } from "@/lib/utils/error";
+import { createRouteLogger } from "@/lib/api/route-logger";
 
 const leadSchema = z.object({
     name: z.string().trim().min(2).max(80),
@@ -20,11 +21,14 @@ type RouteContext = {
 };
 
 export async function POST(req: NextRequest, context: RouteContext) {
+    const routeLog = createRouteLogger("/api/v1/public/[slug]/lead#POST", req);
     try {
         const { slug } = await context.params;
+        routeLog.info("public_lead_submit_started", { slug });
         const institute = await instituteRepository.findBySlug(slug);
 
         if (!institute) {
+            routeLog.warn("public_lead_submit_institute_not_found", { slug });
             return NextResponse.json(
                 { success: false, error: { code: "INSTITUTE_NOT_FOUND", message: "Institute not found" } },
                 { status: 404 }
@@ -34,6 +38,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
         const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
         const rate = enforceRateLimit(`lead:${ip}:${slug}`, env.LEAD_RATE_LIMIT_PER_MIN, 60_000);
         if (!rate.ok) {
+            routeLog.warn("public_lead_submit_rate_limited", { slug, retryAfter: rate.retryAfter });
             return NextResponse.json(
                 {
                     success: false,
@@ -70,12 +75,15 @@ export async function POST(req: NextRequest, context: RouteContext) {
             ...input,
         });
 
+        routeLog.info("public_lead_submit_succeeded", { slug, instituteId: institute.id, leadId: lead.id });
+
         if (contentType.includes("application/json")) {
             return NextResponse.json({ success: true, data: lead });
         }
 
         return NextResponse.redirect(new URL(`/${slug}/lead?success=1`, req.url));
     } catch (error) {
+        routeLog.error("public_lead_submit_failed", error);
         const appError = toAppError(error);
         return NextResponse.json(
             {

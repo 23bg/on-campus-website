@@ -6,6 +6,7 @@ const {
     mockUserRepo,
     mockAssertRazorpayReady,
     mockRazorpayCreate,
+    mockVerifyCheckoutSignature,
 } = vi.hoisted(() => ({
     mockSubscriptionRepo: {
         createTrial: vi.fn(),
@@ -19,6 +20,7 @@ const {
     },
     mockAssertRazorpayReady: vi.fn(),
     mockRazorpayCreate: vi.fn(),
+    mockVerifyCheckoutSignature: vi.fn(),
 }));
 
 vi.mock("@/features/subscription/repositories/subscription.repo", () => ({
@@ -31,13 +33,18 @@ vi.mock("@/features/auth/repositories/user.repo", () => ({
 
 vi.mock("@/lib/config/env", () => ({
     env: {
-        RAZORPAY_PLAN_ID_SOLO: "plan_solo",
-        RAZORPAY_PLAN_ID_TEAM: "plan_team",
+        RAZORPAY_PLAN_ID_STARTER_MONTHLY: "plan_starter_monthly",
+        RAZORPAY_PLAN_ID_STARTER_YEARLY: "plan_starter_yearly",
+        RAZORPAY_PLAN_ID_GROWTH_MONTHLY: "plan_growth_monthly",
+        RAZORPAY_PLAN_ID_GROWTH_YEARLY: "plan_growth_yearly",
+        RAZORPAY_PLAN_ID_SCALE_MONTHLY: "plan_scale_monthly",
+        RAZORPAY_PLAN_ID_SCALE_YEARLY: "plan_scale_yearly",
     },
 }));
 
 vi.mock("@/lib/billing/razorpay", () => ({
     assertRazorpayReady: mockAssertRazorpayReady,
+    verifyRazorpayCheckoutSignature: mockVerifyCheckoutSignature,
     razorpay: {
         subscriptions: {
             create: mockRazorpayCreate,
@@ -53,7 +60,7 @@ describe("subscriptionService", () => {
     const activeSub = {
         id: "sub1",
         instituteId: "inst1",
-        planType: "TEAM" as const,
+        planType: "GROWTH" as const,
         userLimit: 5,
         razorpaySubId: "rzp_sub_1",
         status: "ACTIVE" as const,
@@ -69,14 +76,14 @@ describe("subscriptionService", () => {
     });
 
     it("resolves plan type with fallback", () => {
-        expect(subscriptionService.resolvePlanType("TEAM")).toBe("TEAM");
-        expect(subscriptionService.resolvePlanType("BAD")).toBe("SOLO");
-        expect(subscriptionService.resolvePlanType()).toBe("SOLO");
+        expect(subscriptionService.resolvePlanType("GROWTH")).toBe("GROWTH");
+        expect(subscriptionService.resolvePlanType("BAD")).toBe("STARTER");
+        expect(subscriptionService.resolvePlanType()).toBe("STARTER");
     });
 
     it("returns plan id based on plan type", () => {
-        expect(subscriptionService.getRazorpayPlanId("SOLO")).toBe("plan_solo");
-        expect(subscriptionService.getRazorpayPlanId("TEAM")).toBe("plan_team");
+        expect(subscriptionService.getRazorpayPlanId("STARTER", "MONTHLY")).toBe("plan_starter_monthly");
+        expect(subscriptionService.getRazorpayPlanId("GROWTH", "YEARLY")).toBe("plan_growth_yearly");
     });
 
     it("expires trial when trial date is in past", async () => {
@@ -104,7 +111,7 @@ describe("subscriptionService", () => {
             ...activeSub,
             status: "TRIAL",
             razorpaySubId: null,
-            planType: "SOLO",
+            planType: "STARTER",
             userLimit: 1,
             trialEndsAt: future,
         });
@@ -117,7 +124,7 @@ describe("subscriptionService", () => {
         mockSubscriptionRepo.findByInstituteId.mockResolvedValue(activeSub);
         mockUserRepo.countByInstitute.mockResolvedValue(3);
         const summary = await subscriptionService.getBillingSummary("inst1");
-        expect(summary.planType).toBe("TEAM");
+        expect(summary.planType).toBe("GROWTH");
         expect(summary.planAmount).toBe(1999);
         expect(summary.usersUsed).toBe(3);
         expect(summary.userLimit).toBe(5);
@@ -125,7 +132,7 @@ describe("subscriptionService", () => {
 
     it("reuses existing razorpay subscription for same plan", async () => {
         mockSubscriptionRepo.findByInstituteId.mockResolvedValue(activeSub);
-        const result = await subscriptionService.createRazorpaySubscription("inst1", "TEAM");
+        const result = await subscriptionService.createRazorpaySubscription("inst1", "GROWTH");
         expect(result.reused).toBe(true);
         expect(mockRazorpayCreate).not.toHaveBeenCalled();
     });
@@ -134,20 +141,20 @@ describe("subscriptionService", () => {
         mockSubscriptionRepo.findByInstituteId.mockResolvedValue({
             ...activeSub,
             razorpaySubId: null,
-            planType: "SOLO",
+            planType: "STARTER",
             userLimit: 1,
             status: "TRIAL",
             trialEndsAt: future,
         });
         mockRazorpayCreate.mockResolvedValue({ id: "rzp_new_1" });
 
-        const result = await subscriptionService.createRazorpaySubscription("inst1", "TEAM");
+        const result = await subscriptionService.createRazorpaySubscription("inst1", "GROWTH");
 
         expect(mockAssertRazorpayReady).toHaveBeenCalled();
         expect(mockRazorpayCreate).toHaveBeenCalled();
-        expect(mockSubscriptionRepo.updateByInstituteId).toHaveBeenCalled();
+        expect(mockSubscriptionRepo.upsertByRazorpaySubId).toHaveBeenCalled();
         expect(result.reused).toBe(false);
-        expect(result.razorpaySubId).toBe("rzp_new_1");
+        expect(result.subscriptionId).toBe("rzp_new_1");
     });
 
     it("maps webhook events", () => {

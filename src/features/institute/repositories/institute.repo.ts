@@ -53,6 +53,24 @@ export const instituteRepository = {
     updateById: async (id: string, input: UpdateInstituteInput) =>
         prisma.institute.update({
             where: { id },
-            data: input,
+            data: (() => {
+                const { address, ...rest } = input;
+
+                if (address === undefined) {
+                    return rest;
+                }
+
+                if (address === null) {
+                    return {
+                        ...rest,
+                        address: { unset: true },
+                    };
+                }
+
+                return {
+                    ...rest,
+                    address: { set: address },
+                };
+            })(),
         }),
 };

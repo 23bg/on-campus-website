@@ -3,20 +3,26 @@ import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { instituteService } from "@/features/institute/services/institute.service";
 import { toAppError } from "@/lib/utils/error";
+import { createRouteLogger } from "@/lib/api/route-logger";
 
 export async function GET() {
+    const routeLog = createRouteLogger("/api/v1/institute#GET");
     try {
         const session = await readSessionFromCookie();
         if (!session) {
+            routeLog.warn("institute_get_unauthorized");
             return NextResponse.json(
                 { success: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } },
                 { status: 401 }
             );
         }
 
+        routeLog.info("institute_get_started", { userId: session.userId, instituteId: session.instituteId });
         const data = await instituteService.getInstitute(session.userId);
+        routeLog.info("institute_get_succeeded", { userId: session.userId, instituteId: session.instituteId });
         return NextResponse.json({ success: true, data });
     } catch (error) {
+        routeLog.error("institute_get_failed", error);
         const appError = toAppError(error);
         return NextResponse.json(
             { success: false, error: { code: appError.code, message: appError.message } },
@@ -26,9 +32,11 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+    const routeLog = createRouteLogger("/api/v1/institute#PUT", req);
     try {
         const session = await readSessionFromCookie();
         if (!session?.instituteId) {
+            routeLog.warn("institute_put_unauthorized");
             return NextResponse.json(
                 { success: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } },
                 { status: 401 }
@@ -36,11 +44,14 @@ export async function PUT(req: NextRequest) {
         }
 
         if (!canWriteInstituteData(session.role)) {
+            routeLog.warn("institute_put_forbidden", { userId: session.userId, instituteId: session.instituteId, role: session.role });
             return NextResponse.json(
                 { success: false, error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
                 { status: 403 }
             );
         }
+
+        routeLog.info("institute_put_started", { userId: session.userId, instituteId: session.instituteId });
 
         const body = (await req.json()) as {
             name?: string;
@@ -86,8 +97,10 @@ export async function PUT(req: NextRequest) {
         };
 
         const data = await instituteService.updateProfile(session.instituteId, body);
+        routeLog.info("institute_put_succeeded", { userId: session.userId, instituteId: session.instituteId });
         return NextResponse.json({ success: true, data });
     } catch (error) {
+        routeLog.error("institute_put_failed", error);
         const appError = toAppError(error);
         return NextResponse.json(
             { success: false, error: { code: appError.code, message: appError.message } },

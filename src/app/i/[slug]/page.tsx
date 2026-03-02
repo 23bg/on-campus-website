@@ -17,11 +17,19 @@ export async function generateMetadata({ params }: InstituteSlugPageProps): Prom
 
     try {
         const institute = await getPublicInstitute(slug);
-        const title = institute.name?.trim() || "Institute";
+        const instituteName = institute.name?.trim() || "Institute";
+        const city = institute.address?.city?.trim() || "your city";
+        const topCourses = institute.courses
+            .map((course) => course.name)
+            .filter((courseName): courseName is string => Boolean(courseName?.trim()))
+            .slice(0, 3)
+            .join(" and ");
+        const description = `${instituteName} is a top coaching institute in ${city} offering ${topCourses || "NEET and JEE"} courses. Admissions open.`;
         const logo = institute.logo?.trim();
 
         return {
-            title,
+            title: `${instituteName} | Coaching Institute in ${city}`,
+            description,
             ...(logo
                 ? {
                     icons: {
@@ -34,7 +42,7 @@ export async function generateMetadata({ params }: InstituteSlugPageProps): Prom
         };
     } catch {
         return {
-            title: "Institute",
+            title: "Institute | Coaching Institute",
         };
     }
 }

@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, Pencil, Trash2, Plus, Layers, Eye } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type Course = { id: string; name: string };
 type Teacher = { id: string; name: string; subject?: string | null };
@@ -25,6 +26,7 @@ type Batch = {
 
 type BatchForm = { courseId: string; name: string; startDate: string; schedule: string; teacherId: string };
 const emptyForm: BatchForm = { courseId: "", name: "", startDate: "", schedule: "", teacherId: "" };
+const PAGE_SIZE = 10;
 
 export default function BatchesPage() {
     const [batches, setBatches] = useState<Batch[]>([]);
@@ -37,6 +39,7 @@ export default function BatchesPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
     const [form, setForm] = useState<BatchForm>(emptyForm);
+    const [page, setPage] = useState(1);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -57,6 +60,12 @@ export default function BatchesPage() {
     }, []);
 
     useEffect(() => { load(); }, [load]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [batches.length]);
+
+    const paginatedBatches = batches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const courseMap = Object.fromEntries(courses.map((c) => [c.id, c.name]));
     const teacherMap = Object.fromEntries(teachers.map((t) => [t.id, t.name]));
@@ -163,9 +172,9 @@ export default function BatchesPage() {
                                     No batches yet.
                                 </TableCell>
                             </TableRow>
-                        ) : batches.map((batch, index) => (
+                        ) : paginatedBatches.map((batch, index) => (
                             <TableRow key={batch.id}>
-                                <TableCell>{index + 1}</TableCell>
+                                <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
                                 <TableCell className="font-medium max-w-[180px] truncate" title={batch.name}>{batch.name}</TableCell>
                                 <TableCell className="max-w-[180px] truncate" title={courseMap[batch.courseId] ?? "-"}>{courseMap[batch.courseId] ?? "-"}</TableCell>
                                 <TableCell>{batch.startDate ? new Date(batch.startDate).toLocaleDateString() : "-"}</TableCell>
@@ -189,6 +198,13 @@ export default function BatchesPage() {
                     </TableBody>
                 </Table>
             </div>
+            <TablePaginationControls
+                className="mt-3"
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalItems={batches.length}
+                onPageChange={setPage}
+            />
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>

@@ -77,32 +77,32 @@ export default function DefaultersPage() {
                     ) : (
                         <>
                             <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Sr. No.</TableHead>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead>Phone</TableHead>
-                                    <TableHead>Course</TableHead>
-                                    <TableHead className="text-right">Total Fees</TableHead>
-                                    <TableHead className="text-right">Paid</TableHead>
-                                    <TableHead className="text-right">Pending</TableHead>
-                                    <TableHead>Due Date</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {paginatedDefaulters.map((d, index) => (
-                                    <TableRow key={d.studentId}>
-                                        <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
-                                        <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
-                                        <TableCell>{d.phone}</TableCell>
-                                        <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(d.totalFees)}</TableCell>
-                                        <TableCell className="text-right text-green-600">{formatCurrency(d.totalPaid)}</TableCell>
-                                        <TableCell className="text-right font-medium text-red-600">{formatCurrency(d.pending)}</TableCell>
-                                        <TableCell>{d.dueDate ? new Date(d.dueDate).toLocaleDateString() : "-"}</TableCell>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Sr. No.</TableHead>
+                                        <TableHead>Student</TableHead>
+                                        <TableHead>Phone</TableHead>
+                                        <TableHead>Course</TableHead>
+                                        <TableHead className="text-right">Total Fees</TableHead>
+                                        <TableHead className="text-right">Paid</TableHead>
+                                        <TableHead className="text-right">Pending</TableHead>
+                                        <TableHead>Due Date</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
+                                </TableHeader>
+                                <TableBody>
+                                    {paginatedDefaulters.map((d, index) => (
+                                        <TableRow key={d.studentId}>
+                                            <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
+                                            <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
+                                            <TableCell>{d.phone}</TableCell>
+                                            <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(d.totalFees)}</TableCell>
+                                            <TableCell className="text-right text-green-600">{formatCurrency(d.totalPaid)}</TableCell>
+                                            <TableCell className="text-right font-medium text-red-600">{formatCurrency(d.pending)}</TableCell>
+                                            <TableCell>{d.dueDate ? new Date(d.dueDate).toLocaleDateString() : "-"}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
                             </Table>
                             <TablePaginationControls
                                 className="mt-3"

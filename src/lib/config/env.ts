@@ -27,6 +27,12 @@ const envSchema = z.object({
     RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
     RAZORPAY_PLAN_ID_SOLO: z.string().optional(),
     RAZORPAY_PLAN_ID_TEAM: z.string().optional(),
+    RAZORPAY_PLAN_ID_STARTER_MONTHLY: z.string().optional(),
+    RAZORPAY_PLAN_ID_STARTER_YEARLY: z.string().optional(),
+    RAZORPAY_PLAN_ID_GROWTH_MONTHLY: z.string().optional(),
+    RAZORPAY_PLAN_ID_GROWTH_YEARLY: z.string().optional(),
+    RAZORPAY_PLAN_ID_SCALE_MONTHLY: z.string().optional(),
+    RAZORPAY_PLAN_ID_SCALE_YEARLY: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

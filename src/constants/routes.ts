@@ -31,6 +31,7 @@ const ROUTES = {
 	},
 	USE_CASES: "/use-cases",
 	RESOURCES: "/resources",
+	TOOLS: "/tools",
 	DEMO_INSTITUTE: "/demo-institute",
 	ABOUT: "/about",
 	CONTACT: "/contact",

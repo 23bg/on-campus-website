@@ -73,4 +73,5 @@ describe("proxy route guards", () => {
         expect(response.headers.get("location")).toBeNull();
         expect(response.status).toBe(200);
     });
+
 });

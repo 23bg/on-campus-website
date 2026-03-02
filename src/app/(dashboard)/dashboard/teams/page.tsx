@@ -7,6 +7,7 @@ import { z } from "zod";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type TeamMember = {
     id: string;
@@ -27,6 +28,7 @@ const teamMemberSchema = z.object({
 });
 
 type TeamMemberFormValues = z.infer<typeof teamMemberSchema>;
+const PAGE_SIZE = 10;
 
 export default function DashboardTeamsPage() {
     const [members, setMembers] = useState<TeamMember[]>([]);
@@ -41,6 +43,7 @@ export default function DashboardTeamsPage() {
         },
     });
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
 
     const load = async () => {
         setLoading(true);
@@ -57,6 +60,12 @@ export default function DashboardTeamsPage() {
     useEffect(() => {
         load();
     }, []);
+
+    useEffect(() => {
+        setPage(1);
+    }, [members.length]);
+
+    const paginatedMembers = members.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const canManage = sessionUser?.role === "OWNER";
 
@@ -165,9 +174,9 @@ export default function DashboardTeamsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {members.map((member, index) => (
+                            {paginatedMembers.map((member, index) => (
                                 <tr key={member.id} className="border-t">
-                                    <td className="px-3 py-2">{index + 1}</td>
+                                    <td className="px-3 py-2">{(page - 1) * PAGE_SIZE + index + 1}</td>
                                     <td className="px-3 py-2">{member.name || "-"}</td>
                                     <td className="px-3 py-2">{member.email}</td>
                                     <td className="px-3 py-2">{member.role}</td>
@@ -203,6 +212,13 @@ export default function DashboardTeamsPage() {
                     </table>
                 </div>
             )}
+            <TablePaginationControls
+                className="mt-3"
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalItems={members.length}
+                onPageChange={setPage}
+            />
         </main>
     );
 }

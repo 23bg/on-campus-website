@@ -1,13 +1,26 @@
 import { prisma } from "@/lib/db/prisma";
 import { DEFAULT_PLAN_TYPE, PLAN_CONFIG, PlanType } from "@/config/plans";
 
+const mapPlanTypeToDb = (planType: PlanType) => {
+    // Prisma enum currently uses SOLO/TEAM. Map app-level plans to DB enum.
+    switch (planType) {
+        case "STARTER":
+            return "SOLO" as const;
+        case "GROWTH":
+        case "SCALE":
+            return "TEAM" as const;
+        default:
+            return "SOLO" as const;
+    }
+};
+
 export const subscriptionRepository = {
     createTrial: async (instituteId: string, planType: PlanType = DEFAULT_PLAN_TYPE) =>
         prisma.subscription.upsert({
             where: { instituteId },
             create: {
                 instituteId,
-                planType,
+                planType: mapPlanTypeToDb(planType),
                 userLimit: PLAN_CONFIG[planType].userLimit,
                 status: "TRIAL",
                 trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
@@ -38,7 +51,10 @@ export const subscriptionRepository = {
     ) =>
         prisma.subscription.update({
             where: { instituteId },
-            data: payload,
+            data: {
+                ...payload,
+                ...(payload.planType ? { planType: mapPlanTypeToDb(payload.planType) } : {}),
+            } as any,
         }),
 
     upsertByRazorpaySubId: async (
@@ -57,7 +73,7 @@ export const subscriptionRepository = {
             create: {
                 instituteId,
                 razorpaySubId,
-                planType: payload.planType ?? DEFAULT_PLAN_TYPE,
+                planType: mapPlanTypeToDb(payload.planType ?? DEFAULT_PLAN_TYPE),
                 userLimit: payload.userLimit ?? PLAN_CONFIG[payload.planType ?? DEFAULT_PLAN_TYPE].userLimit,
                 status: payload.status ?? "TRIAL",
                 currentPeriodEnd: payload.currentPeriodEnd,
@@ -68,7 +84,7 @@ export const subscriptionRepository = {
                 status: payload.status,
                 currentPeriodEnd: payload.currentPeriodEnd,
                 trialEndsAt: payload.trialEndsAt,
-                planType: payload.planType,
+                ...(payload.planType ? { planType: mapPlanTypeToDb(payload.planType) } : {}),
                 userLimit: payload.userLimit,
             },
         }),

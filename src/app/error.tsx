@@ -1,6 +1,7 @@
 ﻿'use client'
+import { clientLogger } from '@/lib/clientLogger'
 export default function GlobalError({ error, reset }: { error: Error; reset: () => void }) {
-  console.error('Global Error:', error)
+  clientLogger.error('global_error', { message: error.message, stack: error.stack })
 
   return (
     <div className="h-screen flex flex-col items-center justify-center">

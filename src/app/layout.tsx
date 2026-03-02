@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import Script from "next/script";
 
 export const inter = Inter({
   subsets: ["latin"],
@@ -55,7 +56,7 @@ export default async function RootLayout({
                 color="#00BF63"
                 shadow={false}
               />
-              <main>{children}</main>
+              {children}
               <Toaster
                 duration={3000}
                 position={"top-center"}
@@ -65,7 +66,12 @@ export default async function RootLayout({
             </ReduxProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
+        <Script
+          id="razorpay-checkout-js"
+          src="https://checkout.razorpay.com/v1/checkout.js"
+        />
       </body>
+
     </html>
   );
 }

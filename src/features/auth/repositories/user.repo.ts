@@ -104,4 +104,10 @@ export const userRepository = {
         prisma.user.deleteMany({
             where: { id, instituteId },
         }),
+
+    updateFirstLogin: async (id: string, firstLogin: boolean) =>
+        prisma.user.update({
+            where: { id },
+            data: { firstLogin },
+        }),
 };
