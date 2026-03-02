@@ -120,7 +120,7 @@ export default function Pricing() {
                     <Card className="border rounded-lg">
                         <CardHeader>
                             <CardTitle className="text-4xl font-semibold">
-                                ₹{getDisplayPrice(PLAN_CONFIG.SOLO.priceMonthly)}
+                                ₹{getDisplayPrice(PLAN_CONFIG.STARTER.priceMonthly)}
                             </CardTitle>
                             <p className="text-muted-foreground text-sm">
                                 {billingSuffix}
@@ -159,7 +159,7 @@ export default function Pricing() {
                         <CardHeader>
                             <div className="flex justify-between">
                                 <CardTitle className="text-4xl font-semibold">
-                                    ₹{getDisplayPrice(PLAN_CONFIG.TEAM.priceMonthly)}
+                                    ₹{getDisplayPrice(PLAN_CONFIG.GROWTH.priceMonthly)}
                                 </CardTitle>
                                 <Badge>
                                     {t("mostPopular")}

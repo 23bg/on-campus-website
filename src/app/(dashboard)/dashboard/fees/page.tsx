@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Plus, IndianRupee, CheckCircle2, Clock } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type Student = { id: string; name: string; phone: string };
 type FeePlan = {
@@ -31,6 +32,8 @@ type Payment = {
     note?: string | null;
 };
 
+const PAGE_SIZE = 10;
+
 export default function FeesPage() {
     const [students, setStudents] = useState<Student[]>([]);
     const [plans, setPlans] = useState<FeePlan[]>([]);
@@ -44,6 +47,7 @@ export default function FeesPage() {
     // Payment view
     const [selectedPlan, setSelectedPlan] = useState<FeePlan | null>(null);
     const [payments, setPayments] = useState<Payment[]>([]);
+    const [paymentPage, setPaymentPage] = useState(1);
 
     // Add Payment dialog
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -154,6 +158,11 @@ export default function FeesPage() {
 
     const paidTotal = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + p.amount, 0);
     const pendingTotal = selectedPlan ? Math.max(0, selectedPlan.totalAmount - paidTotal) : 0;
+    const paginatedPayments = payments.slice((paymentPage - 1) * PAGE_SIZE, paymentPage * PAGE_SIZE);
+
+    useEffect(() => {
+        setPaymentPage(1);
+    }, [selectedPlan?.id, payments.length]);
 
     return (
         <main className="p-6">
@@ -260,9 +269,9 @@ export default function FeesPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {payments.map((payment, index) => (
+                                        {paginatedPayments.map((payment, index) => (
                                             <TableRow key={payment.id}>
-                                                <TableCell>{index + 1}</TableCell>
+                                                <TableCell>{(paymentPage - 1) * PAGE_SIZE + index + 1}</TableCell>
                                                 <TableCell className="font-medium">{formatCurrency(payment.amount)}</TableCell>
                                                 <TableCell>{payment.paidOn ? new Date(payment.paidOn).toLocaleDateString() : "-"}</TableCell>
                                                 <TableCell className="max-w-60 truncate text-muted-foreground text-sm" title={payment.note || "-"}>{payment.note || "-"}</TableCell>
@@ -270,6 +279,13 @@ export default function FeesPage() {
                                         ))}
                                     </TableBody>
                                 </Table>
+                                <TablePaginationControls
+                                    className="mt-3"
+                                    page={paymentPage}
+                                    pageSize={PAGE_SIZE}
+                                    totalItems={payments.length}
+                                    onPageChange={setPaymentPage}
+                                />
                             </>
                         )}
                     </CardContent>

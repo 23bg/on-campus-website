@@ -1,0 +1,153 @@
+import type { Metadata } from "next";
+import { prisma } from "@/lib/db/prisma";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+export const metadata: Metadata = {
+    title: "Compare Coaching Courses Near You",
+    description: "Compare coaching courses by city, duration, and fees to find the best institute near you.",
+};
+
+type CourseComparisonPageProps = {
+    searchParams: Promise<{ city?: string; course?: string }>;
+};
+
+export default async function CourseComparisonPage({ searchParams }: CourseComparisonPageProps) {
+    const params = await searchParams;
+    const city = params.city?.trim() || "";
+    const course = params.course?.trim() || "";
+
+    const instituteWhere = {
+        isOnboarded: true,
+        slug: { not: null as string | null },
+        ...(city
+            ? {
+                address: {
+                    is: {
+                        city: { equals: city },
+                    },
+                },
+            }
+            : {}),
+    };
+
+    const institutes = await prisma.institute.findMany({
+        where: instituteWhere,
+        select: {
+            id: true,
+            name: true,
+            address: true,
+        },
+    });
+
+    const instituteIds = institutes.map((institute) => institute.id);
+
+    const courses = instituteIds.length
+        ? await prisma.course.findMany({
+            where: {
+                instituteId: { in: instituteIds },
+                ...(course
+                    ? {
+                        name: {
+                            contains: course,
+                            mode: "insensitive",
+                        },
+                    }
+                    : {}),
+            },
+            select: {
+                id: true,
+                instituteId: true,
+                name: true,
+                defaultFees: true,
+                duration: true,
+            },
+            orderBy: { createdAt: "desc" },
+            take: 200,
+        })
+        : [];
+
+    const instituteMap = new Map(institutes.map((institute) => [institute.id, institute]));
+
+    const rows = courses
+        .map((row) => {
+            const institute = instituteMap.get(row.instituteId);
+            if (!institute) return null;
+            return {
+                id: row.id,
+                institute: institute.name || "Institute",
+                course: row.name,
+                fees: row.defaultFees != null ? `₹${row.defaultFees.toLocaleString("en-IN")}` : "N/A",
+                duration: row.duration || "N/A",
+                mode: "Offline / Hybrid",
+                city: institute.address?.city || "N/A",
+            };
+        })
+        .filter((value): value is NonNullable<typeof value> => Boolean(value));
+
+    return (
+        <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
+            <div className="space-y-2">
+                <h1 className="text-3xl font-bold">Course Comparison Tool</h1>
+                <p className="text-muted-foreground">Compare coaching courses between institutes.</p>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Filters</CardTitle>
+                    <CardDescription>Filter by city and course name</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form className="grid gap-3 md:grid-cols-[1fr_1fr_auto]" method="GET">
+                        <Input name="city" placeholder="City" defaultValue={city} />
+                        <Input name="course" placeholder="Course" defaultValue={course} />
+                        <Button type="submit">Apply</Button>
+                    </form>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Results</CardTitle>
+                    <CardDescription>{rows.length} courses found</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Institute</TableHead>
+                                <TableHead>Course</TableHead>
+                                <TableHead>Fees</TableHead>
+                                <TableHead>Duration</TableHead>
+                                <TableHead>Mode</TableHead>
+                                <TableHead>City</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {rows.length ? (
+                                rows.map((row) => (
+                                    <TableRow key={row.id}>
+                                        <TableCell>{row.institute}</TableCell>
+                                        <TableCell>{row.course}</TableCell>
+                                        <TableCell>{row.fees}</TableCell>
+                                        <TableCell>{row.duration}</TableCell>
+                                        <TableCell>{row.mode}</TableCell>
+                                        <TableCell>{row.city}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                        No courses found for selected filters.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </main>
+    );
+}

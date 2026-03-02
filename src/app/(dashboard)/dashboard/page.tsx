@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, IndianRupee, AlertTriangle, GraduationCap, UserPlus, Users } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type Metrics = {
     leadsThisMonth: number;
@@ -72,6 +73,8 @@ type Defaulter = {
     dueDate?: string | null;
 };
 
+const PAGE_SIZE = 5;
+
 export default function DashboardPage() {
     const [metrics, setMetrics] = useState<Metrics | null>(null);
     const [defaulters, setDefaulters] = useState<Defaulter[]>([]);
@@ -79,6 +82,11 @@ export default function DashboardPage() {
     const [announcementTitle, setAnnouncementTitle] = useState("");
     const [announcementBody, setAnnouncementBody] = useState("");
     const [postingAnnouncement, setPostingAnnouncement] = useState(false);
+    const [todayFollowUpsPage, setTodayFollowUpsPage] = useState(1);
+    const [overdueFollowUpsPage, setOverdueFollowUpsPage] = useState(1);
+    const [recentLeadsPage, setRecentLeadsPage] = useState(1);
+    const [recentPaymentsPage, setRecentPaymentsPage] = useState(1);
+    const [defaultersPage, setDefaultersPage] = useState(1);
 
     useEffect(() => {
         const load = async () => {
@@ -99,6 +107,25 @@ export default function DashboardPage() {
     }, []);
 
     const formatCurrency = (v: number) => `₹${v.toLocaleString("en-IN")}`;
+
+    useEffect(() => {
+        setTodayFollowUpsPage(1);
+        setOverdueFollowUpsPage(1);
+        setRecentLeadsPage(1);
+        setRecentPaymentsPage(1);
+        setDefaultersPage(1);
+    }, [metrics, defaulters.length]);
+
+    const todayFollowUps = metrics?.followUpOverview?.todaysFollowUps ?? [];
+    const overdueFollowUps = metrics?.followUpOverview?.overdueFollowUps ?? [];
+    const recentLeads = metrics?.recentLeads ?? [];
+    const recentPayments = metrics?.recentPayments ?? [];
+
+    const paginatedTodayFollowUps = todayFollowUps.slice((todayFollowUpsPage - 1) * PAGE_SIZE, todayFollowUpsPage * PAGE_SIZE);
+    const paginatedOverdueFollowUps = overdueFollowUps.slice((overdueFollowUpsPage - 1) * PAGE_SIZE, overdueFollowUpsPage * PAGE_SIZE);
+    const paginatedRecentLeads = recentLeads.slice((recentLeadsPage - 1) * PAGE_SIZE, recentLeadsPage * PAGE_SIZE);
+    const paginatedRecentPayments = recentPayments.slice((recentPaymentsPage - 1) * PAGE_SIZE, recentPaymentsPage * PAGE_SIZE);
+    const paginatedDefaulters = defaulters.slice((defaultersPage - 1) * PAGE_SIZE, defaultersPage * PAGE_SIZE);
 
     const postAnnouncement = async () => {
         if (!announcementTitle.trim() || !announcementBody.trim()) {
@@ -214,27 +241,36 @@ export default function DashboardPage() {
                                 <CardTitle className="text-base">Today&apos;s Follow-ups</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {!metrics?.followUpOverview?.todaysFollowUps?.length ? (
+                                {!todayFollowUps.length ? (
                                     <p className="text-sm text-muted-foreground">No follow-ups scheduled for today.</p>
                                 ) : (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Phone</TableHead>
-                                                <TableHead>Date</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {metrics.followUpOverview.todaysFollowUps.map((lead) => (
-                                                <TableRow key={lead.id}>
-                                                    <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                    <TableCell>{lead.phone}</TableCell>
-                                                    <TableCell>{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                                    <>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Name</TableHead>
+                                                    <TableHead>Phone</TableHead>
+                                                    <TableHead>Date</TableHead>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {paginatedTodayFollowUps.map((lead) => (
+                                                    <TableRow key={lead.id}>
+                                                        <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                                        <TableCell>{lead.phone}</TableCell>
+                                                        <TableCell>{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                        <TablePaginationControls
+                                            className="mt-3"
+                                            page={todayFollowUpsPage}
+                                            pageSize={PAGE_SIZE}
+                                            totalItems={todayFollowUps.length}
+                                            onPageChange={setTodayFollowUpsPage}
+                                        />
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -244,27 +280,36 @@ export default function DashboardPage() {
                                 <CardTitle className="text-base text-red-600">Overdue Follow-ups</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {!metrics?.followUpOverview?.overdueFollowUps?.length ? (
+                                {!overdueFollowUps.length ? (
                                     <p className="text-sm text-muted-foreground">No overdue follow-ups.</p>
                                 ) : (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Phone</TableHead>
-                                                <TableHead>Due</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {metrics.followUpOverview.overdueFollowUps.map((lead) => (
-                                                <TableRow key={lead.id}>
-                                                    <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                    <TableCell>{lead.phone}</TableCell>
-                                                    <TableCell className="text-red-600">{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                                    <>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Name</TableHead>
+                                                    <TableHead>Phone</TableHead>
+                                                    <TableHead>Due</TableHead>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {paginatedOverdueFollowUps.map((lead) => (
+                                                    <TableRow key={lead.id}>
+                                                        <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                                        <TableCell>{lead.phone}</TableCell>
+                                                        <TableCell className="text-red-600">{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                        <TablePaginationControls
+                                            className="mt-3"
+                                            page={overdueFollowUpsPage}
+                                            pageSize={PAGE_SIZE}
+                                            totalItems={overdueFollowUps.length}
+                                            onPageChange={setOverdueFollowUpsPage}
+                                        />
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -274,27 +319,36 @@ export default function DashboardPage() {
                                 <CardTitle className="text-base">Recent Leads</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {!metrics?.recentLeads?.length ? (
+                                {!recentLeads.length ? (
                                     <p className="text-sm text-muted-foreground">No recent leads yet. Share your institute link to start receiving enquiries.</p>
                                 ) : (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Phone</TableHead>
-                                                <TableHead>Status</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {metrics.recentLeads.map((lead) => (
-                                                <TableRow key={lead.id}>
-                                                    <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                    <TableCell>{lead.phone}</TableCell>
-                                                    <TableCell>{lead.status}</TableCell>
+                                    <>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Name</TableHead>
+                                                    <TableHead>Phone</TableHead>
+                                                    <TableHead>Status</TableHead>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {paginatedRecentLeads.map((lead) => (
+                                                    <TableRow key={lead.id}>
+                                                        <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                                        <TableCell>{lead.phone}</TableCell>
+                                                        <TableCell>{lead.status}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                        <TablePaginationControls
+                                            className="mt-3"
+                                            page={recentLeadsPage}
+                                            pageSize={PAGE_SIZE}
+                                            totalItems={recentLeads.length}
+                                            onPageChange={setRecentLeadsPage}
+                                        />
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -304,27 +358,36 @@ export default function DashboardPage() {
                                 <CardTitle className="text-base">Recent Payments</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {!metrics?.recentPayments?.length ? (
+                                {!recentPayments.length ? (
                                     <p className="text-sm text-muted-foreground">No recent payments found.</p>
                                 ) : (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Student</TableHead>
-                                                <TableHead className="text-right">Amount</TableHead>
-                                                <TableHead>Method</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {metrics.recentPayments.map((payment) => (
-                                                <TableRow key={payment.id}>
-                                                    <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
-                                                    <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
-                                                    <TableCell className="max-w-[140px] truncate" title={payment.method || "-"}>{payment.method || "-"}</TableCell>
+                                    <>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Student</TableHead>
+                                                    <TableHead className="text-right">Amount</TableHead>
+                                                    <TableHead>Method</TableHead>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {paginatedRecentPayments.map((payment) => (
+                                                    <TableRow key={payment.id}>
+                                                        <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
+                                                        <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
+                                                        <TableCell className="max-w-[140px] truncate" title={payment.method || "-"}>{payment.method || "-"}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                        <TablePaginationControls
+                                            className="mt-3"
+                                            page={recentPaymentsPage}
+                                            pageSize={PAGE_SIZE}
+                                            totalItems={recentPayments.length}
+                                            onPageChange={setRecentPaymentsPage}
+                                        />
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -354,9 +417,9 @@ export default function DashboardPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {defaulters.map((d, index) => (
+                                        {paginatedDefaulters.map((d, index) => (
                                             <TableRow key={d.studentId}>
-                                                <TableCell>{index + 1}</TableCell>
+                                                <TableCell>{(defaultersPage - 1) * PAGE_SIZE + index + 1}</TableCell>
                                                 <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
                                                 <TableCell>{d.phone}</TableCell>
                                                 <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
@@ -368,6 +431,13 @@ export default function DashboardPage() {
                                         ))}
                                     </TableBody>
                                 </Table>
+                                <TablePaginationControls
+                                    className="mt-3"
+                                    page={defaultersPage}
+                                    pageSize={PAGE_SIZE}
+                                    totalItems={defaulters.length}
+                                    onPageChange={setDefaultersPage}
+                                />
                             </CardContent>
                         </Card>
                     ) : null}

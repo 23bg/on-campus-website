@@ -10,6 +10,29 @@ import api from "@/lib/axios";
 import { Loader2, CreditCard } from "lucide-react";
 import { PLAN_CONFIG, PlanType } from "@/config/plans";
 
+type RazorpayCheckoutResponse = {
+    razorpay_payment_id: string;
+    razorpay_subscription_id: string;
+    razorpay_signature: string;
+};
+
+type RazorpayCheckoutOptions = {
+    key: string;
+    subscription_id: string;
+    name: string;
+    description: string;
+    handler: (response: RazorpayCheckoutResponse) => void | Promise<void>;
+    modal?: {
+        ondismiss?: () => void;
+    };
+};
+
+type RazorpayInstance = {
+    open: () => void;
+};
+
+type RazorpayConstructor = new (options: RazorpayCheckoutOptions) => RazorpayInstance;
+
 type BillingSummary = {
     planType: PlanType;
     planName?: string;
@@ -35,7 +58,7 @@ export default function BillingPage() {
     const [summary, setSummary] = useState<BillingSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState<PlanType>("SOLO");
+    const [selectedPlan, setSelectedPlan] = useState<PlanType>("STARTER");
 
     const loadSummary = async () => {
         try {
@@ -57,9 +80,44 @@ export default function BillingPage() {
     const createSubscription = async (planType: PlanType) => {
         setCreating(true);
         try {
-            await api.post(API.INTERNAL.BILLING.ROOT, { action: "create-subscription", planType });
-            toast.success(planType === "TEAM" ? "Growth plan initiated" : "Starter plan initiated");
-            await loadSummary();
+            const response = await api.post(API.INTERNAL.BILLING.ROOT, {
+                action: "create-subscription",
+                planType,
+                interval: "MONTHLY",
+            });
+
+            const payload = response.data?.data as {
+                subscriptionId?: string;
+                key?: string;
+            };
+
+            if (!payload?.subscriptionId || !payload?.key) {
+                throw new Error("Missing checkout payload");
+            }
+
+            const RazorpayCtor = (window as unknown as { Razorpay?: RazorpayConstructor }).Razorpay;
+            if (!RazorpayCtor) {
+                throw new Error("Razorpay SDK not loaded");
+            }
+
+            const rzp = new RazorpayCtor({
+                key: payload.key,
+                subscription_id: payload.subscriptionId,
+                name: "OnCampus",
+                description: "Admission CRM Subscription",
+                handler: async (checkoutResponse) => {
+                    await api.post(API.INTERNAL.BILLING.CONFIRM, checkoutResponse);
+                    toast.success(`${planType} plan activated`);
+                    await loadSummary();
+                },
+                modal: {
+                    ondismiss: () => {
+                        toast.message("Checkout closed. Complete payment setup to activate trial.");
+                    },
+                },
+            });
+
+            rzp.open();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         } finally {
@@ -93,7 +151,7 @@ export default function BillingPage() {
                             <CardTitle className="flex items-center gap-2">
                                 <CreditCard className="h-5 w-5" /> Subscription Plan
                             </CardTitle>
-                            <CardDescription className="mt-1">{summary?.planName ?? "Starter System"} — ₹{summary?.planAmount ?? PLAN_CONFIG.SOLO.priceMonthly}/month</CardDescription>
+                            <CardDescription className="mt-1">{summary?.planName ?? "Starter System"} — ₹{summary?.planAmount ?? PLAN_CONFIG.STARTER.priceMonthly}/month</CardDescription>
                         </div>
                         <Badge variant="secondary" className={STATUS_COLORS[summary?.status ?? "TRIAL"] ?? ""}>
                             {summary?.status ?? "TRIAL"}
@@ -131,26 +189,36 @@ export default function BillingPage() {
                         </span>
                     </div>
 
-                    <div className="grid gap-2 pt-2 sm:grid-cols-2">
+                    <div className="grid gap-2 pt-2 sm:grid-cols-3">
                         <Button
-                            variant={selectedPlan === "SOLO" ? "default" : "outline"}
+                            variant={selectedPlan === "STARTER" ? "default" : "outline"}
                             disabled={creating}
                             onClick={() => {
-                                setSelectedPlan("SOLO");
-                                void createSubscription("SOLO");
+                                setSelectedPlan("STARTER");
+                                void createSubscription("STARTER");
                             }}
                         >
-                            {creating && selectedPlan === "SOLO" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Starter (₹${PLAN_CONFIG.SOLO.priceMonthly})`}
+                            {creating && selectedPlan === "STARTER" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Starter (₹${PLAN_CONFIG.STARTER.priceMonthly})`}
                         </Button>
                         <Button
-                            variant={selectedPlan === "TEAM" ? "default" : "outline"}
+                            variant={selectedPlan === "GROWTH" ? "default" : "outline"}
                             disabled={creating}
                             onClick={() => {
-                                setSelectedPlan("TEAM");
-                                void createSubscription("TEAM");
+                                setSelectedPlan("GROWTH");
+                                void createSubscription("GROWTH");
                             }}
                         >
-                            {creating && selectedPlan === "TEAM" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Growth (₹${PLAN_CONFIG.TEAM.priceMonthly})`}
+                            {creating && selectedPlan === "GROWTH" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Growth (₹${PLAN_CONFIG.GROWTH.priceMonthly})`}
+                        </Button>
+                        <Button
+                            variant={selectedPlan === "SCALE" ? "default" : "outline"}
+                            disabled={creating}
+                            onClick={() => {
+                                setSelectedPlan("SCALE");
+                                void createSubscription("SCALE");
+                            }}
+                        >
+                            {creating && selectedPlan === "SCALE" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Scale (₹${PLAN_CONFIG.SCALE.priceMonthly})`}
                         </Button>
                     </div>
                 </CardContent>

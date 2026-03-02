@@ -8,6 +8,7 @@ export type NavItem = {
 export const PUBLIC_NAV_ITEMS: NavItem[] = [
     { labelKey: "home", href: ROUTES.HOME },
     { labelKey: "features", href: ROUTES.FEATURES },
+    { labelKey: "tools", href: ROUTES.TOOLS },
     { labelKey: "pricing", href: ROUTES.PRICING },
     { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
     { labelKey: "useCases", href: ROUTES.USE_CASES },
@@ -19,6 +20,7 @@ export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
         titleKey: "groupProduct",
         links: [
             { labelKey: "features", href: ROUTES.FEATURES },
+            { labelKey: "tools", href: ROUTES.TOOLS },
             { labelKey: "pricing", href: ROUTES.PRICING },
             { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
         ],

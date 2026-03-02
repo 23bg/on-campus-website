@@ -3,6 +3,7 @@ import { instituteRepository } from "@/features/institute/repositories/institute
 import { userRepository } from "@/features/auth/repositories/user.repo";
 import { courseRepository } from "@/features/course/repositories/course.repo";
 import { AppError } from "@/lib/utils/error";
+import { prisma } from "@/lib/db/prisma";
 
 const phoneSchema = z
     .string()
@@ -448,9 +449,15 @@ export const instituteService = {
         if (!institute) {
             throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
         }
-        const [courses, users] = await Promise.all([
+        const [courses, users, batches, studentsCount] = await Promise.all([
             courseRepository.listByInstitute(institute.id),
             userRepository.listByInstitute(institute.id),
+            prisma.batch.findMany({
+                where: { instituteId: institute.id },
+                orderBy: { createdAt: "desc" },
+                take: 8,
+            }),
+            prisma.student.count({ where: { instituteId: institute.id } }),
         ]);
         const teachers = users
             .filter((user) => Boolean(user.subject?.trim() || user.bio?.trim()))
@@ -458,7 +465,23 @@ export const instituteService = {
                 id: user.id,
                 name: user.name ?? "Teacher",
                 subject: user.subject ?? null,
+                experience: user.bio ?? null,
             }));
-        return { ...withSocialLinks(institute), courses, teachers };
+
+        const photos = [
+            institute.heroImage,
+            institute.banner,
+            institute.logo,
+            ...courses.map((course) => course.banner),
+        ].filter((photo): photo is string => Boolean(photo && photo.trim()));
+
+        return {
+            ...withSocialLinks(institute),
+            courses,
+            teachers,
+            batches,
+            studentsCount,
+            photos: Array.from(new Set(photos)),
+        };
     },
 };

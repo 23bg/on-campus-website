@@ -13,6 +13,7 @@ import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { clientLogger } from "@/lib/clientLogger";
 
 const businessSchema = z.object({
     name: z.string().min(2, "Business name must be at least 2 characters").max(100, "Business name must be less than 100 characters"),
@@ -79,7 +80,9 @@ export function BusinessOnboardingForm({ onSuccess }: BusinessOnboardingFormProp
             toast.success("Business created successfully!");
             onSuccess?.();
         } catch (error: any) {
-            console.error('Business creation error:', error);
+            clientLogger.error("business_creation_error", {
+                message: error?.message,
+            });
 
             const errorMessage = typeof error === 'string' ? error :
                 error?.data?.message ||

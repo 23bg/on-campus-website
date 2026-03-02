@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, Pencil, Trash2, Plus, BookOpen, Eye } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type Course = {
     id: string;
@@ -25,6 +26,7 @@ type Course = {
 
 type CourseForm = { name: string; banner: string; duration: string; defaultFees: string; description: string };
 const emptyForm: CourseForm = { name: "", banner: "", duration: "", defaultFees: "", description: "" };
+const PAGE_SIZE = 10;
 
 export default function CoursesPage() {
     const searchParams = useSearchParams();
@@ -37,6 +39,7 @@ export default function CoursesPage() {
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [form, setForm] = useState<CourseForm>(emptyForm);
     const [searchQuery, setSearchQuery] = useState("");
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         const query = searchParams.get("query") ?? "";
@@ -58,6 +61,10 @@ export default function CoursesPage() {
     }, []);
 
     useEffect(() => { load(); }, [load]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchQuery, courses.length]);
 
     const openCreate = () => {
         setEditingId(null);
@@ -135,6 +142,11 @@ export default function CoursesPage() {
         );
     }, [courses, searchQuery]);
 
+    const paginatedCourses = useMemo(
+        () => visibleCourses.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+        [visibleCourses, page]
+    );
+
     return (
         <main className="p-6">
             <div className="flex items-center justify-between">
@@ -181,9 +193,9 @@ export default function CoursesPage() {
                                     No matching courses found.
                                 </TableCell>
                             </TableRow>
-                        ) : visibleCourses.map((course, index) => (
+                        ) : paginatedCourses.map((course, index) => (
                             <TableRow key={course.id}>
-                                <TableCell>{index + 1}</TableCell>
+                                <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
                                 <TableCell className="font-medium max-w-[220px] truncate" title={course.name}>{course.name}</TableCell>
                                 <TableCell>{course.banner ? "Added" : "-"}</TableCell>
                                 <TableCell className="max-w-[140px] truncate" title={course.duration || "-"}>{course.duration || "-"}</TableCell>
@@ -207,6 +219,13 @@ export default function CoursesPage() {
                     </TableBody>
                 </Table>
             </div>
+            <TablePaginationControls
+                className="mt-3"
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalItems={visibleCourses.length}
+                onPageChange={setPage}
+            />
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>

@@ -42,7 +42,7 @@ export default function DashboardHeader() {
     });
 
     return (
-        <header className="flex h-16 items-center justify-between px-4 border-b bg-background dark:bg-zinc-900/40 backdrop-blur-sm rounded-t-lg">
+        <header id="dashboard-header" className="flex h-16 items-center justify-between px-4 border-b bg-background dark:bg-zinc-900/40 backdrop-blur-sm rounded-t-lg">
             <div className="flex items-center gap-3 min-w-0">
                 <SidebarTrigger />
 

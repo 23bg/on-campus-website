@@ -1,4 +1,5 @@
 ﻿import { NextResponse } from 'next/server'
+import { logger, serializeError } from '@/lib/logger'
 
 /** 
  * Base class for all app-specific errors
@@ -57,7 +58,10 @@ export function handleError(error: unknown) {
     )
   }
 
-  console.error('[UNEXPECTED ERROR]', error)
+  logger.error({
+    event: 'unexpected_error',
+    error: serializeError(error),
+  })
   return NextResponse.json(
     {
       success: false,

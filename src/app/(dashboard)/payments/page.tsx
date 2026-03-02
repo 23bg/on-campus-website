@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type PaymentRow = {
     id: string;
@@ -25,6 +26,7 @@ type PaymentRow = {
 };
 
 const PAYMENT_METHODS = ["ALL", "CASH", "UPI", "CARD", "BANK_TRANSFER", "OTHER"] as const;
+const PAGE_SIZE = 10;
 
 export default function PaymentsPage() {
     const [rows, setRows] = useState<PaymentRow[]>([]);
@@ -33,6 +35,7 @@ export default function PaymentsPage() {
     const [to, setTo] = useState("");
     const [studentQuery, setStudentQuery] = useState("");
     const [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>("ALL");
+    const [page, setPage] = useState(1);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -61,6 +64,12 @@ export default function PaymentsPage() {
             return row.student.name.toLowerCase().includes(query) || row.student.phone.includes(query);
         })
         : rows;
+
+    useEffect(() => {
+        setPage(1);
+    }, [studentQuery, method, from, to, rows.length]);
+
+    const paginatedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const totalAmount = filteredRows.reduce((sum, row) => sum + row.amount, 0);
 
@@ -129,9 +138,9 @@ export default function PaymentsPage() {
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredRows.map((payment, index) => (
+                                    paginatedRows.map((payment, index) => (
                                         <TableRow key={payment.id}>
-                                            <TableCell>{index + 1}</TableCell>
+                                            <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
                                             <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
                                             <TableCell>{payment.student.phone}</TableCell>
                                             <TableCell className="text-right">{`₹${payment.amount.toLocaleString("en-IN")}`}</TableCell>
@@ -144,6 +153,13 @@ export default function PaymentsPage() {
                             </TableBody>
                         </Table>
                     </div>
+                    <TablePaginationControls
+                        className="mt-3"
+                        page={page}
+                        pageSize={PAGE_SIZE}
+                        totalItems={filteredRows.length}
+                        onPageChange={setPage}
+                    />
                 </CardContent>
             </Card>
         </main>

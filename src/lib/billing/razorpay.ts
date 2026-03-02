@@ -32,3 +32,21 @@ export const verifyRazorpayWebhookSignature = (payload: string, signature: strin
     return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 };
 
+export const verifyRazorpayCheckoutSignature = (input: {
+    paymentId: string;
+    subscriptionId: string;
+    signature: string;
+}): boolean => {
+    if (!env.RAZORPAY_KEY_SECRET) {
+        throw new AppError("Missing RAZORPAY_KEY_SECRET", 500, "RAZORPAY_SECRET_MISSING");
+    }
+
+    const payload = `${input.paymentId}|${input.subscriptionId}`;
+    const expected = crypto
+        .createHmac("sha256", env.RAZORPAY_KEY_SECRET)
+        .update(payload)
+        .digest("hex");
+
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(input.signature));
+};
+

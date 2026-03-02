@@ -54,6 +54,7 @@
         },
         BILLING: {
             ROOT: '/billing',
+            CONFIRM: '/billing/confirm',
         },
         TEAMS: {
             ROOT: '/teams',

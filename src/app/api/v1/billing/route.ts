@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readSessionFromCookie } from "@/lib/auth/auth";
+import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/lib/auth/auth";
 import { canManageBilling } from "@/lib/auth/permissions";
-import { subscriptionService } from "@/features/subscription/services/subscription.service";
+import { BillingInterval, subscriptionService } from "@/features/subscription/services/subscription.service";
 import { toAppError } from "@/lib/utils/error";
 import { isPlanType } from "@/config/plans";
+import { env } from "@/lib/config/env";
 
 export async function GET() {
     try {
@@ -16,6 +17,19 @@ export async function GET() {
         }
 
         const data = await subscriptionService.getBillingSummary(session.instituteId);
+
+        if (
+            session.subscriptionStatus &&
+            data?.status &&
+            session.subscriptionStatus !== data.status
+        ) {
+            const nextToken = createSessionToken({
+                ...session,
+                subscriptionStatus: data.status,
+            });
+            await setSessionCookie(nextToken);
+        }
+
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);
@@ -43,7 +57,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const body = (await req.json().catch(() => ({}))) as { action?: string; planType?: string };
+        const body = (await req.json().catch(() => ({}))) as { action?: string; planType?: string; interval?: string };
         if (body.action !== "create-subscription") {
             return NextResponse.json(
                 { success: false, error: { code: "INVALID_ACTION", message: "Unsupported action" } },
@@ -58,8 +72,22 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const data = await subscriptionService.createRazorpaySubscription(session.instituteId, body.planType);
-        return NextResponse.json({ success: true, data });
+        const interval: BillingInterval =
+            body.interval && (body.interval === "YEARLY" || body.interval === "MONTHLY")
+                ? body.interval
+                : "MONTHLY";
+
+        const created = await subscriptionService.createRazorpaySubscription(session.instituteId, body.planType, interval);
+        return NextResponse.json({
+            success: true,
+            data: {
+                subscriptionId: created.subscriptionId,
+                key: env.RAZORPAY_KEY_ID,
+                planType: created.planType,
+                interval: created.interval,
+                reused: created.reused,
+            },
+        });
     } catch (error) {
         const appError = toAppError(error);
         return NextResponse.json(

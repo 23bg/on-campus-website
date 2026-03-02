@@ -22,6 +22,9 @@ export function NavMain({
         isActive?: boolean;
     }[];
 }) {
+    const toStepId = (title: string) =>
+        `dashboard-nav-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
+
     return (
         <SidebarGroup>
             <SidebarGroupLabel>{menuTitle}</SidebarGroupLabel>
@@ -29,7 +32,7 @@ export function NavMain({
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild tooltip={item.title}>
-                            <Link href={item.url}>
+                            <Link id={toStepId(item.title)} href={item.url}>
                                 {item.icon ? <item.icon className="h-4 w-4 shrink-0" /> : null}
                                 <span>{item.title}</span>
                             </Link>

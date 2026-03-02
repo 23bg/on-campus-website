@@ -1,6 +1,6 @@
 import { AppError } from "@/lib/utils/error";
 import { subscriptionRepository } from "@/features/subscription/repositories/subscription.repo";
-import { assertRazorpayReady, razorpay } from "@/lib/billing/razorpay";
+import { assertRazorpayReady, razorpay, verifyRazorpayCheckoutSignature } from "@/lib/billing/razorpay";
 import { env } from "@/lib/config/env";
 import { DEFAULT_PLAN_TYPE, isPlanType, PLAN_CONFIG, PlanType } from "@/config/plans";
 import { userRepository } from "@/features/auth/repositories/user.repo";
@@ -9,6 +9,27 @@ export type SubscriptionState = "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
 type SubscriptionRecord = NonNullable<Awaited<ReturnType<typeof subscriptionRepository.findByInstituteId>>>;
 
 const DASHBOARD_ALLOWED: SubscriptionState[] = ["TRIAL", "ACTIVE"];
+
+export type BillingInterval = "MONTHLY" | "YEARLY";
+
+const normalizeStoredPlanType = (storedPlanType: string | null | undefined, userLimit?: number | null): PlanType => {
+    if (storedPlanType === "STARTER" || storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
+        return storedPlanType;
+    }
+
+    if (storedPlanType === "SOLO") {
+        return "STARTER";
+    }
+
+    if (storedPlanType === "TEAM") {
+        if ((userLimit ?? 0) >= PLAN_CONFIG.SCALE.userLimit) {
+            return "SCALE";
+        }
+        return "GROWTH";
+    }
+
+    return DEFAULT_PLAN_TYPE;
+};
 
 export const subscriptionService = {
     canAccessDashboard(status: SubscriptionState): boolean {
@@ -22,11 +43,27 @@ export const subscriptionService = {
         return DEFAULT_PLAN_TYPE;
     },
 
-    getRazorpayPlanId(planType: PlanType): string {
-        const planId = planType === "TEAM" ? env.RAZORPAY_PLAN_ID_TEAM : env.RAZORPAY_PLAN_ID_SOLO;
+    getRazorpayPlanId(planType: PlanType, interval: BillingInterval = "MONTHLY"): string {
+        const lookup: Record<PlanType, Record<BillingInterval, string | undefined>> = {
+            STARTER: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_STARTER_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_STARTER_YEARLY,
+            },
+            GROWTH: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
+            },
+            SCALE: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_SCALE_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_SCALE_YEARLY,
+            },
+        };
+
+        const planId = lookup[planType]?.[interval];
         if (!planId) {
-            throw new AppError(`Missing Razorpay plan id for ${planType}`, 500, "RAZORPAY_PLAN_ID_MISSING");
+            throw new AppError(`Missing Razorpay plan id for ${planType}/${interval}`, 500, "RAZORPAY_PLAN_ID_MISSING");
         }
+
         return planId;
     },
 
@@ -60,7 +97,7 @@ export const subscriptionService = {
 
     async getBillingSummary(instituteId: string) {
         const subscription = await this.getSubscription(instituteId);
-        const planType = this.resolvePlanType(subscription.planType);
+        const planType = normalizeStoredPlanType(subscription.planType, subscription.userLimit);
         const plan = PLAN_CONFIG[planType];
         const usersUsed = await userRepository.countByInstitute(instituteId);
         const userLimit = subscription.userLimit ?? plan.userLimit;
@@ -81,17 +118,26 @@ export const subscriptionService = {
         };
     },
 
-    async createRazorpaySubscription(instituteId: string, requestedPlanType?: string) {
+    async createRazorpaySubscription(
+        instituteId: string,
+        requestedPlanType?: string,
+        interval: BillingInterval = "MONTHLY"
+    ) {
         assertRazorpayReady();
         const planType = this.resolvePlanType(requestedPlanType);
         const plan = PLAN_CONFIG[planType];
-        const planId = this.getRazorpayPlanId(planType);
+        const planId = this.getRazorpayPlanId(planType, interval);
 
-        const subscription = await this.getSubscription(instituteId);
-        if (subscription.razorpaySubId && subscription.planType === planType) {
+        const existing = await subscriptionRepository.findByInstituteId(instituteId);
+        const existingPlanType = existing
+            ? normalizeStoredPlanType(existing.planType, existing.userLimit)
+            : null;
+
+        if (existing?.razorpaySubId && existingPlanType === planType) {
             return {
-                razorpaySubId: subscription.razorpaySubId,
+                subscriptionId: existing.razorpaySubId,
                 planType,
+                interval,
                 reused: true,
             };
         }
@@ -107,19 +153,53 @@ export const subscriptionService = {
             },
         });
 
-        await subscriptionRepository.updateByInstituteId(instituteId, {
-            razorpaySubId: created.id,
-            status: "TRIAL",
+        await subscriptionRepository.upsertByRazorpaySubId(created.id, instituteId, {
+            status: "INACTIVE",
             planType,
             userLimit: plan.userLimit,
-            trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         });
 
         return {
-            razorpaySubId: created.id,
+            subscriptionId: created.id,
             planType,
-            status: "TRIAL" as const,
+            interval,
+            status: "INACTIVE" as const,
             reused: false,
+        };
+    },
+
+    async confirmRazorpaySubscription(input: {
+        instituteId: string;
+        paymentId: string;
+        subscriptionId: string;
+        signature: string;
+    }) {
+        const isValid = verifyRazorpayCheckoutSignature({
+            paymentId: input.paymentId,
+            subscriptionId: input.subscriptionId,
+            signature: input.signature,
+        });
+
+        if (!isValid) {
+            throw new AppError("Invalid Razorpay checkout signature", 401, "INVALID_CHECKOUT_SIGNATURE");
+        }
+
+        const existing = await subscriptionRepository.findByInstituteId(input.instituteId);
+        if (!existing || existing.razorpaySubId !== input.subscriptionId) {
+            throw new AppError("Subscription mismatch for institute", 400, "SUBSCRIPTION_MISMATCH");
+        }
+
+        const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+        const updated = await subscriptionRepository.updateByInstituteId(input.instituteId, {
+            status: "TRIAL",
+            trialEndsAt,
+        });
+
+        return {
+            instituteId: updated.instituteId,
+            razorpaySubId: updated.razorpaySubId,
+            status: updated.status,
+            trialEndsAt: updated.trialEndsAt,
         };
     },
 

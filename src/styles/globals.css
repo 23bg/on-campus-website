@@ -52,7 +52,6 @@
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
-
 }
 
 
@@ -70,7 +69,7 @@
     --font-heading: var(--font-jakarta);
 
 
-    /* Light Theme */
+    /* LIGHT THEME */
 
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
@@ -114,7 +113,6 @@
     --sidebar-ring: 147 100% 37%;
 
 }
-
 
 
 /* =========================
@@ -167,7 +165,6 @@
 }
 
 
-
 /* =========================
    BASE STYLES
 ========================= */
@@ -199,11 +196,11 @@
     }
 
 
-    /* Headings */
+    /* RESPONSIVE HEADINGS */
 
     h1 {
         font-family: var(--font-heading);
-        font-size: 42px;
+        font-size: clamp(28px, 4vw, 42px);
         font-weight: 600;
         letter-spacing: -0.02em;
         line-height: 1.2;
@@ -211,7 +208,7 @@
 
     h2 {
         font-family: var(--font-heading);
-        font-size: 32px;
+        font-size: clamp(24px, 3vw, 32px);
         font-weight: 600;
         letter-spacing: -0.015em;
         line-height: 1.25;
@@ -219,7 +216,7 @@
 
     h3 {
         font-family: var(--font-heading);
-        font-size: 24px;
+        font-size: clamp(20px, 2.5vw, 24px);
         font-weight: 600;
         line-height: 1.3;
     }
@@ -254,12 +251,10 @@
 
         line-height: 1.8;
 
-        max-width: 70ch;
+        margin: 0;
 
     }
 
-
-    /* Small text */
 
     small {
         @apply text-muted-foreground;
@@ -267,8 +262,6 @@
         line-height: 1.6;
     }
 
-
-    /* Buttons */
 
     button {
         font-family: var(--font-body);
@@ -278,63 +271,47 @@
 }
 
 
-
 /* =========================
    UTILITIES
 ========================= */
 
 @layer utilities {
 
-
-    /* Dashboard text */
-
-    .text-dashboard {
-
-        font-size: 14px;
-        line-height: 1.4;
-
+    .reading-width {
+        max-width: 720px;
     }
 
-    .reading-width {
-
-        max-width: 720px;
-
+    .text-dashboard {
+        font-size: 14px;
+        line-height: 1.4;
     }
 
     .text-body {
-
         font-size: 16px;
         line-height: 1.7;
-
     }
 
     .text-small {
-
         font-size: 14px;
         line-height: 1.6;
-
     }
 
     .text-large {
-
         font-size: 18px;
         line-height: 1.7;
-
     }
 
 }
 
 
-/* Numbers alignment (fees etc) */
+/* Numbers alignment */
 
 .numeric {
-
     font-variant-numeric: tabular-nums;
-
 }
 
 
-/* Focus styling */
+/* Focus */
 
 :focus-visible {
 
@@ -343,6 +320,9 @@
     outline-offset: 2px;
 
 }
+
+
+/* Selection */
 
 ::selection {
 

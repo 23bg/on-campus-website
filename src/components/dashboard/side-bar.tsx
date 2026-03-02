@@ -137,7 +137,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                     <SidebarMenu>
                         <SidebarMenuItem >
                             <SidebarMenuButton >
-                                <Link href={ROUTES.DASHBOARD.ROOT} className="flex items-center gap-2">
+                                <Link id="dashboard-brand" href={ROUTES.DASHBOARD.ROOT} className="flex items-center gap-2">
                                     {state === "collapsed" ? (
                                         <span className="text-xl font-semibold text-primary"></span>) : (
                                         <div className="flex items-center gap-2">

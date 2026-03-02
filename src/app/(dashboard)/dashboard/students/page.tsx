@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, Pencil, Trash2, Plus, Upload, CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 
 type Course = { id: string; name: string; defaultFees?: number | null };
 type Batch = { id: string; courseId: string; name: string };
@@ -34,6 +35,8 @@ type UploadResult = {
     errors: Array<{ row: number; message: string }>;
 };
 
+const PAGE_SIZE = 10;
+
 export default function StudentsPage() {
     const searchParams = useSearchParams();
     const [students, setStudents] = useState<Student[]>([]);
@@ -54,6 +57,7 @@ export default function StudentsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [portalCredentials, setPortalCredentials] = useState<PortalCredentialForm>({ username: "", email: "", password: "" });
     const [updatingPortalCredentials, setUpdatingPortalCredentials] = useState(false);
+    const [page, setPage] = useState(1);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -122,6 +126,15 @@ export default function StudentsPage() {
                 .includes(q);
         });
     }, [students, searchQuery, courseMap, batchMap]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchQuery, students.length]);
+
+    const paginatedStudents = useMemo(
+        () => visibleStudents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+        [visibleStudents, page]
+    );
 
     const handleCourseChange = (courseId: string) => {
         const course = courseMap[courseId];
@@ -303,11 +316,11 @@ export default function StudentsPage() {
                                     No matching students found.
                                 </TableCell>
                             </TableRow>
-                        ) : visibleStudents.map((student, index) => {
+                        ) : paginatedStudents.map((student, index) => {
                             const fee = feeSummaries[student.id];
                             return (
                                 <TableRow key={student.id}>
-                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
                                     <TableCell className="font-medium max-w-[180px] truncate" title={student.name}>{student.name}</TableCell>
                                     <TableCell>{student.phone}</TableCell>
                                     <TableCell className="max-w-[180px] truncate" title={student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}>{student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}</TableCell>
@@ -334,6 +347,13 @@ export default function StudentsPage() {
                     </TableBody>
                 </Table>
             </div>
+            <TablePaginationControls
+                className="mt-3"
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalItems={visibleStudents.length}
+                onPageChange={setPage}
+            />
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
