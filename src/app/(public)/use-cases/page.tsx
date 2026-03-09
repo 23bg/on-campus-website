@@ -65,6 +65,18 @@ export default function UseCasesPage() {
                     </article>
                 ))}
             </div>
+
+            <section className="mt-8 rounded-xl border p-5">
+                <h2 className="text-xl font-semibold">City-Specific CRM Pages</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                    Explore admission CRM pages tailored for major coaching markets.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                    <Link href="/solutions/admission-crm/pune" className="font-medium text-primary hover:underline">Admission CRM in Pune</Link>
+                    <Link href="/solutions/admission-crm/delhi" className="font-medium text-primary hover:underline">Admission CRM in Delhi</Link>
+                    <Link href="/solutions/admission-crm/mumbai" className="font-medium text-primary hover:underline">Admission CRM in Mumbai</Link>
+                </div>
+            </section>
         </main>
     );
 }
