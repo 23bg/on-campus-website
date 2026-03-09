@@ -3,10 +3,26 @@ import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getTranslations("pages");
+    const title = t("contactMetaTitle");
+    const description = t("contactMetaDescription");
 
     return {
-        title: t("contactMetaTitle"),
-        description: t("contactMetaDescription"),
+        title,
+        description,
+        alternates: {
+            canonical: "/contact",
+        },
+        openGraph: {
+            title,
+            description,
+            url: "/contact",
+            type: "website",
+        },
+        twitter: {
+            title,
+            description,
+            card: "summary_large_image",
+        },
     };
 }
 

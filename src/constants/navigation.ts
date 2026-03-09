@@ -8,8 +8,10 @@ export type NavItem = {
 export const PUBLIC_NAV_ITEMS: NavItem[] = [
     { labelKey: "home", href: ROUTES.HOME },
     { labelKey: "features", href: ROUTES.FEATURES },
+    { labelKey: "institutes", href: ROUTES.INSTITUTES },
     { labelKey: "tools", href: ROUTES.TOOLS },
     { labelKey: "pricing", href: ROUTES.PRICING },
+    { labelKey: "contact", href: ROUTES.CONTACT },
     { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
     { labelKey: "useCases", href: ROUTES.USE_CASES },
     { labelKey: "resources", href: ROUTES.RESOURCES },
@@ -22,12 +24,14 @@ export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
             { labelKey: "features", href: ROUTES.FEATURES },
             { labelKey: "tools", href: ROUTES.TOOLS },
             { labelKey: "pricing", href: ROUTES.PRICING },
+            { labelKey: "resources", href: ROUTES.RESOURCES },
             { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
         ],
     },
     {
         titleKey: "groupUseCases",
         links: [
+            { labelKey: "allUseCases", href: ROUTES.USE_CASES },
             { labelKey: "jeeNeetInstitutes", href: "/use-cases/jee-neet-coaching" },
             { labelKey: "tuitionClasses", href: "/use-cases/tuition-classes" },
             { labelKey: "computerTrainingCenters", href: "/use-cases/computer-training" },
@@ -39,6 +43,7 @@ export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
         links: [
             { labelKey: "about", href: ROUTES.ABOUT },
             { labelKey: "contact", href: ROUTES.CONTACT },
+            { labelKey: "institutes", href: ROUTES.INSTITUTES },
         ],
     },
     {

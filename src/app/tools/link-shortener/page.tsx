@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import LinkShortenerTool from "@/modules/tools/components/LinkShortenerTool";
 
 export const metadata: Metadata = {
@@ -14,6 +15,9 @@ export default function LinkShortenerPage() {
                 <p className="text-muted-foreground">Generate short links like oncampus.in/l/abc123 in seconds.</p>
             </div>
             <LinkShortenerTool />
+            <p className="text-sm text-muted-foreground">
+                Run complete operations with <Link href="/features" className="text-primary underline-offset-4 hover:underline">platform features</Link> and <Link href="/pricing" className="text-primary underline-offset-4 hover:underline">pricing plans</Link>.
+            </p>
         </main>
     );
 }

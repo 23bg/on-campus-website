@@ -10,6 +10,10 @@ export const metadata: Metadata = {
     title: "Dashboard",
     description:
         "OnCampus Dashboard - Manage admissions, leads, students, teachers, and billing.",
+    robots: {
+        index: false,
+        follow: false,
+    },
 };
 
 export default async function AppLayout({

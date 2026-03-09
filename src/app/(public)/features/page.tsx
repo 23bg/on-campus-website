@@ -5,10 +5,26 @@ import ROUTES from "@/constants/routes";
 
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getTranslations("pages");
+    const title = t("featuresMetaTitle");
+    const description = t("featuresMetaDescription");
 
     return {
-        title: t("featuresMetaTitle"),
-        description: t("featuresMetaDescription"),
+        title,
+        description,
+        alternates: {
+            canonical: "/features",
+        },
+        openGraph: {
+            title,
+            description,
+            url: "/features",
+            type: "website",
+        },
+        twitter: {
+            title,
+            description,
+            card: "summary_large_image",
+        },
     };
 }
 
