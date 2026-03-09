@@ -6,6 +6,20 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export const metadata: Metadata = {
     title: "Free Tools for Coaching Institutes",
     description: "Free growth tools for coaching institutes: QR code generator, link shortener, course comparison, digital score, and templates.",
+    alternates: {
+        canonical: "/tools",
+    },
+    openGraph: {
+        title: "Free Tools for Coaching Institutes",
+        description: "Free growth tools for coaching institutes: QR code generator, link shortener, course comparison, digital score, and templates.",
+        url: "/tools",
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Free Tools for Coaching Institutes",
+        description: "Free growth tools for coaching institutes: QR code generator, link shortener, course comparison, digital score, and templates.",
+    },
 };
 
 const tools = [
@@ -42,6 +56,9 @@ export default function ToolsPage() {
             <div className="mb-8 space-y-2">
                 <h1 className="text-3xl font-bold">Free Tools</h1>
                 <p className="text-muted-foreground">Use these tools without login to grow your coaching institute faster.</p>
+                <p className="text-sm text-muted-foreground">
+                    Looking for full operations? Explore the <Link href="/features" className="text-primary underline-offset-4 hover:underline">platform features</Link> and <Link href="/pricing" className="text-primary underline-offset-4 hover:underline">pricing plans</Link>.
+                </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

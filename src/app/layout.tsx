@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/providers/theme-provider";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 import Script from "next/script";
 
 export const inter = Inter({
@@ -22,14 +22,47 @@ export const jakarta = Plus_Jakarta_Sans({
 });
 
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("pages");
-
-  return {
-    title: t("landingMetaTitle"),
-    description: t("landingMetaDescription"),
-  };
-}
+export const metadata: Metadata = {
+  metadataBase: new URL("https://oncampus.in"),
+  title: {
+    default: "OnCampus - Admission CRM for Coaching Institutes",
+    template: "%s | OnCampus",
+  },
+  description:
+    "OnCampus helps coaching institutes capture enquiries, manage admissions, track students, courses and fees.",
+  keywords: [
+    "admission crm",
+    "coaching institute crm",
+    "student management software",
+    "admission management system",
+    "student admission software",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    url: "https://oncampus.in",
+    siteName: "OnCampus",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OnCampus Admission CRM",
+    description: "Admission and student management platform for coaching institutes.",
+    images: ["/og-image.png"],
+  },
+};
 
 // ensureInitialUser();
 

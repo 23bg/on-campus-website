@@ -3,6 +3,20 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
     title: "About - OnCampus",
     description: "Learn why OnCampus was built for coaching institutes.",
+    alternates: {
+        canonical: "/about",
+    },
+    openGraph: {
+        title: "About - OnCampus",
+        description: "Learn why OnCampus was built for coaching institutes.",
+        url: "/about",
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "About - OnCampus",
+        description: "Learn why OnCampus was built for coaching institutes.",
+    },
 };
 
 export default function AboutPage() {

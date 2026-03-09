@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import ExcelTemplatesTool from "@/modules/tools/components/ExcelTemplatesTool";
 
 export const metadata: Metadata = {
@@ -14,6 +15,9 @@ export default function TemplatesPage() {
                 <p className="text-muted-foreground">Ready-to-use formats for institute operations.</p>
             </div>
             <ExcelTemplatesTool />
+            <p className="text-sm text-muted-foreground">
+                Run complete operations with <Link href="/features" className="text-primary underline-offset-4 hover:underline">platform features</Link> and <Link href="/pricing" className="text-primary underline-offset-4 hover:underline">pricing plans</Link>.
+            </p>
         </main>
     );
 }

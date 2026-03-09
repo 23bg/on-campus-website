@@ -4,6 +4,20 @@ import Link from "next/link";
 export const metadata: Metadata = {
     title: "Use Cases - OnCampus",
     description: "Explore how coaching institutes use OnCampus to run enquiry, admission, student, and fee operations in one platform.",
+    alternates: {
+        canonical: "/use-cases",
+    },
+    openGraph: {
+        title: "Use Cases - OnCampus",
+        description: "Explore how coaching institutes use OnCampus to run enquiry, admission, student, and fee operations in one platform.",
+        url: "/use-cases",
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Use Cases - OnCampus",
+        description: "Explore how coaching institutes use OnCampus to run enquiry, admission, student, and fee operations in one platform.",
+    },
 };
 
 const useCases = [

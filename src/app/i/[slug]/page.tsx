@@ -8,6 +8,8 @@ type InstituteSlugPageProps = {
     params: Promise<{ slug: string }>;
 };
 
+export const revalidate = 3600;
+
 const getPublicInstitute = cache(async (slug: string) => {
     return instituteService.getPublicPage(slug);
 });

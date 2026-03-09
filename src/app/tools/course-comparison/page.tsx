@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { prisma } from "@/lib/db/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -148,6 +149,10 @@ export default async function CourseComparisonPage({ searchParams }: CourseCompa
                     </Table>
                 </CardContent>
             </Card>
+
+            <p className="text-sm text-muted-foreground">
+                Run complete operations with <Link href="/features" className="text-primary underline-offset-4 hover:underline">platform features</Link> and <Link href="/pricing" className="text-primary underline-offset-4 hover:underline">pricing plans</Link>.
+            </p>
         </main>
     );
 }
