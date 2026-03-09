@@ -14,7 +14,7 @@ export default function Pricing() {
     const tCommon = useTranslations("common");
     const [yearlyBilling, setYearlyBilling] = useState(false);
 
-    const yearlyMonthsCharged = 11;
+    const yearlyMonthsCharged = 10;
     const scaleMonthlyPrice = Number(t("scalePrice"));
     const billingSuffix = yearlyBilling ? t("yearlyPriceSuffix") : t("monthlyPriceSuffix");
 

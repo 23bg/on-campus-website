@@ -12,7 +12,7 @@ export default function LeadManagementFeaturePage() {
             <div className="mt-6 space-y-4 text-muted-foreground">
                 <p>Capture enquiries from forms, links, and QR flows in one unified pipeline.</p>
                 <p>Move leads across stages, assign follow-ups, and track conversion outcomes clearly.</p>
-                <p>Get practical visibility for owners without complex CRM setup.</p>
+                <p>Get practical visibility for owners without complex tools or scattered spreadsheets.</p>
             </div>
         </main>
     );

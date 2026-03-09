@@ -29,7 +29,7 @@
     },
     "footer": {
         "brand": "OnCampus",
-        "tagline": "Admission CRM for Indian Coaching Institutes",
+        "tagline": "Admission & Student Management Platform for Coaching Institutes",
         "builtInIndia": "Built in India",
         "securePayments": "Secure Payments via Razorpay",
         "copyright": "© {year} OnCampus. All rights reserved.",
@@ -52,55 +52,55 @@
     },
     "hero": {
         "label": "OnCampus",
-        "title": "Stop Losing Admission Leads in WhatsApp & Excel.",
-        "subtitleLine1": "Admission CRM built for Indian coaching institutes.",
-        "subtitleLine2": "Collect enquiries. Track leads. Convert admissions.",
-        "subtitleLine3": "All in one simple system for ₹999/month.",
+        "title": "Run Your Coaching Institute Without Excel & WhatsApp Chaos.",
+        "subtitleLine1": "Admission & Student Management Platform for Coaching Institutes.",
+        "subtitleLine2": "Capture enquiries. Manage follow-ups and admissions.",
+        "subtitleLine3": "Track students, courses, and fees in one platform.",
         "cta": "Start Free Trial",
-        "secondaryCta": "Book Demo",
+        "secondaryCta": "See How It Works",
         "previewAlt": "OnCampus dashboard preview"
     },
     "problem": {
-        "title": "Running Your Institute on Excel & WhatsApp?",
-        "item1": "Leads get buried in WhatsApp chats",
-        "item2": "No visibility on conversion rate",
-        "item3": "Follow-ups get missed during busy days",
-        "item4": "No centralized student data",
-        "item5": "No proper reporting for admissions"
+        "title": "Running Your Institute on Excel, WhatsApp & Registers?",
+        "item1": "Enquiries get buried in WhatsApp chats",
+        "item2": "Follow-ups are missed during busy admission periods",
+        "item3": "Student records are scattered across files",
+        "item4": "Fee tracking becomes messy and inconsistent",
+        "item5": "No clear visibility of admissions and students"
     },
     "solution": {
-        "title": "One Simple Admission CRM.",
-        "item1": "Capture leads from forms, QR, and shared links",
-        "item2": "Track every enquiry stage until admission",
-        "item3": "Keep student records in one clean system",
-        "item4": "Publish a public institute page in minutes",
-        "item5": "Run subscription billing with secure Razorpay checkout"
+        "title": "One System to Run Your Institute Operations.",
+        "item1": "Capture enquiries from forms, QR codes, and shared links",
+        "item2": "Track every enquiry until admission",
+        "item3": "Maintain structured student records and course mapping",
+        "item4": "Track fee plans, installments, and payments",
+        "item5": "Give students access to their course information through a portal"
     },
     "featuresSection": {
-        "title": "Core Features That Drive Admissions",
-        "item1Title": "Unlimited Leads",
-        "item1Description": "Capture and track every admission enquiry without feature gating.",
-        "item2Title": "Public Mini Website",
-        "item2Description": "Launch your institute profile with courses, contacts, and enquiry CTA.",
-        "item3Title": "QR Lead Capture",
-        "item3Description": "Turn posters and handouts into instant enquiry forms with QR.",
-        "item4Title": "Excel Upload",
-        "item4Description": "Migrate existing student data quickly and keep records structured.",
-        "item5Title": "Razorpay Subscription Billing",
-        "item5Description": "Secure recurring payments with transparent plan management.",
-        "item6Title": "No Feature Gating",
-        "item6Description": "Core workflows stay available across plans so teams can scale confidently."
+        "title": "Core Features Built for Institute Operations",
+        "item1Title": "Lead & Enquiry Management",
+        "item1Description": "Capture and track every enquiry until admission with a structured pipeline.",
+        "item2Title": "Public Institute Page",
+        "item2Description": "Launch a professional institute page with courses, contacts, and enquiry forms.",
+        "item3Title": "Student Records",
+        "item3Description": "Maintain a clean database of students, courses, and batches in one system.",
+        "item4Title": "Fee & Installment Tracking",
+        "item4Description": "Track fee plans, payments, and overdue installments easily.",
+        "item5Title": "Student Information Portal",
+        "item5Description": "Give students access to their courses, batches, and institute updates.",
+        "item6Title": "Alerts & Notifications",
+        "item6Description": "Get alerts for new enquiries, follow-ups, and operational updates."
     },
     "useCasesSection": {
-        "title": "Built for Real Institute Workflows",
+        "title": "Built for Real Institute Operations",
         "item1Title": "NEET / JEE Coaching",
-        "item1Description": "Track high-volume enquiries by source and follow up consistently until admissions close.",
+        "item1Description": "Manage high-volume enquiries, admissions, and batches with clear tracking.",
         "item2Title": "Tuition Classes",
-        "item2Description": "Organize daily walk-ins and calls in one lead pipeline without juggling multiple spreadsheets.",
+        "item2Description": "Track daily enquiries, students, and fees without juggling spreadsheets.",
         "item3Title": "Computer Training Institutes",
-        "item3Description": "Manage course-wise enquiries and student records with clear conversion visibility.",
+        "item3Description": "Manage course-wise enquiries, student records, and fee collections.",
         "item4Title": "Skill Academies",
-        "item4Description": "Run practical admission operations for short-term programs with a simple team workflow."
+        "item4Description": "Run admission and student operations for short-term programs with a simple workflow."
     },
     "trust": {
         "title": "Trusted by Early-Stage Institutes",
@@ -112,10 +112,10 @@
     },
     "howItWorks": {
         "title": "How It Works",
-        "step1": "Create Account",
-        "step2": "Setup Institute",
-        "step3": "Share QR",
-        "step4": "Convert Students"
+        "step1": "Capture Enquiries",
+        "step2": "Track Follow-ups and Admissions",
+        "step3": "Create Student Records and Course Mapping",
+        "step4": "Track Fees and Share Student Portal Access"
     },
     "demo": {
         "title": "Institute Page Demo",
@@ -151,7 +151,7 @@
         "yearlyPriceSuffix": "/year",
         "monthlyToggle": "Monthly",
         "yearlyToggle": "Yearly",
-        "yearlyBadge": "Pay 11 months only",
+        "yearlyBadge": "Pay 10 months only",
         "billingSwitchAria": "Toggle monthly and yearly pricing",
         "starterUsers": "1 User",
         "growthUsers": "Up to 10 Users",
@@ -205,7 +205,7 @@
         "tableTeamRoles": "Team Roles",
         "teamCollaboration": "Team collaboration (up to 10 users)",
         "sharedItem1": "Public Institute Page",
-        "sharedItem2": "Lead CRM",
+        "sharedItem2": "Enquiry and Admission Pipeline",
         "sharedItem3": "Student Records",
         "sharedItem4": "Course Mapping",
         "sharedItem5": "QR Lead Capture",
@@ -224,10 +224,10 @@
         "addonAnalyticsItem3": "Batch-wise conversion trends",
         "addonOnboardingTitle": "Premium Onboarding / Consulting (Future)",
         "addonOnboardingItem1": "Admission process audit",
-        "addonOnboardingItem2": "CRM workflow setup",
+        "addonOnboardingItem2": "Admission workflow setup",
         "addonOnboardingItem3": "Team training",
         "sectionAnnual": "Annual Billing",
-        "annualLine1": "Switch to Yearly and pay only 11 months for full-year access.",
+        "annualLine1": "Switch to Yearly and pay only 10 months for full-year access.",
         "annualLine2": "Professional annual billing for better savings and commitment.",
         "sectionTrust": "Trust Elements",
         "trust1": "No long-term contract",
@@ -263,19 +263,19 @@
         "a6": "Yes. You can track fee collections and payment records inside OnCampus."
     },
     "cta": {
-        "title": "Start Managing Admissions Professionally.",
+        "title": "Run Your Institute Operations Professionally.",
         "primary": "Start Free Trial",
-        "secondary": "Book Demo"
+        "secondary": "Explore the System"
     },
     "pages": {
-        "landingMetaTitle": "OnCampus - Admission CRM for Coaching Institutes",
-        "landingMetaDescription": "OnCampus helps coaching institutes capture enquiries and manage student admissions.",
-        "pricingMetaTitle": "Pricing - OnCampus",
-        "pricingMetaDescription": "Starter ₹999, Growth ₹1,999, Scale ₹3,999 for serious admission operations.",
-        "featuresMetaTitle": "Features - OnCampus",
-        "featuresMetaDescription": "Explore OnCampus features for leads, students, fees, payments, and institute public pages.",
-        "contactMetaTitle": "Contact - OnCampus",
-        "contactMetaDescription": "Contact OnCampus support and sales."
+        "landingMetaTitle": "OnCampus - Coaching Institute Admission & Student Management Platform",
+        "landingMetaDescription": "OnCampus helps coaching institutes capture enquiries, manage admissions, track students, courses, and fees in one platform.",
+        "pricingMetaTitle": "OnCampus Pricing - Admission Management Platform for Coaching Institutes",
+        "pricingMetaDescription": "Simple pricing starting at ₹999/month for coaching institute admission and student operations.",
+        "featuresMetaTitle": "OnCampus Features - Lead, Student, Course & Fee Management",
+        "featuresMetaDescription": "Explore OnCampus features for enquiries, admissions, students, courses, fees, and institute operations.",
+        "contactMetaTitle": "Contact OnCampus",
+        "contactMetaDescription": "Contact the OnCampus team for product support and institute onboarding."
     },
     "featuresPage": {
         "label": "Features",
