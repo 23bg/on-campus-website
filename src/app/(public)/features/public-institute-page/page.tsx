@@ -12,7 +12,7 @@ export default function PublicInstitutePageFeaturePage() {
             <div className="mt-6 space-y-4 text-muted-foreground">
                 <p>Create a branded institute profile page without separate website development effort.</p>
                 <p>Show courses, contact information, and enquiry actions in one focused destination.</p>
-                <p>Turn interest into trackable leads with direct CRM integration.</p>
+                <p>Turn interest into trackable enquiries with direct admission workflow tracking.</p>
             </div>
         </main>
     );

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Skill Institute Admission CRM - OnCampus",
-    description: "Manage admissions for short-term skill programs with practical tracking in OnCampus.",
+    title: "Skill Institute Admission and Student Management Platform - OnCampus",
+    description: "Manage admissions, student records, and fee operations for short-term skill programs with OnCampus.",
 };
 
 export default function SkillCentersUseCasePage() {

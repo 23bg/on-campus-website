@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Computer Training CRM - OnCampus",
-    description: "Admission workflow for computer training centers with structured lead tracking.",
+    title: "Computer Training Admission and Student Management Platform - OnCampus",
+    description: "Admission workflow for computer training centers with structured enquiry, student, and fee tracking.",
 };
 
 export default function ComputerTrainingUseCasePage() {

@@ -3,24 +3,24 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
     title: "Use Cases - OnCampus",
-    description: "Explore how different coaching institutes use OnCampus to improve enquiry to admission conversion.",
+    description: "Explore how coaching institutes use OnCampus to run enquiry, admission, student, and fee operations in one platform.",
 };
 
 const useCases = [
     {
         title: "JEE / NEET Coaching",
         href: "/use-cases/jee-neet-coaching",
-        description: "Handle high enquiry volumes and track every lead until admission.",
+        description: "Handle high enquiry volumes and track every enquiry until admission.",
     },
     {
         title: "Tuition Classes",
         href: "/use-cases/tuition-classes",
-        description: "Manage walk-ins, calls, and referrals in one admission workflow.",
+        description: "Manage walk-ins, calls, and referrals in one structured admission workflow.",
     },
     {
         title: "Computer Training Centers",
         href: "/use-cases/computer-training",
-        description: "Organize course-wise leads and improve conversion follow-through.",
+        description: "Organize course-wise enquiries and improve conversion follow-through.",
     },
     {
         title: "Skill Institutes",
@@ -34,9 +34,9 @@ export default function UseCasesPage() {
         <main className="mx-auto w-full max-w-6xl px-4 py-12 md:px-6 lg:py-16">
             <div className="space-y-3">
                 <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Use Cases</p>
-                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Admission CRM for Every Institute Type</h1>
+                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Admission and Student Management Platform for Coaching Institutes</h1>
                 <p className="max-w-3xl text-muted-foreground">
-                    OnCampus is built for the real operating style of Indian institutes, from large coaching centers to focused skill academies.
+                    OnCampus is built for the real operating style of Indian coaching institutes, from large coaching centers to focused skill academies.
                 </p>
             </div>
 

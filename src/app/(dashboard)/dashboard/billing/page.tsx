@@ -104,7 +104,7 @@ export default function BillingPage() {
                 key: payload.key,
                 subscription_id: payload.subscriptionId,
                 name: "OnCampus",
-                description: "Admission CRM Subscription",
+                description: "Admission and Student Management Platform Subscription",
                 handler: async (checkoutResponse) => {
                     await api.post(API.INTERNAL.BILLING.CONFIRM, checkoutResponse);
                     toast.success(`${planType} plan activated`);

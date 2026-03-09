@@ -358,9 +358,9 @@ export default function InstitutePublicView({ slug, institute }: any) {
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="space-y-1">
                             <p className="text-sm font-medium text-primary">Powered by OnCampus</p>
-                            <h3 className="text-xl font-semibold">Grow your admissions with OnCampus CRM</h3>
+                            <h3 className="text-xl font-semibold">Run admissions and student operations with OnCampus</h3>
                             <p className="text-sm text-muted-foreground">
-                                Capture leads, manage students, and launch your institute page in minutes.
+                                Capture enquiries, manage students, and launch your institute page in minutes.
                             </p>
                         </div>
 

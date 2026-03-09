@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 const resources = [
     "How to increase admissions in coaching institutes",
     "How to track leads for tuition classes",
-    "Excel vs CRM for coaching institutes",
+    "Excel vs admission management platform for coaching institutes",
     "How to build admission funnel for NEET institute",
 ];
 

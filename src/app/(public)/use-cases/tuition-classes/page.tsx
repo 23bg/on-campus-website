@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Tuition Class Admission CRM - OnCampus",
-    description: "Use OnCampus to simplify enquiry handling and admissions for tuition classes.",
+    title: "Tuition Class Admission and Student Management Platform - OnCampus",
+    description: "Use OnCampus to simplify enquiry handling, admissions, student records, and fee tracking for tuition classes.",
 };
 
 export default function TuitionUseCasePage() {
