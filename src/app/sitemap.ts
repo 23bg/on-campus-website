@@ -70,12 +70,6 @@ function getGeneratedSeoPages(): MetadataRoute.Sitemap {
         return pages;
     } catch {
         return [];
-            {
-                url: `${BASE_URL}/institutes`,
-                lastModified: new Date(),
-                changeFrequency: "daily",
-                priority: 0.8,
-            },
     }
 }
 
