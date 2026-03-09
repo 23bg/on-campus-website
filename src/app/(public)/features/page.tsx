@@ -87,6 +87,15 @@ export default async function FeaturesPage() {
                 <Link href={ROUTES.FEATURE_DETAILS.PUBLIC_INSTITUTE_PAGE} className="text-sm text-muted-foreground hover:text-foreground">{t("linkPublicInstitutePage")}</Link>
                 <Link href={ROUTES.FEATURE_DETAILS.SUBSCRIPTION_BILLING} className="text-sm text-muted-foreground hover:text-foreground">{t("linkSubscriptionBilling")}</Link>
             </div>
+
+            <div className="mt-6 rounded-xl border p-5">
+                <h2 className="text-lg font-semibold">Popular City Solution Pages</h2>
+                <div className="mt-3 flex flex-wrap gap-4 text-sm">
+                    <Link href="/solutions/admission-crm/pune" className="text-muted-foreground hover:text-foreground">Admission CRM in Pune</Link>
+                    <Link href="/solutions/admission-crm/delhi" className="text-muted-foreground hover:text-foreground">Admission CRM in Delhi</Link>
+                    <Link href="/solutions/admission-crm/mumbai" className="text-muted-foreground hover:text-foreground">Admission CRM in Mumbai</Link>
+                </div>
+            </div>
         </main>
     );
 }

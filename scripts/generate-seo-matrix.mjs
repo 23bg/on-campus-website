@@ -2,25 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
-const INPUT_PATH = "c:/Users/iampr/Downloads/in.json";
+const PROGRAMMATIC_SOURCE_PATH = path.join(ROOT, "src", "lib", "seo", "programmatic.ts");
 const OUTPUT_CSV = path.join(ROOT, "docs", "release", "SEO_PROGRAMMATIC_170_PAGES.csv");
 const OUTPUT_MD = path.join(ROOT, "docs", "release", "SEO_PROGRAMMATIC_170_PAGES.md");
 
-const LOCATION_KEYWORDS = [
-    "admission crm",
-    "coaching institute crm",
-    "student management software",
-    "student admission software",
-    "admission management software",
-    "student enquiry management",
-    "lead management for coaching institutes",
-    "fee management software",
-    "coaching institute management system",
-    "student portal software",
-    "best coaching software",
-    "coaching management app",
-    "institute erp software",
-];
+const LOCATION_KEYWORD = "admission crm";
 
 const FEATURE_PAGES = [
     ["lead-management", "lead management software for coaching institutes"],
@@ -249,47 +235,36 @@ function classifyCity(cityLower) {
     return "District HQ / Major Town";
 }
 
-const raw = JSON.parse(fs.readFileSync(INPUT_PATH, "utf8"));
+const programmaticSource = fs.readFileSync(PROGRAMMATIC_SOURCE_PATH, "utf8");
+const cityMatches = [...programmaticSource.matchAll(/\{\s*slug:\s*"([^"]+)",\s*name:\s*"([^"]+)",\s*state:\s*"([^"]+)"/g)];
 
-const deduped = [];
-const seen = new Set();
-for (const row of raw) {
-    const city = normalizeText(row.city);
-    const adminName = normalizeText(row.admin_name);
-    const slug = toSlug(city);
-    if (!slug || seen.has(slug)) continue;
-    seen.add(slug);
-    deduped.push({
+const top100Cities = cityMatches.slice(0, 100).map((m) => {
+    const city = normalizeText(m[2]);
+    return {
         city,
         cityTitle: toTitleCase(city),
         cityLower: city.toLowerCase(),
-        citySlug: slug,
-        state: adminName,
-        population: Number.parseInt(String(row.population || "0"), 10) || 0,
-    });
-}
-
-deduped.sort((a, b) => b.population - a.population || a.cityTitle.localeCompare(b.cityTitle));
-
-const top100Cities = deduped.slice(0, 100);
+        citySlug: m[1],
+        state: normalizeText(m[3]),
+    };
+});
 
 const rows = [];
 let id = 1;
 
 for (let i = 0; i < top100Cities.length; i += 1) {
     const city = top100Cities[i];
-    const keywordBase = LOCATION_KEYWORDS[i % LOCATION_KEYWORDS.length];
-    const targetKeyword = `${keywordBase} in ${city.cityLower}`;
+    const targetKeyword = `${LOCATION_KEYWORD} in ${city.cityLower}`;
     rows.push({
         id: id++,
         pageType: "Location",
         category: classifyCity(city.cityLower),
-        urlSlug: `/${toSlug(keywordBase)}-${city.citySlug}`,
+        urlSlug: `/admission-crm/${city.citySlug}`,
         targetKeyword,
-        seoTitle: seoTitle(`${keywordBase} in ${city.cityTitle}`),
-        metaDescription: metaDescription(`${keywordBase} in ${city.cityTitle}`, `in ${city.cityTitle}`),
+        seoTitle: seoTitle(`${LOCATION_KEYWORD} in ${city.cityTitle}`),
+        metaDescription: metaDescription(`${LOCATION_KEYWORD} in ${city.cityTitle}`, `in ${city.cityTitle}`),
         pageIntent: `Commercial - Coaching institutes in ${city.cityTitle} evaluating local software solutions.`,
-        pageOutline: locationOutline(keywordBase, city.cityTitle),
+        pageOutline: locationOutline(LOCATION_KEYWORD, city.cityTitle),
     });
 }
 
@@ -378,7 +353,7 @@ const counts = rows.reduce(
 const md = [
     "# OnCampus Programmatic SEO Matrix (170 Pages)",
     "",
-    "Generated from `c:/Users/iampr/Downloads/in.json` using `scripts/generate-seo-matrix.mjs`.",
+    "Generated from curated targets in `src/lib/seo/programmatic.ts` using `scripts/generate-seo-matrix.mjs`.",
     "",
     "## Split",
     "",

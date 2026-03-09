@@ -1,6 +1,6 @@
 # OnCampus Programmatic SEO Matrix (170 Pages)
 
-Generated from `c:/Users/iampr/Downloads/in.json` using `scripts/generate-seo-matrix.mjs`.
+Generated from curated targets in `src/lib/seo/programmatic.ts` using `scripts/generate-seo-matrix.mjs`.
 
 ## Split
 
