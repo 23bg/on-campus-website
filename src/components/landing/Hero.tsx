@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { DEMO_VIDEO_EMBED_URL } from "@/constants/external-links";
 
 export default function Hero() {
     const t = useTranslations("hero");
@@ -29,15 +30,19 @@ export default function Hero() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border bg-muted/20 p-3">
-                    <Image
-                        src="/landing/dashboard-mock.svg"
-                        alt={t("previewAlt")}
-                        width={900}
-                        height={620}
-                        priority
-                        className="h-auto w-full rounded-lg"
-                    />
+                <div className="rounded-xl">
+                    <section className="mb-8">
+                        <div className="aspect-video overflow-hidden rounded-lg border-0">
+                            <iframe
+                                src={DEMO_VIDEO_EMBED_URL}
+                                title={`Gettting started video tutorial`}
+                                className="h-full w-full"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                            />
+                        </div>
+                    </section>
                 </div>
             </div>
         </section>

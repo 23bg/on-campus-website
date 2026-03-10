@@ -66,32 +66,52 @@ model ShortLink {
 }
 
 model Institute {
-    id                  String    @id @default(auto()) @map("_id") @db.ObjectId
-    name                String?
-    description         String?
-    phone               String?
-    whatsapp            String?
-    address             Address?
-    timings             String?
-    leadWhatsappEnabled Boolean   @default(false)
-    autoReplyEnabled    Boolean   @default(false)
-    logo                String?
-    banner              String?
-    heroImage           String?
-    googleMapLink       String?
-    websiteUrl          String?
-    instagramUrl        String?
-    facebookUrl         String?
-    youtubeUrl          String?
-    linkedinUrl         String?
-    isOnboarded         Boolean   @default(false)
-    slug                String?   @unique
-    deletedAt           DateTime?
-    createdAt           DateTime  @default(now())
-    updatedAt           DateTime  @updatedAt
+    id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+    name                   String?
+    description            String?
+    phone                  String?
+    whatsapp               String?
+    address                Address?
+    timings                String?
+    leadWhatsappEnabled    Boolean   @default(false)
+    autoReplyEnabled       Boolean   @default(false)
+    logo                   String?
+    banner                 String?
+    heroImage              String?
+    googleMapLink          String?
+    websiteUrl             String?
+    instagramUrl           String?
+    facebookUrl            String?
+    youtubeUrl             String?
+    linkedinUrl            String?
+    isOnboarded            Boolean   @default(false)
+    whatsappOnboardingSent Boolean   @default(false)
+    slug                   String?   @unique
+    deletedAt              DateTime?
+    createdAt              DateTime  @default(now())
+    updatedAt              DateTime  @updatedAt
 
     @@index([phone])
     @@map("institutes")
+}
+
+model WhatsAppMessage {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String?  @db.ObjectId
+    phone       String
+    message     String
+    direction   String
+    status      String
+    provider    String   @default("META_WHATSAPP_CLOUD")
+    providerId  String?
+    payload     Json?
+    error       String?
+    createdAt   DateTime @default(now())
+
+    @@index([instituteId])
+    @@index([phone])
+    @@index([status])
+    @@map("whatsapp_messages")
 }
 
 type Address {

@@ -167,6 +167,14 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         ))}
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild>
+                                <Link href={ROUTES.HELP}>
+                                    <BookOpen className="h-4 w-4" />
+                                    <span>Help Center</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarFooter>

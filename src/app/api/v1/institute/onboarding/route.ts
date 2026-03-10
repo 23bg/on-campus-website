@@ -7,7 +7,7 @@ import { toAppError } from "@/lib/utils/error";
 export async function POST(req: NextRequest) {
     try {
         const session = await readSessionFromCookie();
-        if (!session?.instituteId) {
+        if (!session?.userId) {
             return NextResponse.json(
                 { success: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } },
                 { status: 401 }
@@ -51,10 +51,12 @@ export async function POST(req: NextRequest) {
             linkedin?: string;
         };
 
-        const data = await instituteService.completeOnboarding(session.instituteId, body);
+        const institute = await instituteService.getInstitute(session.userId);
+        const data = await instituteService.completeOnboarding(institute.id, body);
 
         const nextToken = createSessionToken({
             ...session,
+            instituteId: institute.id,
             isOnboarded: true,
         });
         await setSessionCookie(nextToken);

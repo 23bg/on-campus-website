@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/theme-toggle";
 import ImraboChat from "@/modules/ai/components/ImraboChat";
 import UserMenu from "@/modules/auth/components/UserMenu";
 import ROUTES from "@/constants/routes";
+import { DEMO_VIDEO_URL } from "@/constants/external-links";
 import GlobalSearch from "@/components/layout/dashboard/GlobalSearch";
 
 const routeLabelMap: Record<string, string> = {
@@ -72,6 +74,12 @@ export default function DashboardHeader() {
             </div>
 
             <div className="flex items-center gap-3">
+                <Button asChild variant="outline" size="sm" className="hidden lg:inline-flex">
+                    <Link href={DEMO_VIDEO_URL} target="_blank" rel="noopener noreferrer">Watch Demo</Link>
+                </Button>
+                <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+                    <Link href={ROUTES.HELP}>Docs</Link>
+                </Button>
                 <GlobalSearch />
                 <ImraboChat />
                 <ThemeToggle />

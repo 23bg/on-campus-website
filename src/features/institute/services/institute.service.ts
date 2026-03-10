@@ -4,6 +4,9 @@ import { userRepository } from "@/features/auth/repositories/user.repo";
 import { courseRepository } from "@/features/course/repositories/course.repo";
 import { AppError } from "@/lib/utils/error";
 import { prisma } from "@/lib/db/prisma";
+import { normalizePhone } from "@/lib/utils/phone";
+import { sendWhatsAppTemplate } from "@/lib/services/whatsapp";
+import { logger } from "@/lib/utils/logger";
 
 const phoneSchema = z
     .string()
@@ -199,17 +202,107 @@ const withSocialLinks = <T extends {
 
 const hasText = (value: string | null | undefined): boolean => Boolean(value && value.trim().length > 0);
 
+const tempSlugFromIdentity = (identity: string): string => {
+    const base = identity
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/(^-|-$)/g, "")
+        .slice(0, 30);
+
+    return `temp-${base || "oncampus"}-${Date.now().toString(36)}`;
+};
+
+const ensureInstituteForUser = async (userId: string) => {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+        throw new AppError("User not found", 404, "USER_NOT_FOUND");
+    }
+
+    if (user.instituteId) {
+        const existingInstitute = await instituteRepository.findById(user.instituteId);
+        if (existingInstitute) {
+            return existingInstitute;
+        }
+    }
+
+    const createdInstitute = await instituteRepository.create({
+        name: null,
+        slug: tempSlugFromIdentity(user.email || user.id),
+        isOnboarded: false,
+    });
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: { instituteId: createdInstitute.id },
+    });
+
+    return createdInstitute;
+};
+
+const sendOnboardingWhatsAppMessage = async (institute: {
+    id: string;
+    name: string | null;
+    phone: string | null;
+    whatsapp: string | null;
+    whatsappOnboardingSent?: boolean;
+}) => {
+    if (institute.whatsappOnboardingSent) {
+        return;
+    }
+
+    const destinationPhone = institute.whatsapp || institute.phone;
+    if (!destinationPhone) {
+        return;
+    }
+
+    const normalizedDestination = normalizePhone(destinationPhone);
+    if (!normalizedDestination) {
+        return;
+    }
+
+    try {
+        const response = await sendWhatsAppTemplate(
+            normalizedDestination,
+            "onboarding_welcome",
+            ["Institute Admin", institute.name || "OnCampus Institute"]
+        );
+
+        await Promise.all([
+            instituteRepository.updateById(institute.id, { whatsappOnboardingSent: true }),
+            prisma.whatsAppMessage.create({
+                data: {
+                    instituteId: institute.id,
+                    phone: normalizedDestination,
+                    message: "onboarding_welcome",
+                    direction: "OUTBOUND",
+                    status: "SENT",
+                    providerId: response.messages?.[0]?.id || null,
+                    payload: response,
+                },
+            }),
+        ]);
+    } catch (error) {
+        logger.error({ event: "whatsapp_onboarding_send_failed", instituteId: institute.id, error });
+
+        await prisma.whatsAppMessage.create({
+            data: {
+                instituteId: institute.id,
+                phone: normalizedDestination,
+                message: "onboarding_welcome",
+                direction: "OUTBOUND",
+                status: "FAILED",
+                provider: "META_WHATSAPP_CLOUD",
+                error: error instanceof Error ? error.message : "Unknown WhatsApp onboarding error",
+            },
+        });
+    }
+};
+
 export const instituteService = {
     async getInstitute(userId: string) {
-        const user = await userRepository.findById(userId);
-        if (!user?.instituteId) {
-            throw new AppError("Institute not found for user", 404, "INSTITUTE_NOT_FOUND");
-        }
-
-        const institute = await instituteRepository.findById(user.instituteId);
-        if (!institute) {
-            throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
-        }
+        const institute = await ensureInstituteForUser(userId);
 
         return withSocialLinks(institute);
     },
@@ -440,6 +533,8 @@ export const instituteService = {
             linkedinUrl: payload.linkedin?.trim() || null,
             isOnboarded: true,
         });
+
+        await sendOnboardingWhatsAppMessage(updated);
 
         return withSocialLinks(updated);
     },

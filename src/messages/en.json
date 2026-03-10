@@ -19,13 +19,9 @@
         "brand": "OnCampus",
         "menu": "Menu",
         "openMenu": "Open menu",
-        "home": "Home",
         "features": "Features",
-        "institutes": "Institutes",
-        "tools": "Tools",
         "useCases": "Use Cases",
         "pricing": "Pricing",
-        "contact": "Contact",
         "demo": "Demo",
         "resources": "Resources"
     },
@@ -35,6 +31,13 @@
         "builtInIndia": "Built in India",
         "securePayments": "Secure Payments via Razorpay",
         "copyright": "© {year} OnCampus. All rights reserved.",
+        "product": "Product",
+        "resources": "Resources",
+        "company": "Company",
+        "helpCenter": "Help Center",
+        "documentation": "Documentation",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
         "groupProduct": "Product",
         "groupUseCases": "Use Cases",
         "groupCompany": "Company",
@@ -42,6 +45,7 @@
         "allUseCases": "All Use Cases",
         "features": "Features",
         "tools": "Tools",
+        "useCases": "Use Cases",
         "pricing": "Pricing",
         "resources": "Resources",
         "demo": "Demo",
@@ -125,8 +129,8 @@
     "demo": {
         "title": "Institute Page Demo",
         "description": "Every institute gets their own page.",
-        "cta": "Open /demo-institute",
-        "previewAlt": "Demo institute page preview"
+        "cta": "Watch Demo Video",
+        "previewAlt": "OnCampus demo video"
     },
     "pricing": {
         "title": "Built for Serious Admission Operations.",
@@ -318,8 +322,8 @@
     "contactPage": {
         "title": "Contact",
         "subtitle": "Need help with setup, billing, or product questions? Reach us anytime.",
-        "emailValue": "support@oncampus.app",
-        "whatsAppValue": "+91 90000 00000",
+        "emailValue": "support@oncampus.in",
+        "whatsAppValue": "+91 93568 36509",
         "supportHoursValue": "Mon-Sat, 10:00 AM - 7:00 PM"
     },
     "courses": {

@@ -1,11 +1,11 @@
 ﻿import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { DEMO_VIDEO_EMBED_URL, DEMO_VIDEO_URL } from "@/constants/external-links";
 
 export const metadata: Metadata = {
     title: "Demo Institute - OnCampus",
-    description: "Preview how an institute profile looks on OnCampus.",
+    description: "Watch the OnCampus demo video to preview the platform experience.",
 };
 
 export default function DemoInstitutePage() {
@@ -13,21 +13,23 @@ export default function DemoInstitutePage() {
         <main className="mx-auto w-full max-w-6xl px-4 py-12 md:px-6 lg:py-16">
             <div className="space-y-4">
                 <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Demo</p>
-                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Every institute gets their own page.</h1>
+                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Watch the OnCampus product demo.</h1>
                 <p className="max-w-3xl text-muted-foreground">
-                    This is a sample institute profile layout your coaching center can publish instantly.
+                    See how OnCampus handles enquiries, admissions, students, courses, and operations in one workflow.
                 </p>
             </div>
 
             <div className="mt-8 rounded-xl border bg-muted/20 p-3">
-                <Image
-                    src="/landing/demo-mock.svg"
-                    alt="Demo institute profile page"
-                    width={1200}
-                    height={760}
-                    priority
-                    className="h-auto w-full rounded-lg"
-                />
+                <div className="aspect-video overflow-hidden rounded-lg border bg-background">
+                    <iframe
+                        src={DEMO_VIDEO_EMBED_URL}
+                        title="OnCampus demo video"
+                        className="h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                    />
+                </div>
             </div>
 
             <div className="mt-8 flex gap-3">
@@ -35,7 +37,7 @@ export default function DemoInstitutePage() {
                     <Link href="/signup">Start Free Trial</Link>
                 </Button>
                 <Button asChild variant="outline">
-                    <Link href="/">Back to Home</Link>
+                    <Link href={DEMO_VIDEO_URL} target="_blank" rel="noopener noreferrer">Open on YouTube</Link>
                 </Button>
             </div>
         </main>

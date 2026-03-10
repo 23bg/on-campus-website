@@ -1,4 +1,5 @@
 import ROUTES from "@/constants/routes";
+import { DEMO_VIDEO_URL } from "@/constants/external-links";
 
 export type NavItem = {
     labelKey: string;
@@ -6,15 +7,12 @@ export type NavItem = {
 };
 
 export const PUBLIC_NAV_ITEMS: NavItem[] = [
-    { labelKey: "home", href: ROUTES.HOME },
     { labelKey: "features", href: ROUTES.FEATURES },
-    { labelKey: "institutes", href: ROUTES.INSTITUTES },
-    { labelKey: "tools", href: ROUTES.TOOLS },
-    { labelKey: "pricing", href: ROUTES.PRICING },
-    { labelKey: "contact", href: ROUTES.CONTACT },
-    { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
     { labelKey: "useCases", href: ROUTES.USE_CASES },
+    { labelKey: "pricing", href: ROUTES.PRICING },
     { labelKey: "resources", href: ROUTES.RESOURCES },
+    { labelKey: "demo", href: DEMO_VIDEO_URL },
+
 ];
 
 export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
@@ -25,7 +23,8 @@ export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
             { labelKey: "tools", href: ROUTES.TOOLS },
             { labelKey: "pricing", href: ROUTES.PRICING },
             { labelKey: "resources", href: ROUTES.RESOURCES },
-            { labelKey: "demo", href: ROUTES.DEMO_INSTITUTE },
+            { labelKey: "demo", href: DEMO_VIDEO_URL },
+
         ],
     },
     {
@@ -38,6 +37,7 @@ export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
             { labelKey: "skillInstitutes", href: "/use-cases/skill-centers" },
         ],
     },
+
     {
         titleKey: "groupCompany",
         links: [
@@ -49,6 +49,7 @@ export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
     {
         titleKey: "groupLegal",
         links: [
+            { labelKey: "helpCenter", href: ROUTES.HELP },
             { labelKey: "privacyPolicy", href: ROUTES.PRIVACY },
             { labelKey: "terms", href: ROUTES.TERMS },
         ],
