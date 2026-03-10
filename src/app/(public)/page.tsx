@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import Link from "next/link";
+// import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import JsonLd from "@/components/seo/JsonLd";
 import Hero from "@/components/landing/Hero";
@@ -12,7 +12,7 @@ import Demo from "@/components/landing/Demo";
 import Pricing from "@/components/landing/Pricing";
 import FAQ from "@/components/landing/FAQ";
 import CTA from "@/components/landing/CTA";
-import UseCases from "../../components/landing/UseCases";
+import UseCases from "@/components/landing/UseCases";
 import LandingHeader from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 
@@ -60,7 +60,7 @@ export default function LandingPage() {
         "@type": "Organization",
         name: "OnCampus",
         url: "https://oncampus.in",
-        email: "support@oncampus.app",
+        email: "support@oncampus.in",
     };
 
     const faqSchema = {
@@ -104,22 +104,6 @@ export default function LandingPage() {
             <Problem />
             <Solution />
             <Features />
-            <section className="mx-auto w-full max-w-5xl px-4 py-8 md:px-6">
-                <h2 className="text-2xl font-semibold">Explore Core Product Pages</h2>
-                <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                    <Link href="/admission-crm" className="text-primary underline-offset-4 hover:underline">Admission CRM</Link>
-                    <Link href="/student-management-software" className="text-primary underline-offset-4 hover:underline">Student Management Software</Link>
-                    <Link href="/coaching-institute-crm" className="text-primary underline-offset-4 hover:underline">Coaching Institute CRM</Link>
-                </div>
-            </section>
-            <section className="mx-auto w-full max-w-5xl px-4 py-2 pb-8 md:px-6">
-                <h2 className="text-2xl font-semibold">Popular City Solutions</h2>
-                <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                    <Link href="/solutions/admission-crm/pune" className="text-primary underline-offset-4 hover:underline">Admission CRM in Pune</Link>
-                    <Link href="/solutions/admission-crm/delhi" className="text-primary underline-offset-4 hover:underline">Admission CRM in Delhi</Link>
-                    <Link href="/solutions/admission-crm/mumbai" className="text-primary underline-offset-4 hover:underline">Admission CRM in Mumbai</Link>
-                </div>
-            </section>
             <UseCases />
             <Trust />
             <HowItWorks />

@@ -26,6 +26,7 @@ type UpdateInstituteInput = {
     youtubeUrl?: string | null;
     linkedinUrl?: string | null;
     isOnboarded?: boolean;
+    whatsappOnboardingSent?: boolean;
     slug?: string;
 };
 
