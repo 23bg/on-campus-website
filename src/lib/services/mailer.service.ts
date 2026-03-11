@@ -65,7 +65,8 @@ export const mailerService = {
         let transport = getTransporter();
 
         const message = {
-            from: env.SMTP_FROM,
+            from: `"${env.SMTP_HOST_NAME}" <${env.SMTP_FROM}>`,
+            // from: env.SMTP_FROM,
             to: input.email,
             subject: "Your OnCampus OTP",
             text: `Your OTP is ${input.otp}. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.`,

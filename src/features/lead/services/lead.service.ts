@@ -4,6 +4,7 @@ import { studentRepository } from "@/features/student/repositories/student.repo"
 import { instituteRepository } from "@/features/institute/repositories/institute.repo";
 import { AppError } from "@/lib/utils/error";
 import { leadActivityService } from "@/features/lead/services/lead-activity.service";
+import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
 
 const leadInputSchema = z.object({
     instituteId: z.string().min(1),
@@ -56,6 +57,12 @@ export const leadService = {
                 description: `Next follow-up on ${created.followUpAt.toISOString().slice(0, 10)}`,
             });
         }
+
+        await sendEventBasedWhatsAppAlert({
+            event: "LEAD_CREATED",
+            instituteId: created.instituteId,
+            message: `New enquiry received: ${created.name} (${created.phone}).`,
+        });
 
         return created;
     },
@@ -123,6 +130,12 @@ export const leadService = {
                 instituteId,
                 activityType: "CONVERTED_TO_STUDENT",
                 title: "Converted to student",
+            });
+
+            await sendEventBasedWhatsAppAlert({
+                event: "LEAD_CONVERTED_TO_STUDENT",
+                instituteId,
+                message: `Lead converted to student: ${updated.name} (${updated.phone}).`,
             });
         }
 

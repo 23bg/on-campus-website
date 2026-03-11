@@ -21,7 +21,8 @@ export const subscriptionRepository = {
             create: {
                 instituteId,
                 planType: mapPlanTypeToDb(planType),
-                userLimit: PLAN_CONFIG[planType].userLimit,
+                // 0 is stored as the sentinel value for "unlimited" (null in PlanConfig)
+                userLimit: PLAN_CONFIG[planType].userLimit ?? 0,
                 status: "TRIAL",
                 trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
             },
@@ -74,7 +75,8 @@ export const subscriptionRepository = {
                 instituteId,
                 razorpaySubId,
                 planType: mapPlanTypeToDb(payload.planType ?? DEFAULT_PLAN_TYPE),
-                userLimit: payload.userLimit ?? PLAN_CONFIG[payload.planType ?? DEFAULT_PLAN_TYPE].userLimit,
+                // 0 = unlimited sentinel
+                userLimit: payload.userLimit ?? PLAN_CONFIG[payload.planType ?? DEFAULT_PLAN_TYPE].userLimit ?? 0,
                 status: payload.status ?? "TRIAL",
                 currentPeriodEnd: payload.currentPeriodEnd,
                 trialEndsAt: payload.trialEndsAt,

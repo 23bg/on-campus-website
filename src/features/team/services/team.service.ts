@@ -2,6 +2,7 @@ import { z } from "zod";
 import { userRepository } from "@/features/auth/repositories/user.repo";
 import { AppError } from "@/lib/utils/error";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
+import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
 
 const roleSchema = z.enum(["MANAGER", "VIEWER"]);
 const memberEmailSchema = z.string().trim().max(120).email();
@@ -37,9 +38,11 @@ export const teamService = {
                 userRepository.countByInstitute(instituteId),
             ]);
 
-            if (currentUsers >= (subscription.userLimit ?? 1)) {
+            // subscription.userLimit === 0 means unlimited (Scale plan)
+            const seatLimit = subscription.userLimit === 0 ? null : (subscription.userLimit ?? 1);
+            if (seatLimit !== null && currentUsers >= seatLimit) {
                 throw new AppError(
-                    "Your current plan user limit is reached. Upgrade to TEAM to add more users.",
+                    "Your current plan user limit is reached. Upgrade your plan to add more users.",
                     409,
                     "PLAN_USER_LIMIT_REACHED"
                 );
@@ -47,20 +50,36 @@ export const teamService = {
         }
 
         if (existing) {
-            return userRepository.updateByEmail(email, {
+            const updatedMember = await userRepository.updateByEmail(email, {
                 instituteId,
                 role,
                 name: name ?? existing.name,
             });
+
+            await sendEventBasedWhatsAppAlert({
+                event: "TEAM_MEMBER_ADDED",
+                instituteId,
+                message: `Team member added: ${updatedMember?.name || email} (${role}).`,
+            });
+
+            return updatedMember;
         }
 
-        return userRepository.create({
+        const createdMember = await userRepository.create({
             email,
             instituteId,
             role,
             name,
             emailVerified: false,
         });
+
+        await sendEventBasedWhatsAppAlert({
+            event: "TEAM_MEMBER_ADDED",
+            instituteId,
+            message: `Team member added: ${createdMember.name || email} (${role}).`,
+        });
+
+        return createdMember;
     },
 
     async updateMemberRole(
