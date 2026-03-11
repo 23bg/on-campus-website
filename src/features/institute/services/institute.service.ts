@@ -5,8 +5,7 @@ import { courseRepository } from "@/features/course/repositories/course.repo";
 import { AppError } from "@/lib/utils/error";
 import { prisma } from "@/lib/db/prisma";
 import { normalizePhone } from "@/lib/utils/phone";
-import { sendWhatsAppTemplate } from "@/lib/services/whatsapp";
-import { logger } from "@/lib/utils/logger";
+import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
 
 const phoneSchema = z
     .string()
@@ -262,41 +261,15 @@ const sendOnboardingWhatsAppMessage = async (institute: {
         return;
     }
 
-    try {
-        const response = await sendWhatsAppTemplate(
-            normalizedDestination,
-            "onboarding_welcome",
-            ["Institute Admin", institute.name || "OnCampus Institute"]
-        );
+    const result = await sendEventBasedWhatsAppAlert({
+        event: "INSTITUTE_ONBOARDING_COMPLETED",
+        instituteId: institute.id,
+        phoneNumber: normalizedDestination,
+        message: `Onboarding completed for ${institute.name || "your institute"}. Your workspace is ready to use.`,
+    });
 
-        await Promise.all([
-            instituteRepository.updateById(institute.id, { whatsappOnboardingSent: true }),
-            prisma.whatsAppMessage.create({
-                data: {
-                    instituteId: institute.id,
-                    phone: normalizedDestination,
-                    message: "onboarding_welcome",
-                    direction: "OUTBOUND",
-                    status: "SENT",
-                    providerId: response.messages?.[0]?.id || null,
-                    payload: response,
-                },
-            }),
-        ]);
-    } catch (error) {
-        logger.error({ event: "whatsapp_onboarding_send_failed", instituteId: institute.id, error });
-
-        await prisma.whatsAppMessage.create({
-            data: {
-                instituteId: institute.id,
-                phone: normalizedDestination,
-                message: "onboarding_welcome",
-                direction: "OUTBOUND",
-                status: "FAILED",
-                provider: "META_WHATSAPP_CLOUD",
-                error: error instanceof Error ? error.message : "Unknown WhatsApp onboarding error",
-            },
-        });
+    if (result?.sent) {
+        await instituteRepository.updateById(institute.id, { whatsappOnboardingSent: true });
     }
 };
 
@@ -442,6 +415,12 @@ export const instituteService = {
             youtubeUrl: youtubeUrl || null,
             linkedinUrl: linkedinUrl || null,
             isOnboarded,
+        });
+
+        await sendEventBasedWhatsAppAlert({
+            event: "INSTITUTE_PROFILE_UPDATED",
+            instituteId,
+            message: `Institute profile updated successfully for ${updated.name || "your institute"}.`,
         });
 
         return withSocialLinks(updated);

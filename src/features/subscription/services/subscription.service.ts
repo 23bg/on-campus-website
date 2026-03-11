@@ -22,7 +22,8 @@ const normalizeStoredPlanType = (storedPlanType: string | null | undefined, user
     }
 
     if (storedPlanType === "TEAM") {
-        if ((userLimit ?? 0) >= PLAN_CONFIG.SCALE.userLimit) {
+        const scaleLimit = PLAN_CONFIG.SCALE.userLimit ?? Infinity;
+        if ((userLimit ?? 0) >= scaleLimit) {
             return "SCALE";
         }
         return "GROWTH";
@@ -156,7 +157,7 @@ export const subscriptionService = {
         await subscriptionRepository.upsertByRazorpaySubId(created.id, instituteId, {
             status: "INACTIVE",
             planType,
-            userLimit: plan.userLimit,
+            userLimit: plan.userLimit ?? undefined,
         });
 
         return {

@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { AppError } from "@/lib/utils/error";
+import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
 
 export const studentPortalService = {
     async setCredentials(
@@ -10,7 +11,7 @@ export const studentPortalService = {
     ) {
         const student = await prisma.student.findFirst({
             where: { id: studentId, instituteId },
-            select: { id: true, email: true },
+            select: { id: true, email: true, name: true, phone: true },
         });
 
         if (!student) {
@@ -37,6 +38,21 @@ export const studentPortalService = {
                 portalPasswordHash: passwordHash,
                 portalActive: true,
             },
+        });
+
+        const message = `Portal credentials set for student ${student.name}. Student can now log in to the portal.`;
+
+        await sendEventBasedWhatsAppAlert({
+            event: "STUDENT_PORTAL_CREDENTIALS_SET",
+            instituteId,
+            message,
+            phoneNumber: student.phone,
+        });
+
+        await sendEventBasedWhatsAppAlert({
+            event: "STUDENT_PORTAL_CREDENTIALS_SET",
+            instituteId,
+            message,
         });
 
         return { success: true };

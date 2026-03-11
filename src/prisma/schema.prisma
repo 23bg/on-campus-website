@@ -300,3 +300,31 @@ enum InstallmentStatus {
     PAID
     OVERDUE
 }
+
+model WhatsAppUsage {
+    id                String   @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId       String   @db.ObjectId
+    phoneNumber       String
+    conversationStart DateTime
+    conversationEnd   DateTime
+    createdAt         DateTime @default(now())
+
+    @@index([instituteId])
+    @@index([phoneNumber])
+    @@index([conversationStart])
+    @@map("whatsapp_usage")
+}
+
+model MonthlyUsage {
+    id                     String   @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId            String   @db.ObjectId
+    month                  Int
+    year                   Int
+    conversationCount      Int      @default(0)
+    dailyConversationCount Int      @default(0)
+    updatedAt              DateTime @updatedAt
+
+    @@unique([instituteId, month, year])
+    @@index([instituteId])
+    @@map("monthly_usage")
+}

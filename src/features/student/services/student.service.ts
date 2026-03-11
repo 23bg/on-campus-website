@@ -3,6 +3,7 @@ import { studentRepository } from "@/features/student/repositories/student.repo"
 import { courseRepository } from "@/features/course/repositories/course.repo";
 import { feeRepository } from "@/features/fee/repositories/fee.repo";
 import { AppError } from "@/lib/utils/error";
+import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
 
 const studentInputSchema = z.object({
     instituteId: z.string().min(1),
@@ -50,6 +51,12 @@ export const studentService = {
                 totalAmount: feeAmount,
             });
         }
+
+        await sendEventBasedWhatsAppAlert({
+            event: "STUDENT_CREATED",
+            instituteId: input.instituteId,
+            message: `Student created: ${student.name} (${student.phone}).`,
+        });
 
         return student;
     },

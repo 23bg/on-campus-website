@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { REQUEST_ID_HEADER } from "@/lib/request-logger";
 import { serializeError, withLogContext } from "@/lib/logger";
@@ -11,6 +12,18 @@ function endOfDayPlusDays(start: Date, days: number) {
     d.setDate(d.getDate() + days);
     d.setHours(23, 59, 59, 0);
     return d;
+}
+
+function isMongoReplicaSetError(error: unknown): boolean {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        return error.code === "P2031";
+    }
+
+    if (error instanceof Error) {
+        return /replica\s*set/i.test(error.message);
+    }
+
+    return false;
 }
 
 export async function POST(req: Request) {
@@ -67,6 +80,22 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, redirect: "/onboarding" }, { status: 201 });
     } catch (err: any) {
+        if (isMongoReplicaSetError(err)) {
+            logger.error({
+                event: "signup_failed_mongodb_replica_set_required",
+                error: serializeError(err),
+            });
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    message:
+                        "Database configuration issue: Prisma with MongoDB requires a replica set. Start MongoDB as a replica set or use an Atlas replica-set URI.",
+                },
+                { status: 503 }
+            );
+        }
+
         logger.error({
             event: "signup_failed",
             error: serializeError(err),

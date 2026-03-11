@@ -37,6 +37,7 @@ const ROUTES = {
 	DEMO_INSTITUTE: "/demo-institute",
 	ABOUT: "/about",
 	CONTACT: "/contact",
+	SECURITY: "/security",
 	PRIVACY: "/privacy",
 	TERMS: "/terms",
 };

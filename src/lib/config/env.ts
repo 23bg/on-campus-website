@@ -9,6 +9,7 @@ const envSchema = z.object({
     JWT_SECRET: z.string().optional(),
     DATABASE_URL: z.string().min(1).optional(),
     OTP_EMAIL_ENABLED: z.coerce.boolean().default(false),
+    SMTP_HOST_NAME: z.preprocess(emptyToUndefined, z.string().optional()),
     SMTP_HOST: z.preprocess(emptyToUndefined, z.string().optional()),
     SMTP_PORT: z.preprocess(
         emptyToUndefined,

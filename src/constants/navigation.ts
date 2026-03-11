@@ -50,6 +50,7 @@ export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
         titleKey: "groupLegal",
         links: [
             { labelKey: "helpCenter", href: ROUTES.HELP },
+            { labelKey: "security", href: ROUTES.SECURITY },
             { labelKey: "privacyPolicy", href: ROUTES.PRIVACY },
             { labelKey: "terms", href: ROUTES.TERMS },
         ],
