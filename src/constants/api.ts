@@ -38,6 +38,12 @@
         INSTITUTE: {
             ROOT: '/institute',
             ONBOARDING: '/institute/onboarding',
+            DOMAIN: '/institute/domain',
+            WHATSAPP: '/institute/whatsapp',
+            NOTIFICATIONS: '/institute/notifications',
+        },
+        AI: {
+            IMRABO_CHAT: '/ai/imrabo',
         },
         PUBLIC: {
             LEAD: (slug: string) => `/public/${slug}/lead`,

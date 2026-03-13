@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { feeRepository } from "@/features/fee/repositories/fee.repo";
 import { AppError } from "@/lib/utils/error";
+import { billingService } from "@/features/billing/services/billing.service";
+import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
 
 const feePlanSchema = z.object({
     studentId: z.string().min(1),
@@ -70,6 +72,8 @@ export const feeService = {
             throw new AppError("Fee plan not found", 404, "FEE_PLAN_NOT_FOUND");
         }
 
+        await billingService.assertCanProcessPayments(plan.instituteId);
+
         const paidOn = input.date ? new Date(input.date) : new Date();
 
         const installment = await feeRepository.createInstallment({
@@ -88,6 +92,17 @@ export const feeService = {
             method: input.method,
             reference: input.reference,
             paidOn,
+        });
+
+        await sendEventBasedWhatsAppAlert({
+            event: "PAYMENT_RECEIVED",
+            instituteId: plan.instituteId,
+            message: `Payment received: ₹${input.amount}`,
+            templateEvent: "payment_received",
+            templateVariables: {
+                student_name: "Student",
+                course_name: "Course",
+            },
         });
 
         return installment;

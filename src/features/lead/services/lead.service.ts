@@ -5,6 +5,7 @@ import { instituteRepository } from "@/features/institute/repositories/institute
 import { AppError } from "@/lib/utils/error";
 import { leadActivityService } from "@/features/lead/services/lead-activity.service";
 import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
+import { billingService } from "@/features/billing/services/billing.service";
 
 const leadInputSchema = z.object({
     instituteId: z.string().min(1),
@@ -27,6 +28,7 @@ const listInputSchema = z.object({
 export const leadService = {
     async createLead(payload: unknown) {
         const input = leadInputSchema.parse(payload);
+        await billingService.assertCanCreateLeads(input.instituteId);
         const duplicate = await leadRepository.findByPhoneInInstitute(input.instituteId, input.phone);
         if (duplicate) {
             throw new AppError("Lead already exists with this mobile number", 409, "DUPLICATE_LEAD", {
@@ -62,6 +64,11 @@ export const leadService = {
             event: "LEAD_CREATED",
             instituteId: created.instituteId,
             message: `New enquiry received: ${created.name} (${created.phone}).`,
+            templateEvent: "new_enquiry_alert",
+            templateVariables: {
+                student_name: created.name,
+                course_name: created.course ?? "General enquiry",
+            },
         });
 
         return created;
@@ -136,6 +143,11 @@ export const leadService = {
                 event: "LEAD_CONVERTED_TO_STUDENT",
                 instituteId,
                 message: `Lead converted to student: ${updated.name} (${updated.phone}).`,
+                templateEvent: "admission_confirmed",
+                templateVariables: {
+                    student_name: updated.name,
+                    course_name: updated.course ?? "Course",
+                },
             });
         }
 

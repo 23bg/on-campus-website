@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import api from "@/lib/axios";
 import { API } from "@/constants/api";
 
@@ -26,6 +29,21 @@ type NotificationSettings = {
 type AppSettings = {
     dashboard: DashboardSettings;
     notifications: NotificationSettings;
+};
+
+type DomainStatus = "PENDING" | "VERIFIED" | "ACTIVE" | "FAILED";
+
+type DomainSettings = {
+    slug: string;
+    customDomain: string;
+    domainVerified: boolean;
+    domainStatus: DomainStatus;
+    defaultDomain: string;
+    dnsInstruction: {
+        type: string;
+        name: string;
+        target: string;
+    };
 };
 
 const SETTINGS_STORAGE_KEY = "oncampus:settings";
@@ -49,6 +67,11 @@ export default function SettingsPage() {
     const [settings, setSettings] = useState<AppSettings>(defaultSettings);
     const [dataCounts, setDataCounts] = useState({ students: 0, leads: 0, courses: 0, payments: 0 });
     const [exporting, setExporting] = useState(false);
+    const [domainSettings, setDomainSettings] = useState<DomainSettings | null>(null);
+    const [domainInput, setDomainInput] = useState("");
+    const [domainSaving, setDomainSaving] = useState(false);
+    const [domainVerifying, setDomainVerifying] = useState(false);
+    const [domainActivating, setDomainActivating] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -84,8 +107,88 @@ export default function SettingsPage() {
             }
         };
 
+        const loadDomainSettings = async () => {
+            try {
+                const response = await api.get<{ success: boolean; data: DomainSettings }>(API.INTERNAL.INSTITUTE.DOMAIN);
+                setDomainSettings(response.data.data);
+                setDomainInput(response.data.data.customDomain ?? "");
+            } catch {
+                // Keep domain section available for manual input
+            }
+        };
+
         loadCounts();
+        loadDomainSettings();
     }, []);
+
+    const getStatusVariant = (status: DomainStatus): "default" | "secondary" | "destructive" => {
+        if (status === "ACTIVE") return "default";
+        if (status === "FAILED") return "destructive";
+        return "secondary";
+    };
+
+    const saveDomain = async () => {
+        if (!domainInput.trim()) {
+            toast.error("Please enter a custom domain");
+            return;
+        }
+
+        setDomainSaving(true);
+        try {
+            const response = await api.put<{ success: boolean; data: DomainSettings }>(API.INTERNAL.INSTITUTE.DOMAIN, {
+                customDomain: domainInput,
+                surface: "portal",
+            });
+            setDomainSettings(response.data.data);
+            setDomainInput(response.data.data.customDomain ?? "");
+            toast.success("Domain saved. Add DNS record and verify.");
+        } catch (error: unknown) {
+            const message = (error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+            toast.error(message ?? "Unable to save custom domain");
+        } finally {
+            setDomainSaving(false);
+        }
+    };
+
+    const verifyDomain = async () => {
+        setDomainVerifying(true);
+        try {
+            const response = await api.post<{
+                success: boolean;
+                data: { verified: boolean; host: string; nextStep: string };
+            }>(API.INTERNAL.INSTITUTE.DOMAIN, {
+                action: "verify",
+                customDomain: domainInput,
+            });
+
+            toast.success(response.data.data.verified ? "Domain verified" : "Domain not verified yet");
+
+            const latest = await api.get<{ success: boolean; data: DomainSettings }>(API.INTERNAL.INSTITUTE.DOMAIN);
+            setDomainSettings(latest.data.data);
+        } catch (error: unknown) {
+            const message = (error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+            toast.error(message ?? "Unable to verify domain");
+        } finally {
+            setDomainVerifying(false);
+        }
+    };
+
+    const activateDomain = async () => {
+        setDomainActivating(true);
+        try {
+            const response = await api.post<{ success: boolean; data: DomainSettings }>(API.INTERNAL.INSTITUTE.DOMAIN, {
+                action: "activate",
+                customDomain: domainInput,
+            });
+            setDomainSettings(response.data.data);
+            toast.success("Domain activated");
+        } catch (error: unknown) {
+            const message = (error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
+            toast.error(message ?? "Unable to activate domain");
+        } finally {
+            setDomainActivating(false);
+        }
+    };
 
     const saveSettings = () => {
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
@@ -136,6 +239,21 @@ export default function SettingsPage() {
                 <h1 className=" text-2xl font-semibold">Settings</h1>
                 <p className="mt-1 text-sm text-muted-foreground">Manage appearance, notifications, and dashboard behavior.</p>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Platform Integrations</CardTitle>
+                    <CardDescription>Configure sender and event-level notification behavior.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-2">
+                    <Button asChild variant="outline" className="justify-start">
+                        <Link href="/settings/whatsapp-integration">Settings → WhatsApp Integration</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="justify-start">
+                        <Link href="/settings/notifications">Settings → Notifications</Link>
+                    </Button>
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>
@@ -290,6 +408,62 @@ export default function SettingsPage() {
                     <Button variant="outline" onClick={exportData} disabled={exporting}>
                         {exporting ? "Exporting..." : "Export Data"}
                     </Button>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Domains</CardTitle>
+                    <CardDescription>Connect your own domain and activate white-label access.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="rounded border p-3">
+                            <p className="text-xs text-muted-foreground">Default subdomain</p>
+                            <p className="text-sm font-medium">{domainSettings?.defaultDomain || "-"}</p>
+                        </div>
+                        <div className="rounded border p-3">
+                            <p className="text-xs text-muted-foreground">Current status</p>
+                            <div className="mt-1">
+                                <Badge variant={getStatusVariant(domainSettings?.domainStatus ?? "PENDING")}>
+                                    {domainSettings?.domainStatus ?? "PENDING"}
+                                </Badge>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="custom-domain">Custom domain</Label>
+                        <Input
+                            id="custom-domain"
+                            value={domainInput}
+                            onChange={(event) => setDomainInput(event.target.value)}
+                            placeholder="portal.yourinstitute.com"
+                        />
+                    </div>
+
+                    <div className="rounded border p-3 text-sm text-muted-foreground">
+                        <p className="font-medium text-foreground">DNS record to add</p>
+                        <p className="mt-1">Type: {domainSettings?.dnsInstruction.type ?? "CNAME"}</p>
+                        <p>Name: {domainSettings?.dnsInstruction.name ?? "portal"}</p>
+                        <p>Target: {domainSettings?.dnsInstruction.target ?? "cname.vercel-dns.com"}</p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        <Button onClick={saveDomain} disabled={domainSaving}>
+                            {domainSaving ? "Saving..." : "Save Domain"}
+                        </Button>
+                        <Button variant="outline" onClick={verifyDomain} disabled={domainVerifying || !domainInput.trim()}>
+                            {domainVerifying ? "Verifying..." : "Verify DNS"}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={activateDomain}
+                            disabled={domainActivating || !domainSettings?.domainVerified}
+                        >
+                            {domainActivating ? "Activating..." : "Activate Domain"}
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
 

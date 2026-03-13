@@ -1,4 +1,5 @@
 import { z } from "zod";
+import dns from "node:dns/promises";
 import { instituteRepository } from "@/features/institute/repositories/institute.repo";
 import { userRepository } from "@/features/auth/repositories/user.repo";
 import { courseRepository } from "@/features/course/repositories/course.repo";
@@ -14,6 +15,14 @@ const phoneSchema = z
     .or(z.literal(""));
 
 const urlSchema = z.string().trim().max(2048, "URL is too long").url().optional().or(z.literal(""));
+const colorSchema = z.string().trim().regex(/^#([0-9a-fA-F]{6})$/, "Color must be a hex value like #00BF63").optional().or(z.literal(""));
+const domainSchema = z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, "Enter a valid domain name")
+    .optional()
+    .or(z.literal(""));
 
 const instituteNameSchema = z.string().trim().min(2, "Institute name must be at least 2 characters").max(80, "Institute name cannot exceed 80 characters");
 const slugInputSchema = z.string().trim().min(2, "Slug must be at least 2 characters").max(80, "Slug cannot exceed 80 characters");
@@ -177,6 +186,13 @@ const withSocialLinks = <T extends {
     facebookUrl?: string | null;
     youtubeUrl?: string | null;
     linkedinUrl?: string | null;
+    logo?: string | null;
+    logoUrl?: string | null;
+    faviconUrl?: string | null;
+    primaryColor?: string | null;
+    customDomain?: string | null;
+    domainVerified?: boolean;
+    domainStatus?: string | null;
     address?: {
         addressLine1?: string | null;
         addressLine2?: string | null;
@@ -195,6 +211,16 @@ const withSocialLinks = <T extends {
         facebook: institute.facebookUrl ?? "",
         youtube: institute.youtubeUrl ?? "",
         linkedin: institute.linkedinUrl ?? "",
+    },
+    branding: {
+        logoUrl: institute.logoUrl ?? institute.logo ?? "",
+        faviconUrl: institute.faviconUrl ?? institute.logo ?? "",
+        primaryColor: institute.primaryColor ?? "#00BF63",
+    },
+    domains: {
+        customDomain: institute.customDomain ?? "",
+        domainVerified: Boolean(institute.domainVerified),
+        domainStatus: institute.domainStatus ?? "PENDING",
     },
     addressText: addressToText(institute.address),
 });
@@ -307,6 +333,10 @@ export const instituteService = {
             countryCode?: string;
             timings?: string;
             logo?: string;
+            logoUrl?: string;
+            faviconUrl?: string;
+            primaryColor?: string;
+            customDomain?: string;
             banner?: string;
             heroImage?: string;
             googleMapLink?: string;
@@ -365,6 +395,11 @@ export const instituteService = {
             .filter(Boolean)
             .forEach((url) => urlSchema.parse(url));
 
+        if (payload.logoUrl !== undefined) urlSchema.parse(payload.logoUrl);
+        if (payload.faviconUrl !== undefined) urlSchema.parse(payload.faviconUrl);
+        if (payload.primaryColor !== undefined) colorSchema.parse(payload.primaryColor);
+        if (payload.customDomain !== undefined) domainSchema.parse(payload.customDomain);
+
         const nextSlug = payload.slug
             ? normalizeSlug(payload.slug)
             : payload.name
@@ -406,6 +441,10 @@ export const instituteService = {
                 : undefined,
             timings: payload.timings || null,
             logo: payload.logo || null,
+            logoUrl: payload.logoUrl || payload.logo || null,
+            faviconUrl: payload.faviconUrl || null,
+            primaryColor: payload.primaryColor || null,
+            customDomain: payload.customDomain ? payload.customDomain.trim().toLowerCase() : undefined,
             banner: payload.banner || null,
             heroImage: payload.heroImage || null,
             googleMapLink: payload.googleMapLink || null,
@@ -424,6 +463,139 @@ export const instituteService = {
         });
 
         return withSocialLinks(updated);
+    },
+
+    async getDomainSettings(instituteId: string) {
+        const institute = await instituteRepository.findById(instituteId);
+        if (!institute) {
+            throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
+        }
+
+        return {
+            slug: institute.slug,
+            customDomain: institute.customDomain ?? "",
+            domainVerified: Boolean(institute.domainVerified),
+            domainStatus: institute.domainStatus ?? "PENDING",
+            defaultDomain: institute.slug ? `${institute.slug}.oncampus.in` : "",
+            dnsInstruction: {
+                type: "CNAME",
+                name: "portal",
+                target: "cname.vercel-dns.com",
+            },
+        };
+    },
+
+    async saveCustomDomain(instituteId: string, customDomain: string, surface = "portal") {
+        const parsed = domainSchema.parse(customDomain);
+        const normalized = (parsed || "").trim().toLowerCase();
+        if (!normalized) {
+            throw new AppError("Custom domain is required", 400, "CUSTOM_DOMAIN_REQUIRED");
+        }
+
+        const existing = await instituteRepository.findByCustomDomain(normalized);
+        if (existing && existing.id !== instituteId) {
+            throw new AppError("Domain already in use by another institute", 409, "DOMAIN_ALREADY_IN_USE");
+        }
+
+        await instituteRepository.updateById(instituteId, {
+            customDomain: normalized,
+            domainVerified: false,
+            domainStatus: "PENDING",
+        });
+
+        await instituteRepository.upsertDomainRecord({
+            instituteId,
+            host: normalized,
+            surface,
+            status: "PENDING",
+            active: false,
+        });
+
+        return this.getDomainSettings(instituteId);
+    },
+
+    async verifyCustomDomain(instituteId: string, customDomain?: string) {
+        const institute = await instituteRepository.findById(instituteId);
+        if (!institute) {
+            throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
+        }
+
+        const targetDomain = (customDomain || institute.customDomain || "").trim().toLowerCase();
+        if (!targetDomain) {
+            throw new AppError("No custom domain configured", 400, "CUSTOM_DOMAIN_REQUIRED");
+        }
+
+        const cnameRecords = await dns.resolveCname(targetDomain).catch(() => [] as string[]);
+        const isVerified = cnameRecords.some((record) => record.toLowerCase().includes("vercel-dns.com"));
+
+        await instituteRepository.updateById(instituteId, {
+            customDomain: targetDomain,
+            domainVerified: isVerified,
+            domainStatus: isVerified ? "VERIFIED" : "FAILED",
+        });
+
+        await instituteRepository.upsertDomainRecord({
+            instituteId,
+            host: targetDomain,
+            surface: "portal",
+            status: isVerified ? "VERIFIED" : "FAILED",
+            active: isVerified,
+        });
+
+        return {
+            verified: isVerified,
+            host: targetDomain,
+            cnameRecords,
+            nextStep: isVerified
+                ? "Domain verified. Attach this domain in Vercel project settings and set status ACTIVE."
+                : "DNS record not verified yet. Ensure CNAME points to cname.vercel-dns.com and retry.",
+        };
+    },
+
+    async activateCustomDomain(instituteId: string, customDomain?: string) {
+        const institute = await instituteRepository.findById(instituteId);
+        if (!institute) {
+            throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
+        }
+
+        const targetDomain = (customDomain || institute.customDomain || "").trim().toLowerCase();
+        if (!targetDomain) {
+            throw new AppError("No custom domain configured", 400, "CUSTOM_DOMAIN_REQUIRED");
+        }
+
+        if (!institute.domainVerified) {
+            throw new AppError("Domain must be verified before activation", 400, "DOMAIN_NOT_VERIFIED");
+        }
+
+        await instituteRepository.updateById(instituteId, {
+            customDomain: targetDomain,
+            domainStatus: "ACTIVE",
+        });
+
+        await instituteRepository.upsertDomainRecord({
+            instituteId,
+            host: targetDomain,
+            surface: "portal",
+            status: "ACTIVE",
+            active: true,
+        });
+
+        return this.getDomainSettings(instituteId);
+    },
+
+    async getByHost(hostname: string) {
+        const normalizedHost = hostname.trim().toLowerCase();
+        const byDomain = await instituteRepository.findByCustomDomain(normalizedHost);
+        if (byDomain?.slug) return this.getPublicPage(byDomain.slug);
+
+        if (normalizedHost.endsWith(".oncampus.in")) {
+            const sub = normalizedHost.replace(/\.oncampus\.in$/, "");
+            if (sub && !["portal", "student", "www", "api"].includes(sub)) {
+                return this.getPublicPage(sub);
+            }
+        }
+
+        return null;
     },
 
     async completeOnboarding(

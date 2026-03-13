@@ -48,6 +48,10 @@ export const subscriptionRepository = {
             trialEndsAt?: Date | null;
             planType?: PlanType;
             userLimit?: number;
+            billingInterval?: "MONTHLY" | "YEARLY";
+            lastChargedAt?: Date | null;
+            autopayEnabled?: boolean;
+            paymentMethodAddedAt?: Date | null;
         }
     ) =>
         prisma.subscription.update({
@@ -67,6 +71,10 @@ export const subscriptionRepository = {
             trialEndsAt?: Date | null;
             planType?: PlanType;
             userLimit?: number;
+            billingInterval?: "MONTHLY" | "YEARLY";
+            lastChargedAt?: Date | null;
+            autopayEnabled?: boolean;
+            paymentMethodAddedAt?: Date | null;
         }
     ) =>
         prisma.subscription.upsert({
@@ -80,12 +88,20 @@ export const subscriptionRepository = {
                 status: payload.status ?? "TRIAL",
                 currentPeriodEnd: payload.currentPeriodEnd,
                 trialEndsAt: payload.trialEndsAt,
+                billingInterval: payload.billingInterval,
+                lastChargedAt: payload.lastChargedAt,
+                autopayEnabled: payload.autopayEnabled ?? false,
+                paymentMethodAddedAt: payload.paymentMethodAddedAt,
             },
             update: {
                 razorpaySubId,
                 status: payload.status,
                 currentPeriodEnd: payload.currentPeriodEnd,
                 trialEndsAt: payload.trialEndsAt,
+                billingInterval: payload.billingInterval,
+                lastChargedAt: payload.lastChargedAt,
+                autopayEnabled: payload.autopayEnabled,
+                paymentMethodAddedAt: payload.paymentMethodAddedAt,
                 ...(payload.planType ? { planType: mapPlanTypeToDb(payload.planType) } : {}),
                 userLimit: payload.userLimit,
             },
@@ -97,6 +113,9 @@ export const subscriptionRepository = {
             status?: "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
             currentPeriodEnd?: Date | null;
             trialEndsAt?: Date | null;
+            lastChargedAt?: Date | null;
+            autopayEnabled?: boolean;
+            paymentMethodAddedAt?: Date | null;
         }
     ) =>
         prisma.subscription.updateMany({

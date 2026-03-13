@@ -15,8 +15,8 @@ export const billingArticle: HelpArticle = {
             description: "Select Starter, Growth, or Scale based on users and WhatsApp alert quota.",
             bullets: [
                 "Starter: 1 user, 1,000 alerts/month",
-                "Growth: up to 10 users, 2,000 alerts/month",
-                "Scale: unlimited users, 5,000 alerts/month",
+                "Growth: up to 10 users, 3,000 alerts/month",
+                "Scale: unlimited users, 10,000 alerts/month",
             ],
         },
         {
