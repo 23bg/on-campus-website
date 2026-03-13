@@ -43,6 +43,8 @@ const envSchema = z.object({
     WHATSAPP_ACCESS_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
     WHATSAPP_VERIFY_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
     WHATSAPP_API_VERSION: z.preprocess(emptyToUndefined, z.string().default("v19.0")),
+    GEMINI_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
+    GEMINI_MODEL: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
 export const env = envSchema.parse(process.env);

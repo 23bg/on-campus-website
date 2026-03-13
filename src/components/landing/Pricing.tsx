@@ -55,7 +55,7 @@ export default function Pricing() {
             description: t("starterSubtext"),
             users: t("starterUsers"),
             whatsapp: t("starterWhatsApp"),
-            dailyAlerts: "Up to 150 alerts per day",
+            dailyAlerts: t("starterWhatsAppDaily"),
             extra: PLAN_CONFIG.STARTER.extraConversationCost,
             features: [
                 t("starterFeature1"),
@@ -65,6 +65,7 @@ export default function Pricing() {
                 t("starterFeature5"),
                 t("starterFeature6"),
                 t("starterFeature7"),
+                t("starterFeature8"),
             ],
             outcome: t("starterOutcome"),
             cta: t("startSoloTrial"),
@@ -79,7 +80,7 @@ export default function Pricing() {
             description: t("growthSubtext"),
             users: t("growthUsers"),
             whatsapp: t("growthWhatsApp"),
-            dailyAlerts: "Up to 300 alerts per day",
+            dailyAlerts: t("growthWhatsAppDaily"),
             extra: PLAN_CONFIG.GROWTH.extraConversationCost,
             features: [
                 t("growthFeature1"),
@@ -88,6 +89,8 @@ export default function Pricing() {
                 t("growthFeature4"),
                 t("growthFeature5"),
                 t("growthFeature6"),
+                t("growthFeature7"),
+                t("growthFeature8"),
             ],
             outcome: t("growthOutcome"),
             cta: t("startTeamTrial"),
@@ -97,12 +100,12 @@ export default function Pricing() {
 
         {
             key: "SCALE",
-            price: Number(t("scalePrice")),
+            price: PLAN_CONFIG.SCALE.priceMonthly,
             name: t("scalePlan"),
             description: t("scaleSubtext"),
             users: t("scaleUsers"),
             whatsapp: t("scaleWhatsApp"),
-            dailyAlerts: "Up to 500 alerts per day",
+            dailyAlerts: t("scaleWhatsAppDaily"),
             extra: PLAN_CONFIG.SCALE.extraConversationCost,
             features: [
                 t("scaleFeature1"),
@@ -111,6 +114,9 @@ export default function Pricing() {
                 t("scaleFeature4"),
                 t("scaleFeature5"),
                 t("scaleFeature6"),
+                t("scaleFeature7"),
+                t("scaleFeature8"),
+                t("scaleFeature9"),
             ],
             outcome: t("scaleOutcome"),
             cta: t("startScaleCall"),
@@ -156,6 +162,10 @@ export default function Pricing() {
                     {t("coreSystemLine")}
                 </div>
 
+                <div className="mt-2 text-center text-sm text-muted-foreground">
+                    {t("whatsAppSenderModesLine")}
+                </div>
+
                 {/* BILLING TOGGLE */}
 
                 <div className="mt-8 flex items-center justify-center gap-3">
@@ -169,6 +179,10 @@ export default function Pricing() {
                         {t("yearlyToggle")}
                     </span>
                 </div>
+
+                <p className="mt-3 text-center text-sm text-muted-foreground">
+                    {t("yearlyFreeLine")}
+                </p>
 
                 <p className="mt-6 text-center text-sm font-medium text-foreground rounded-md border bg-primary/5 py-3 px-4">
                     {t("trialBadge")}
@@ -353,10 +367,21 @@ export default function Pricing() {
                                 <Row
                                     name={t("tableWhatsAppAlerts")}
                                     solo="1,000"
-                                    team="2,000"
-                                    scale="5,000"
+                                    team="3,000"
+                                    scale="10,000"
                                     tooltip={t("whatsAppAlertsTooltip")}
                                 />
+
+                                <Row
+                                    name={t("tableCustomWhatsAppNumber")}
+                                    solo="✓"
+                                    team="✓"
+                                    scale="✓"
+                                />
+
+                                <Row name={t("tableSubdomainSupport")} solo="✓" team="✓" scale="✓" />
+                                <Row name={t("tableCustomDomainSupport")} solo="—" team="✓" scale="✓" />
+                                <Row name={t("tableFullWhiteLabel")} solo="—" team="—" scale="✓" />
 
                             </tbody>
 

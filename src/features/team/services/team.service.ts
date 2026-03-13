@@ -60,6 +60,11 @@ export const teamService = {
                 event: "TEAM_MEMBER_ADDED",
                 instituteId,
                 message: `Team member added: ${updatedMember?.name || email} (${role}).`,
+                templateEvent: "lead_assigned",
+                templateVariables: {
+                    student_name: updatedMember?.name || email,
+                    course_name: role,
+                },
             });
 
             return updatedMember;
@@ -77,6 +82,11 @@ export const teamService = {
             event: "TEAM_MEMBER_ADDED",
             instituteId,
             message: `Team member added: ${createdMember.name || email} (${role}).`,
+            templateEvent: "lead_assigned",
+            templateVariables: {
+                student_name: createdMember.name || email,
+                course_name: role,
+            },
         });
 
         return createdMember;

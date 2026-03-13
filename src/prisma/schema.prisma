@@ -25,6 +25,34 @@ enum PlanType {
     TEAM
 }
 
+enum BillingInterval {
+    MONTHLY
+    YEARLY
+}
+
+enum BillingInvoiceStatus {
+    PENDING
+    ISSUED
+    PAID
+    OVERDUE
+    VOID
+}
+
+enum DomainStatus {
+    PENDING
+    VERIFIED
+    ACTIVE
+    FAILED
+}
+
+enum WhatsAppAccountStatus {
+    PENDING
+    VERIFIED
+    ACTIVE
+    DISCONNECTED
+    FAILED
+}
+
 model User {
     id                  String    @id @default(auto()) @map("_id") @db.ObjectId
     email               String    @unique
@@ -66,16 +94,19 @@ model ShortLink {
 }
 
 model Institute {
-    id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+    id                     String       @id @default(auto()) @map("_id") @db.ObjectId
     name                   String?
     description            String?
     phone                  String?
     whatsapp               String?
     address                Address?
     timings                String?
-    leadWhatsappEnabled    Boolean   @default(false)
-    autoReplyEnabled       Boolean   @default(false)
+    leadWhatsappEnabled    Boolean      @default(false)
+    autoReplyEnabled       Boolean      @default(false)
     logo                   String?
+    logoUrl                String?
+    faviconUrl             String?
+    primaryColor           String?
     banner                 String?
     heroImage              String?
     googleMapLink          String?
@@ -84,15 +115,61 @@ model Institute {
     facebookUrl            String?
     youtubeUrl             String?
     linkedinUrl            String?
-    isOnboarded            Boolean   @default(false)
-    whatsappOnboardingSent Boolean   @default(false)
-    slug                   String?   @unique
+    isOnboarded            Boolean      @default(false)
+    whatsappOnboardingSent Boolean      @default(false)
+    slug                   String?      @unique
+    customDomain           String?      @unique
+    domainVerified         Boolean      @default(false)
+    domainStatus           DomainStatus @default(PENDING)
     deletedAt              DateTime?
-    createdAt              DateTime  @default(now())
-    updatedAt              DateTime  @updatedAt
+    createdAt              DateTime     @default(now())
+    updatedAt              DateTime     @updatedAt
 
     @@index([phone])
     @@map("institutes")
+}
+
+model InstituteDomain {
+    id          String       @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String       @db.ObjectId
+    host        String       @unique
+    surface     String       @default("portal")
+    status      DomainStatus @default(PENDING)
+    verifiedAt  DateTime?
+    active      Boolean      @default(false)
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+
+    @@index([instituteId])
+    @@index([status])
+    @@map("institute_domains")
+}
+
+model WhatsAppAccount {
+    id                String                @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId       String                @unique @db.ObjectId
+    phoneNumber       String
+    phoneNumberId     String?
+    businessAccountId String?
+    status            WhatsAppAccountStatus @default(PENDING)
+    connectedAt       DateTime?
+    updatedAt         DateTime              @updatedAt
+
+    @@index([status])
+    @@map("whatsapp_accounts")
+}
+
+model InstituteNotificationPreference {
+    id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId        String   @unique @db.ObjectId
+    newEnquiryAlert    Boolean  @default(true)
+    followUpReminder   Boolean  @default(true)
+    leadAssigned       Boolean  @default(true)
+    paymentReceived    Boolean  @default(true)
+    admissionConfirmed Boolean  @default(true)
+    updatedAt          DateTime @updatedAt
+
+    @@map("institute_notification_preferences")
 }
 
 model WhatsAppMessage {
@@ -126,17 +203,21 @@ type Address {
 }
 
 model Subscription {
-    id               String             @id @default(auto()) @map("_id") @db.ObjectId
-    instituteId      String             @unique @db.ObjectId
-    razorpaySubId    String?
-    planType         PlanType           @default(SOLO)
-    userLimit        Int                @default(1)
-    trialEndsAt      DateTime?
-    status           SubscriptionStatus @default(TRIAL)
-    currentPeriodEnd DateTime?
-    deletedAt        DateTime?
-    createdAt        DateTime           @default(now())
-    updatedAt        DateTime           @updatedAt
+    id                   String             @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId          String             @unique @db.ObjectId
+    razorpaySubId        String?
+    planType             PlanType           @default(SOLO)
+    billingInterval      BillingInterval    @default(MONTHLY)
+    userLimit            Int                @default(1)
+    trialEndsAt          DateTime?
+    status               SubscriptionStatus @default(TRIAL)
+    currentPeriodEnd     DateTime?
+    lastChargedAt        DateTime?
+    autopayEnabled       Boolean            @default(false)
+    paymentMethodAddedAt DateTime?
+    deletedAt            DateTime?
+    createdAt            DateTime           @default(now())
+    updatedAt            DateTime           @updatedAt
 
     @@index([status])
     @@map("subscriptions")
@@ -327,4 +408,43 @@ model MonthlyUsage {
     @@unique([instituteId, month, year])
     @@index([instituteId])
     @@map("monthly_usage")
+}
+
+model BillingInvoice {
+    id                    String               @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId           String               @db.ObjectId
+    month                 Int
+    year                  Int
+    periodStart           DateTime
+    periodEnd             DateTime
+    planCode              String
+    billingInterval       BillingInterval
+    planCharge            Float                @default(0)
+    includedAlerts        Int                  @default(0)
+    alertsUsed            Int                  @default(0)
+    extraAlerts           Int                  @default(0)
+    extraAlertRate        Float                @default(0)
+    usageCharge           Float                @default(0)
+    totalAmount           Float                @default(0)
+    currency              String               @default("INR")
+    status                BillingInvoiceStatus @default(PENDING)
+    issuedAt              DateTime?
+    dueDate               DateTime?
+    paidAt                DateTime?
+    razorpayPaymentLinkId String?
+    paymentLinkUrl        String?
+    downloadUrl           String?
+    autopayEnabled        Boolean              @default(false)
+    paymentAttempts       Int                  @default(0)
+    lastAttemptAt         DateTime?
+    nextRetryAt           DateTime?
+    lastFailureReason     String?
+    metadata              Json?
+    createdAt             DateTime             @default(now())
+    updatedAt             DateTime             @updatedAt
+
+    @@unique([instituteId, month, year])
+    @@index([instituteId, status])
+    @@index([dueDate])
+    @@map("billing_invoices")
 }

@@ -56,6 +56,11 @@ export const studentService = {
             event: "STUDENT_CREATED",
             instituteId: input.instituteId,
             message: `Student created: ${student.name} (${student.phone}).`,
+            templateEvent: "admission_confirmed",
+            templateVariables: {
+                student_name: student.name,
+                course_name: "Course",
+            },
         });
 
         return student;

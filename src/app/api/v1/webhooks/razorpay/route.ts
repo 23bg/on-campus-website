@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
+import { billingService } from "@/features/billing/services/billing.service";
 import { toAppError } from "@/lib/utils/error";
 import { verifyRazorpayWebhookSignature } from "@/lib/billing/razorpay";
 
@@ -17,8 +18,19 @@ type RazorpayWebhookPayload = {
         };
         payment?: {
             entity?: {
+                id?: string;
                 notes?: {
                     instituteId?: string;
+                    invoiceId?: string;
+                };
+            };
+        };
+        payment_link?: {
+            entity?: {
+                id?: string;
+                notes?: {
+                    instituteId?: string;
+                    invoiceId?: string;
                 };
             };
         };
@@ -47,6 +59,23 @@ export async function POST(req: NextRequest) {
 
         const payload = JSON.parse(rawPayload) as RazorpayWebhookPayload;
         const event = payload.event ?? "";
+
+        if (event === "payment_link.paid") {
+            const paymentLinkId = payload.payload?.payment_link?.entity?.id;
+            if (!paymentLinkId) {
+                return NextResponse.json(
+                    { success: false, error: { code: "PAYMENT_LINK_ID_MISSING", message: "Payment link id missing" } },
+                    { status: 400 }
+                );
+            }
+
+            await billingService.markInvoicePaidFromWebhook(paymentLinkId);
+
+            return NextResponse.json({
+                success: true,
+                data: { event, paymentLinkId },
+            });
+        }
 
         const subscriptionEntity = payload.payload?.subscription?.entity;
         const paymentEntity = payload.payload?.payment?.entity;

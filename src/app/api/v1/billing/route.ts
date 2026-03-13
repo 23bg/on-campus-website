@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/lib/auth/auth";
 import { canManageBilling } from "@/lib/auth/permissions";
 import { BillingInterval, subscriptionService } from "@/features/subscription/services/subscription.service";
+import { billingService } from "@/features/billing/services/billing.service";
 import { toAppError } from "@/lib/utils/error";
 import { isPlanType } from "@/config/plans";
 import { env } from "@/lib/config/env";
@@ -16,16 +17,16 @@ export async function GET() {
             );
         }
 
-        const data = await subscriptionService.getBillingSummary(session.instituteId);
+        const data = await billingService.getBillingDashboard(session.instituteId);
 
         if (
             session.subscriptionStatus &&
-            data?.status &&
-            session.subscriptionStatus !== data.status
+            data?.summary?.status &&
+            session.subscriptionStatus !== data.summary.status
         ) {
             const nextToken = createSessionToken({
                 ...session,
-                subscriptionStatus: data.status,
+                subscriptionStatus: data.summary.status,
             });
             await setSessionCookie(nextToken);
         }
@@ -58,6 +59,29 @@ export async function POST(req: NextRequest) {
         }
 
         const body = (await req.json().catch(() => ({}))) as { action?: string; planType?: string; interval?: string };
+        const typedBody = body as { action?: string; planType?: string; interval?: string; invoiceId?: string };
+        if (body.action === "generate-invoice") {
+            const invoice = await billingService.createOrUpdateClosedMonthInvoice(session.instituteId);
+            return NextResponse.json({ success: true, data: invoice });
+        }
+
+        if (body.action === "retry-invoice") {
+            if (!typedBody.invoiceId) {
+                return NextResponse.json(
+                    { success: false, error: { code: "INVOICE_ID_REQUIRED", message: "invoiceId is required" } },
+                    { status: 400 }
+                );
+            }
+
+            const data = await billingService.attemptAutopayForInvoice(typedBody.invoiceId);
+            return NextResponse.json({ success: true, data });
+        }
+
+        if (body.action === "run-dunning") {
+            const data = await billingService.runDunningCycle();
+            return NextResponse.json({ success: true, data });
+        }
+
         if (body.action !== "create-subscription") {
             return NextResponse.json(
                 { success: false, error: { code: "INVALID_ACTION", message: "Unsupported action" } },

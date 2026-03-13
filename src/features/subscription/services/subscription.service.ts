@@ -6,7 +6,20 @@ import { DEFAULT_PLAN_TYPE, isPlanType, PLAN_CONFIG, PlanType } from "@/config/p
 import { userRepository } from "@/features/auth/repositories/user.repo";
 
 export type SubscriptionState = "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
-type SubscriptionRecord = NonNullable<Awaited<ReturnType<typeof subscriptionRepository.findByInstituteId>>>;
+type SubscriptionRecord = {
+    instituteId: string;
+    status: SubscriptionState;
+    trialEndsAt: Date | null;
+    planType?: string | null;
+    userLimit?: number | null;
+    razorpaySubId?: string | null;
+    currentPeriodEnd?: Date | null;
+    updatedAt?: Date;
+    billingInterval?: BillingInterval | null;
+    lastChargedAt?: Date | null;
+    autopayEnabled?: boolean;
+    paymentMethodAddedAt?: Date | null;
+};
 
 const DASHBOARD_ALLOWED: SubscriptionState[] = ["TRIAL", "ACTIVE"];
 
@@ -78,8 +91,9 @@ export const subscriptionService = {
             subscription.trialEndsAt &&
             subscription.trialEndsAt.getTime() < Date.now()
         ) {
+            const nextStatus: SubscriptionState = subscription.autopayEnabled ? "ACTIVE" : "INACTIVE";
             return subscriptionRepository.updateByInstituteId(subscription.instituteId, {
-                status: "INACTIVE",
+                status: nextStatus,
             });
         }
 
@@ -103,15 +117,26 @@ export const subscriptionService = {
         const usersUsed = await userRepository.countByInstitute(instituteId);
         const userLimit = subscription.userLimit ?? plan.userLimit;
         const hasAnySubscriptionActivity = Boolean(subscription.razorpaySubId || subscription.currentPeriodEnd || subscription.status === "ACTIVE");
+        const trialDaysRemaining = subscription.trialEndsAt
+            ? Math.ceil((subscription.trialEndsAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+            : null;
+        const paymentMethodRequired = subscription.status === "TRIAL" && !subscription.autopayEnabled;
+        const trialPaymentReminder = paymentMethodRequired && trialDaysRemaining !== null && trialDaysRemaining <= 2;
 
         return {
             planType,
             planName: plan.name,
             planAmount: plan.priceMonthly,
+            planAmountYearly: plan.priceYearly,
             currency: "INR",
+            billingInterval: subscription.billingInterval ?? "MONTHLY",
             userLimit,
             usersUsed,
             status: subscription.status,
+            autopayEnabled: Boolean(subscription.autopayEnabled),
+            paymentMethodAddedAt: subscription.paymentMethodAddedAt ?? null,
+            trialDaysRemaining,
+            trialPaymentReminder,
             nextBillingDate: subscription.currentPeriodEnd ?? subscription.trialEndsAt,
             razorpaySubId: subscription.razorpaySubId,
             lastPaymentAmount: hasAnySubscriptionActivity ? plan.priceMonthly : null,
@@ -158,6 +183,7 @@ export const subscriptionService = {
             status: "INACTIVE",
             planType,
             userLimit: plan.userLimit ?? undefined,
+            billingInterval: interval,
         });
 
         return {
@@ -194,6 +220,8 @@ export const subscriptionService = {
         const updated = await subscriptionRepository.updateByInstituteId(input.instituteId, {
             status: "TRIAL",
             trialEndsAt,
+            autopayEnabled: true,
+            paymentMethodAddedAt: new Date(),
         });
 
         return {
@@ -248,6 +276,7 @@ export const subscriptionService = {
             return subscriptionRepository.upsertByRazorpaySubId(input.razorpaySubId, input.instituteId, {
                 status,
                 currentPeriodEnd: input.currentPeriodEnd,
+                ...(input.event === "subscription.charged" ? { lastChargedAt: new Date() } : {}),
             });
         }
 
@@ -255,6 +284,7 @@ export const subscriptionService = {
             return subscriptionRepository.updateByRazorpaySubId(input.razorpaySubId, {
                 status,
                 currentPeriodEnd: input.currentPeriodEnd,
+                ...(input.event === "subscription.charged" ? { lastChargedAt: new Date() } : {}),
             });
         }
 
@@ -265,6 +295,7 @@ export const subscriptionService = {
         return subscriptionRepository.updateByInstituteId(input.instituteId, {
             status,
             currentPeriodEnd: input.currentPeriodEnd,
+            ...(input.event === "subscription.charged" ? { lastChargedAt: new Date() } : {}),
         });
     },
 };

@@ -27,17 +27,18 @@ export async function generateMetadata({ params }: InstituteSlugPageProps): Prom
             .slice(0, 3)
             .join(" and ");
         const description = `${instituteName} is a top coaching institute in ${city} offering ${topCourses || "NEET and JEE"} courses. Admissions open.`;
-        const logo = institute.logo?.trim();
+        const logo = (institute.branding?.logoUrl || institute.logo || "").trim();
+        const favicon = (institute.branding?.faviconUrl || logo || "").trim();
 
         return {
             title: `${instituteName} | Coaching Institute in ${city}`,
             description,
-            ...(logo
+            ...(favicon
                 ? {
                     icons: {
-                        icon: [{ url: logo }],
-                        shortcut: [{ url: logo }],
-                        apple: [{ url: logo }],
+                        icon: [{ url: favicon }],
+                        shortcut: [{ url: favicon }],
+                        apple: [{ url: favicon }],
                     },
                 }
                 : {}),

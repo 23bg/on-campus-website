@@ -25,8 +25,8 @@ export const whatsappAlertsArticle: HelpArticle = {
             description: "Each plan includes monthly and daily limits for reliable delivery.",
             bullets: [
                 "Starter: 1,000 alerts/month",
-                "Growth: 2,000 alerts/month",
-                "Scale: 5,000 alerts/month",
+                "Growth: 3,000 alerts/month",
+                "Scale: 10,000 alerts/month",
             ],
         },
         {
