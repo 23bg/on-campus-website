@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { HelpDoc } from "@/content/help/docs";
-import { DEMO_VIDEO_EMBED_URL } from "@/constants/external-links";
 
 type HelpArticleProps = {
     doc: HelpDoc;
@@ -9,6 +9,10 @@ type HelpArticleProps = {
 };
 
 export default function HelpArticle({ doc, previousDoc, nextDoc }: HelpArticleProps) {
+    const embedUrl = doc.video?.youtubeId
+        ? `https://www.youtube.com/embed/${doc.video.youtubeId}`
+        : undefined;
+
     return (
         <article className="rounded-xl border bg-card p-5 md:p-8">
             <header className="mb-8 space-y-2 border-b pb-6">
@@ -16,14 +20,15 @@ export default function HelpArticle({ doc, previousDoc, nextDoc }: HelpArticlePr
                 <h1 className="text-3xl font-semibold tracking-tight">{doc.title}</h1>
                 <p className="text-sm text-muted-foreground">Last updated: {doc.lastUpdated}</p>
                 <p className="text-muted-foreground">{doc.description}</p>
+                <p className="text-muted-foreground">{doc.overview}</p>
             </header>
 
-            {doc.videoUrl ? (
+            {embedUrl ? (
                 <section className="mb-8">
                     <h2 className="mb-3 text-xl font-semibold">Watch Demo</h2>
                     <div className="aspect-video overflow-hidden rounded-lg border">
                         <iframe
-                            src={DEMO_VIDEO_EMBED_URL}
+                            src={embedUrl}
                             title={`${doc.title} video tutorial`}
                             className="h-full w-full"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -35,25 +40,50 @@ export default function HelpArticle({ doc, previousDoc, nextDoc }: HelpArticlePr
             ) : null}
 
             <div className="space-y-8">
-                {doc.sections.map((section) => (
-                    <section key={section.heading} className="space-y-3">
-                        <h2 className="text-xl font-semibold">{section.heading}</h2>
+                {doc.steps.map((step, index) => (
+                    <section key={step.id} className="space-y-3">
+                        <h2 className="text-xl font-semibold">Step {index + 1}: {step.title}</h2>
+                        <p className="text-muted-foreground">{step.description}</p>
 
-                        {section.paragraphs?.map((paragraph) => (
-                            <p key={paragraph} className="text-muted-foreground">
-                                {paragraph}
-                            </p>
-                        ))}
-
-                        {section.bullets?.length ? (
+                        {step.bullets?.length ? (
                             <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-                                {section.bullets.map((bullet) => (
+                                {step.bullets.map((bullet) => (
                                     <li key={bullet}>{bullet}</li>
                                 ))}
                             </ul>
                         ) : null}
+
+                        {step.screenshots?.length ? (
+                            <div className="grid gap-3 md:grid-cols-2">
+                                {step.screenshots.map((screenshot) => (
+                                    <figure key={screenshot.src} className="overflow-hidden rounded-lg border">
+                                        <Image
+                                            src={screenshot.src}
+                                            alt={screenshot.alt}
+                                            width={screenshot.width ?? 1280}
+                                            height={screenshot.height ?? 720}
+                                            className="h-auto w-full"
+                                        />
+                                        <figcaption className="border-t px-3 py-2 text-xs text-muted-foreground">
+                                            {screenshot.alt}
+                                        </figcaption>
+                                    </figure>
+                                ))}
+                            </div>
+                        ) : null}
                     </section>
                 ))}
+
+                {doc.tips?.length ? (
+                    <section className="space-y-3">
+                        <h2 className="text-xl font-semibold">Tips and Best Practices</h2>
+                        <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+                            {doc.tips.map((tip) => (
+                                <li key={tip}>{tip}</li>
+                            ))}
+                        </ul>
+                    </section>
+                ) : null}
 
                 {doc.faqs?.length ? (
                     <section className="space-y-4">

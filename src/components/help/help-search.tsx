@@ -17,7 +17,18 @@ export default function HelpSearch({ docs }: HelpSearchProps) {
         if (!term) return docs;
 
         return docs.filter((doc) =>
-            `${doc.title} ${doc.slug}`.toLowerCase().includes(term)
+            [
+                doc.title,
+                doc.slug,
+                doc.description,
+                doc.overview,
+                ...(doc.keywords ?? []),
+                ...doc.steps.flatMap((step) => [step.title, step.description, ...(step.bullets ?? [])]),
+                ...(doc.faqs ?? []).flatMap((faq) => [faq.question, faq.answer]),
+            ]
+                .join(" ")
+                .toLowerCase()
+                .includes(term)
         );
     }, [docs, query]);
 

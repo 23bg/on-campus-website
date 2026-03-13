@@ -45,6 +45,7 @@ export const setSessionCookie = async (token: string): Promise<void> => {
         httpOnly: true,
         sameSite: "lax",
         secure: env.NODE_ENV === "production",
+        domain: env.SESSION_COOKIE_DOMAIN,
         path: "/",
         maxAge: 7 * 24 * 60 * 60,
     });
@@ -52,7 +53,14 @@ export const setSessionCookie = async (token: string): Promise<void> => {
 
 export const clearSessionCookie = async (): Promise<void> => {
     const cookieStore = await cookies();
-    cookieStore.delete(SESSION_COOKIE);
+    cookieStore.set(SESSION_COOKIE, "", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: env.NODE_ENV === "production",
+        domain: env.SESSION_COOKIE_DOMAIN,
+        path: "/",
+        expires: new Date(0),
+    });
 };
 
 export const readSessionFromCookie = async (): Promise<SessionPayload | null> => {
