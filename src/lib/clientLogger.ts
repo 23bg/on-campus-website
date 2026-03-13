@@ -25,6 +25,8 @@ export const clientLogger = {
         }
     },
     error(event: string, payload?: ClientLogPayload) {
-        console.error(normalize(event, payload));
+        if (isDev) {
+            console.error(normalize(event, payload));
+        }
     },
 };

@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/auth";
 import { edgeLogger, getOrCreateRequestId, REQUEST_ID_HEADER } from "@/lib/request-logger";
+import { getRequestHostname, resolveHost } from "@/lib/tenancy/host-routing";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/verification", "/pricing", "/demo-institute"];
 const ONBOARDING_PATH = "/onboarding";
@@ -37,10 +38,16 @@ const isProtectedPath = (pathname: string): boolean =>
 export function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
     const requestId = getOrCreateRequestId(req.headers);
+    const hostname = getRequestHostname(req);
+    const resolvedHost = resolveHost(hostname);
 
     const buildRequestHeaders = () => {
         const headers = new Headers(req.headers);
         headers.set(REQUEST_ID_HEADER, requestId);
+        headers.set("x-app-surface", resolvedHost.surface);
+        if (resolvedHost.instituteSlug) {
+            headers.set("x-institute-slug", resolvedHost.instituteSlug);
+        }
         return headers;
     };
 
@@ -53,7 +60,78 @@ export function proxy(req: NextRequest) {
         requestId,
         method: req.method,
         pathname,
+        hostname,
+        surface: resolvedHost.surface,
+        instituteSlug: resolvedHost.instituteSlug,
     });
+
+    if (resolvedHost.surface === "portal" && pathname === "/") {
+        const destinationUrl = req.nextUrl.clone();
+        destinationUrl.pathname = "/dashboard";
+        edgeLogger.info("request_rewritten", {
+            requestId,
+            reason: "portal_root_to_dashboard",
+            from: pathname,
+            to: destinationUrl.pathname,
+        });
+        return setResponseTraceHeader(
+            NextResponse.rewrite(destinationUrl, {
+                request: { headers: buildRequestHeaders() },
+            })
+        );
+    }
+
+    if (resolvedHost.surface === "student" && pathname === "/") {
+        const destinationUrl = req.nextUrl.clone();
+        destinationUrl.pathname = "/student";
+        edgeLogger.info("request_rewritten", {
+            requestId,
+            reason: "student_root_to_student_portal",
+            from: pathname,
+            to: destinationUrl.pathname,
+        });
+        return setResponseTraceHeader(
+            NextResponse.rewrite(destinationUrl, {
+                request: { headers: buildRequestHeaders() },
+            })
+        );
+    }
+
+    if (resolvedHost.surface === "institutePublic" && resolvedHost.instituteSlug && pathname === "/") {
+        const destinationUrl = req.nextUrl.clone();
+        destinationUrl.pathname = `/i/${resolvedHost.instituteSlug}`;
+        edgeLogger.info("request_rewritten", {
+            requestId,
+            reason: "tenant_subdomain_to_institute_page",
+            from: pathname,
+            to: destinationUrl.pathname,
+        });
+        return setResponseTraceHeader(
+            NextResponse.rewrite(destinationUrl, {
+                request: { headers: buildRequestHeaders() },
+            })
+        );
+    }
+
+    if (resolvedHost.surface === "portal" && pathname.startsWith("/i/")) {
+        edgeLogger.info("request_redirected", {
+            requestId,
+            reason: "portal_disallow_public_institute_path",
+            from: pathname,
+            to: "/",
+        });
+        return setResponseTraceHeader(NextResponse.redirect(new URL("/", req.url)));
+    }
+
+    if (resolvedHost.surface === "student" && pathname.startsWith("/i/")) {
+        edgeLogger.info("request_redirected", {
+            requestId,
+            reason: "student_disallow_public_institute_path",
+            from: pathname,
+            to: "/",
+        });
+        return setResponseTraceHeader(NextResponse.redirect(new URL("/", req.url)));
+    }
 
     const normalizedPath = normalizeDashboardPath(pathname);
     if (normalizedPath) {

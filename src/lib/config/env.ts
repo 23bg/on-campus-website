@@ -6,6 +6,11 @@ const emptyToUndefined = (value: unknown) =>
 const envSchema = z.object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     NEXT_PUBLIC_API_URL: z.string().optional(),
+    APP_ROOT_DOMAIN: z.preprocess(emptyToUndefined, z.string().optional()),
+    APP_PORTAL_SUBDOMAIN: z.preprocess(emptyToUndefined, z.string().optional()),
+    APP_STUDENT_SUBDOMAIN: z.preprocess(emptyToUndefined, z.string().optional()),
+    SESSION_COOKIE_DOMAIN: z.preprocess(emptyToUndefined, z.string().optional()),
+    CUSTOM_DOMAIN_MAPPINGS: z.preprocess(emptyToUndefined, z.string().optional()),
     JWT_SECRET: z.string().optional(),
     DATABASE_URL: z.string().min(1).optional(),
     OTP_EMAIL_ENABLED: z.coerce.boolean().default(false),
