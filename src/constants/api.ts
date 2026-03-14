@@ -34,6 +34,7 @@
         DASHBOARD: {
             METRICS: '/dashboard/metrics',
             DEFAULTERS: '/dashboard/defaulters',
+            OVERVIEW: '/dashboard/overview',
         },
         INSTITUTE: {
             ROOT: '/institute',

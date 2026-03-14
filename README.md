@@ -40,10 +40,14 @@ Run quality checks:
 ```bash
 pnpm test
 pnpm build
+
+# optional bundle report
+pnpm analyze
 ```
 
-## Environment
+Performance conventions and regression guardrails are documented in `docs/release/PERFORMANCE_GUARDRAILS.md`.
 
+## Environment
 Create environment files for local and production values as required by `src/lib/config/env.ts`.
 
 Important variables include:

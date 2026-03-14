@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "analyze": "cross-env ANALYZE=true next build --webpack",
     "start": "next start",
     "postinstall": "prisma generate",
     "lint": "eslint",
@@ -13,7 +14,16 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "loadtest:public": "k6 run load-tests/public-pages.js",
+    "loadtest:lead": "k6 run load-tests/lead-submission.js",
+    "loadtest:dashboard": "k6 run load-tests/dashboard-apis.js",
+    "loadtest:student": "k6 run load-tests/student-portal.js",
+    "loadtest:payment": "k6 run load-tests/payment-flow.js",
+    "loadtest:all": "powershell -ExecutionPolicy Bypass -File load-tests/run-all.ps1",
+    "loadtest:light": "cross-env LOAD_LEVEL=light powershell -ExecutionPolicy Bypass -File load-tests/run-all.ps1",
+    "loadtest:medium": "cross-env LOAD_LEVEL=medium powershell -ExecutionPolicy Bypass -File load-tests/run-all.ps1",
+    "loadtest:heavy": "cross-env LOAD_LEVEL=heavy powershell -ExecutionPolicy Bypass -File load-tests/run-all.ps1"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma"
@@ -86,6 +96,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.1.6",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
