@@ -113,6 +113,30 @@ export function proxy(req: NextRequest) {
         );
     }
 
+    if (
+        resolvedHost.surface === "institutePublic" &&
+        resolvedHost.instituteSlug &&
+        !pathname.startsWith("/i/") &&
+        !pathname.startsWith("/_next") &&
+        !pathname.startsWith("/api") &&
+        pathname !== "/favicon.ico" &&
+        !pathname.startsWith("/images")
+    ) {
+        const destinationUrl = req.nextUrl.clone();
+        destinationUrl.pathname = `/i/${resolvedHost.instituteSlug}${pathname}`;
+        edgeLogger.info("request_rewritten", {
+            requestId,
+            reason: "tenant_domain_nested_path_to_institute_site",
+            from: pathname,
+            to: destinationUrl.pathname,
+        });
+        return setResponseTraceHeader(
+            NextResponse.rewrite(destinationUrl, {
+                request: { headers: buildRequestHeaders() },
+            })
+        );
+    }
+
     if (resolvedHost.surface === "portal" && pathname.startsWith("/i/")) {
         edgeLogger.info("request_redirected", {
             requestId,

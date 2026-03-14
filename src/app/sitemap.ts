@@ -150,17 +150,87 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     try {
         const institutes = await prisma.institute.findMany({
             where: { isOnboarded: true, slug: { not: null } },
-            select: { slug: true, updatedAt: true },
+            select: { id: true, slug: true, updatedAt: true },
         });
 
-        institutePages = institutes
+        const courses = await prisma.course.findMany({
+            where: {
+                instituteId: { in: institutes.map((item) => item.id) },
+            },
+            select: {
+                instituteId: true,
+                id: true,
+                name: true,
+                slug: true,
+                updatedAt: true,
+            },
+        });
+
+        const slugify = (value?: string | null) =>
+            (value || "")
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9\s-]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-")
+                .replace(/^-|-$/g, "");
+
+        const instituteById = new Map(institutes.map((item) => [item.id, item]));
+
+        const staticInstitutePages = institutes
             .filter((i) => i.slug)
-            .map((institute) => ({
-                url: `${BASE_URL}/i/${institute.slug}`,
-                lastModified: institute.updatedAt,
+            .flatMap((institute) => [
+                {
+                    url: `${BASE_URL}/i/${institute.slug}`,
+                    lastModified: institute.updatedAt,
+                    changeFrequency: "weekly" as const,
+                    priority: 0.6,
+                },
+                {
+                    url: `${BASE_URL}/i/${institute.slug}/courses`,
+                    lastModified: institute.updatedAt,
+                    changeFrequency: "weekly" as const,
+                    priority: 0.55,
+                },
+                {
+                    url: `${BASE_URL}/i/${institute.slug}/faculty`,
+                    lastModified: institute.updatedAt,
+                    changeFrequency: "weekly" as const,
+                    priority: 0.52,
+                },
+                {
+                    url: `${BASE_URL}/i/${institute.slug}/announcements`,
+                    lastModified: institute.updatedAt,
+                    changeFrequency: "daily" as const,
+                    priority: 0.5,
+                },
+                {
+                    url: `${BASE_URL}/i/${institute.slug}/contact`,
+                    lastModified: institute.updatedAt,
+                    changeFrequency: "weekly" as const,
+                    priority: 0.5,
+                },
+                {
+                    url: `${BASE_URL}/i/${institute.slug}/student`,
+                    lastModified: institute.updatedAt,
+                    changeFrequency: "weekly" as const,
+                    priority: 0.45,
+                },
+            ]);
+
+        const coursePages: MetadataRoute.Sitemap = courses.flatMap((course) => {
+            const institute = instituteById.get(course.instituteId);
+            if (!institute?.slug) return [];
+            const routeSlug = course.slug?.trim() || slugify(course.name) || course.id;
+            return [{
+                url: `${BASE_URL}/i/${institute.slug}/courses/${routeSlug}`,
+                lastModified: course.updatedAt,
                 changeFrequency: "weekly" as const,
-                priority: 0.6,
-            }));
+                priority: 0.52,
+            }];
+        });
+
+        institutePages = [...staticInstitutePages, ...coursePages];
     } catch {
         // If DB is unavailable, return only static pages
     }

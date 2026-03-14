@@ -695,7 +695,7 @@ export const instituteService = {
         if (!institute) {
             throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
         }
-        const [courses, users, batches, studentsCount] = await Promise.all([
+        const [courses, users, batches, studentsCount, announcements] = await Promise.all([
             courseRepository.listByInstitute(institute.id),
             userRepository.listByInstitute(institute.id),
             prisma.batch.findMany({
@@ -704,6 +704,16 @@ export const instituteService = {
                 take: 8,
             }),
             prisma.student.count({ where: { instituteId: institute.id } }),
+            prisma.studentAnnouncement.findMany({
+                where: { instituteId: institute.id },
+                orderBy: { createdAt: "desc" },
+                take: 25,
+                select: {
+                    title: true,
+                    body: true,
+                    createdAt: true,
+                },
+            }),
         ]);
         const teachers = users
             .filter((user) => Boolean(user.subject?.trim() || user.bio?.trim()))
@@ -726,6 +736,11 @@ export const instituteService = {
             courses,
             teachers,
             batches,
+            announcements: announcements.map((item) => ({
+                title: item.title,
+                body: item.body,
+                createdAt: item.createdAt.toISOString(),
+            })),
             studentsCount,
             photos: Array.from(new Set(photos)),
         };
