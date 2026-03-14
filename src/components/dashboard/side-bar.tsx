@@ -1,14 +1,9 @@
 ﻿"use client"
 
 import {
-    CreditCard,
-    Settings,
     Home,
     Building2,
     Users,
-    MessageCircle,
-    Twitter,
-    Linkedin,
     BookOpen,
     Layers,
     IndianRupee,
@@ -50,88 +45,81 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
             };
         });
 
-    const navItems = [
+    const navSections = [
         {
-            title: "Dashboard",
-            url: ROUTES.DASHBOARD.ROOT,
-            icon: Home,
+            title: "Overview",
+            items: [
+                {
+                    title: "Dashboard",
+                    url: ROUTES.DASHBOARD.ROOT,
+                    icon: Home,
+                },
+            ],
         },
         {
-            title: "Leads",
-            url: ROUTES.DASHBOARD.LEADS,
-            icon: UserRound,
+            title: "Admissions",
+            items: [
+                {
+                    title: "Leads",
+                    url: ROUTES.DASHBOARD.LEADS,
+                    icon: UserRound,
+                },
+                {
+                    title: "Students",
+                    url: ROUTES.DASHBOARD.STUDENTS,
+                    icon: UserRound,
+                },
+            ],
         },
         {
-            title: "Students",
-            url: ROUTES.DASHBOARD.STUDENTS,
-            icon: UserRound,
+            title: "Academics",
+            items: [
+                {
+                    title: "Courses",
+                    url: ROUTES.DASHBOARD.COURSES,
+                    icon: BookOpen,
+                },
+                {
+                    title: "Batches",
+                    url: ROUTES.DASHBOARD.BATCHES,
+                    icon: Layers,
+                },
+            ],
         },
         {
-            title: "Team",
-            url: ROUTES.DASHBOARD.TEAM,
-            icon: Users,
-        },
-        {
-            title: "Courses",
-            url: ROUTES.DASHBOARD.COURSES,
-            icon: BookOpen,
-        },
-        {
-            title: "Batches",
-            url: ROUTES.DASHBOARD.BATCHES,
-            icon: Layers,
-        },
-        {
-            title: "Fees",
-            url: ROUTES.DASHBOARD.FEES,
-            icon: IndianRupee,
-        },
-        {
-            title: "Payments",
-            url: ROUTES.DASHBOARD.PAYMENTS,
-            icon: Wallet,
+            title: "Finance",
+            items: [
+                {
+                    title: "Fees",
+                    url: ROUTES.DASHBOARD.FEES,
+                    icon: IndianRupee,
+                },
+                {
+                    title: "Payments",
+                    url: ROUTES.DASHBOARD.PAYMENTS,
+                    icon: Wallet,
+                },
+            ],
         },
         {
             title: "Institute",
-            url: ROUTES.DASHBOARD.INSTITUTE,
-            icon: Building2,
-        },
-        {
-            title: "Settings",
-            url: ROUTES.DASHBOARD.SETTINGS,
-            icon: Settings,
-        },
-        {
-            title: "Billing",
-            url: ROUTES.DASHBOARD.BILLING,
-            icon: CreditCard,
-        },
-    ];
-
-    const data = {
-        navMain: navItems,
-    };
-
-    const socialItems = [
-        {
-            title: "WhatsApp",
-            url: process.env.NEXT_PUBLIC_WHATSAPP || "", // Replace with actual WhatsApp link
-            icon: MessageCircle,
-        },
-        {
-            title: "X (Twitter)",
-            url: process.env.NEXT_PUBLIC_X || "", // Replace with actual X/Twitter link
-            icon: Twitter,
-        },
-        {
-            title: "LinkedIn",
-            url: process.env.NEXT_PUBLIC_LINKEDIN || "", // Replace with actual LinkedIn link
-            icon: Linkedin,
+            items: [
+                {
+                    title: "Institute Overview",
+                    url: ROUTES.DASHBOARD.INSTITUTE,
+                    icon: Building2,
+                },
+                {
+                    title: "Team",
+                    url: ROUTES.DASHBOARD.TEAM,
+                    icon: Users,
+                },
+            ],
         },
     ];
 
     return (
-        <Sidebar collapsible='icon' {...props} variant="sidebar" className="h-screen overflow-hidden " >
+        <Sidebar collapsible='offcanvas' {...props} variant="sidebar" className="h-screen overflow-hidden " >
             <SidebarHeader className="mx-0 px-0 ">
                 <SidebarGroup>
                     <SidebarMenu>
@@ -151,33 +139,17 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarHeader>
-            <SidebarContent className="">
-                <NavMain menuTitle="Menus" items={withActiveFlag(data.navMain)} />
+            <SidebarContent >
+                {navSections.map((section) => (
+                    <NavMain
+                        key={section.title ?? "primary"}
+                        menuTitle={section.title}
+
+                        items={withActiveFlag(section.items)}
+                    />
+                ))}
             </SidebarContent>
-            <SidebarFooter>
-                <SidebarGroup>
-                    <SidebarMenu>
-                        {socialItems.map((item) => (
-                            <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton asChild>
-                                    <Link href={item.url} target="_blank" rel="noopener noreferrer">
-                                        <item.icon className="h-4 w-4" />
-                                        <span>{item.title}</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        ))}
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild>
-                                <Link href={ROUTES.HELP}>
-                                    <BookOpen className="h-4 w-4" />
-                                    <span>Help Center</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroup>
-            </SidebarFooter>
+            <SidebarFooter />
         </Sidebar>
     );
 }
