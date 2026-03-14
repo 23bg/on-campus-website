@@ -9,6 +9,9 @@ import {
     IndianRupee,
     UserRound,
     Wallet,
+    MessageCircle,
+    Twitter,
+    Linkedin,
 } from "lucide-react"
 
 import {
@@ -57,7 +60,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
             ],
         },
         {
-            title: "Admissions",
+            title: "Menus",
             items: [
                 {
                     title: "Leads",
@@ -69,11 +72,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                     url: ROUTES.DASHBOARD.STUDENTS,
                     icon: UserRound,
                 },
-            ],
-        },
-        {
-            title: "Academics",
-            items: [
+
                 {
                     title: "Courses",
                     url: ROUTES.DASHBOARD.COURSES,
@@ -84,11 +83,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                     url: ROUTES.DASHBOARD.BATCHES,
                     icon: Layers,
                 },
-            ],
-        },
-        {
-            title: "Finance",
-            items: [
+
                 {
                     title: "Fees",
                     url: ROUTES.DASHBOARD.FEES,
@@ -99,13 +94,9 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                     url: ROUTES.DASHBOARD.PAYMENTS,
                     icon: Wallet,
                 },
-            ],
-        },
-        {
-            title: "Institute",
-            items: [
+
                 {
-                    title: "Institute Overview",
+                    title: "Institute",
                     url: ROUTES.DASHBOARD.INSTITUTE,
                     icon: Building2,
                 },
@@ -119,7 +110,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
     ];
 
     return (
-        <Sidebar collapsible='offcanvas' {...props} variant="sidebar" className="h-screen overflow-hidden " >
+        <Sidebar collapsible='offcanvas' {...props} variant="inset" className="h-screen overflow-hidden " >
             <SidebarHeader className="mx-0 px-0 ">
                 <SidebarGroup>
                     <SidebarMenu>
@@ -149,7 +140,46 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                     />
                 ))}
             </SidebarContent>
-            <SidebarFooter />
+            <SidebarFooter >
+                <div className="flex flex-col gap-2 p-3">
+
+                    <Link
+                        href={process.env.NEXT_PUBLIC_WHATSAPP || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="WhatsApp"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition"
+                    >
+                        <MessageCircle className="h-4 w-4" />
+                        <span className="text-sm">WhatsApp</span>
+                    </Link>
+
+                    <Link
+                        href={process.env.NEXT_PUBLIC_X || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="X"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition"
+                    >
+                        <Twitter className="h-4 w-4" />
+                        <span className="text-sm">X</span>
+                    </Link>
+
+                    <Link
+                        href={process.env.NEXT_PUBLIC_LINKEDIN || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="LinkedIn"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition"
+                    >
+                        <Linkedin className="h-4 w-4" />
+                        <span className="text-sm">LinkedIn</span>
+                    </Link>
+
+                </div>
+            </SidebarFooter>
+
+
         </Sidebar>
     );
 }

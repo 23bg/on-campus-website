@@ -43,7 +43,7 @@ export default function DashboardHeader() {
     });
 
     return (
-        <header id="dashboard-header" className="flex h-16 items-center justify-between px-4 border-b bg-background dark:bg-zinc-900/40 backdrop-blur-sm rounded-t-lg">
+        <header id="dashboard-header" className="flex h-16 items-center justify-between px-4 border-b bg-background dark:bg-zinc-900/40 backdrop-blur-sm rounded-t-2xl">
             <div className="flex items-center gap-3 min-w-0">
                 <SidebarTrigger />
 
@@ -74,18 +74,19 @@ export default function DashboardHeader() {
 
             <div className="flex items-center gap-3">
                 <GlobalSearch />
-                <ImraboChat />
+                {/* <ImraboChat /> */}
                 <Button asChild variant="ghost" size="icon" aria-label="Notifications">
                     <Link href="/settings/notifications">
                         <Bell className="h-4 w-4" />
                     </Link>
                 </Button>
+
                 <UserMenu />
-                <Button asChild variant="ghost" size="icon" aria-label="Help Center">
+                {/* <Button asChild variant="ghost" size="icon" aria-label="Help Center">
                     <Link href={ROUTES.HELP}>
                         <CircleHelp className="h-4 w-4" />
                     </Link>
-                </Button>
+                </Button> */}
             </div>
         </header>
     );

@@ -29,7 +29,7 @@ export default function DashboardLayout({
             <SidebarProvider className=" overflow-hidden h-screen">
                 <DashboardAppSidebar />
 
-                <SidebarInset className="border shadow-none bg-background ">
+                <SidebarInset className="border shadow-none bg-background rounded-2xl ">
                     <DashboardHeader />
 
                     {/* MAIN CONTENT */}
@@ -43,47 +43,52 @@ export default function DashboardLayout({
                     </main>
 
                     {/* FOOTER */}
-                    <footer className="
-                    border-t bg-background dark:bg-zinc-900/40
-                    backdrop-blur-sm rounded-b-lg
-                ">
-                        <div className="
-                        flex flex-col sm:flex-row justify-between items-center
-                        gap-2 px-6 py-3 text-xs text-muted-foreground
-                    ">
-                            <span>© 2026 OnCampus, built for modern coaching institutes.</span>
+                    <footer
+                        className="
+  border-t bg-background dark:bg-zinc-900/40
+  backdrop-blur-sm rounded-b-2xl
+"
+                    >
+                        <div
+                            className="
+    flex flex-col sm:flex-row justify-between items-center
+    gap-2 px-6 py-3 text-xs text-muted-foreground
+  "
+                        >
+                            {/* COPYRIGHT */}
+                            <span>© 2026 OnCampus. Built for coaching institutes.</span>
 
-                            <div className="flex items-center gap-3 text-muted-foreground">
+                            {/* LINKS */}
+                            <div className="flex items-center gap-2">
                                 <Link
-                                    href={process.env.NEXT_PUBLIC_WHATSAPP || "#"}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    aria-label="OnCampus WhatsApp"
-                                    className="transition hover:text-foreground"
+                                    href="/help"
+                                    className="hover:text-foreground transition"
                                 >
-                                    <MessageCircle className="h-4 w-4" />
+                                    Help & Support
                                 </Link>
+
+                                <span>|</span>
+
                                 <Link
-                                    href={process.env.NEXT_PUBLIC_X || "#"}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    aria-label="OnCampus X"
-                                    className="transition hover:text-foreground"
+                                    href="/contact"
+                                    className="hover:text-foreground transition"
                                 >
-                                    <Twitter className="h-4 w-4" />
+                                    Contact
                                 </Link>
+
+                                <span>|</span>
+
                                 <Link
-                                    href={process.env.NEXT_PUBLIC_LINKEDIN || "#"}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    aria-label="OnCampus LinkedIn"
-                                    className="transition hover:text-foreground"
+                                    href="/about"
+                                    className="hover:text-foreground transition"
                                 >
-                                    <Linkedin className="h-4 w-4" />
+                                    About
                                 </Link>
                             </div>
                         </div>
                     </footer>
+
+
                 </SidebarInset>
             </SidebarProvider>
         </DashboardShowcaseTour>
