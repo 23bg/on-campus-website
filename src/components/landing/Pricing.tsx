@@ -214,7 +214,6 @@ export default function Pricing() {
                         <p>• {t("unlimitedItem3")}</p>
                         <p>• {t("unlimitedItem4")}</p>
                         <p>• {t("unlimitedItem5")}</p>
-                        <p>• {t("unlimitedItem6")}</p>
                     </div>
 
                 </div>
@@ -332,7 +331,6 @@ export default function Pricing() {
 
                                 <Row name={t("tableUsers")} solo="1" team="10" scale="Unlimited" />
                                 <Row name={t("tablePublicPage")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableUnlimitedLeads")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableUnlimitedStudents")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableUnlimitedCourses")} solo="✓" team="✓" scale="✓" />
                                 <Row name={t("tableUnlimitedEnquiries")} solo="✓" team="✓" scale="✓" />

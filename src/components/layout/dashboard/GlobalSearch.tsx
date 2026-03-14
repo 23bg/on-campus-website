@@ -86,15 +86,19 @@ export default function GlobalSearch() {
             <Button
                 type="button"
                 variant="outline"
-                className="hidden md:flex h-9 w-[320px] items-center justify-between px-3 text-muted-foreground"
+                className="hidden md:flex h-9 w-48 items-center justify-between px-3 text-muted-foreground"
                 onClick={() => setOpen(true)}
             >
-                <span className="inline-flex items-center gap-2">
+                <div className="flex items-center justify-center gap-3">
                     <Search className="h-4 w-4" />
-                    Search...
-                </span>
-                {/* <CommandShortcut>Win/Cmd + K</CommandShortcut> */}
+                    <span>Search...</span>
+                </div>
+
             </Button>
+
+            {/* <Button asChild variant="ghost" size="icon" aria-label="Notifications" onClick={() => setOpen(true)}>
+                <Search className="h-4 w-4" />
+            </Button> */}
 
             <CommandDialog
                 open={open}
