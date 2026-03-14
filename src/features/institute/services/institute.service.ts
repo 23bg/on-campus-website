@@ -696,8 +696,29 @@ export const instituteService = {
             throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
         }
         const [courses, users, batches, studentsCount, announcements] = await Promise.all([
-            courseRepository.listByInstitute(institute.id),
-            userRepository.listByInstitute(institute.id),
+            prisma.course.findMany({
+                where: { instituteId: institute.id },
+                orderBy: { createdAt: "desc" },
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    banner: true,
+                    duration: true,
+                    defaultFees: true,
+                    description: true,
+                    createdAt: true,
+                },
+            }),
+            prisma.user.findMany({
+                where: { instituteId: institute.id },
+                select: {
+                    id: true,
+                    name: true,
+                    subject: true,
+                    bio: true,
+                },
+            }),
             prisma.batch.findMany({
                 where: { instituteId: institute.id },
                 orderBy: { createdAt: "desc" },

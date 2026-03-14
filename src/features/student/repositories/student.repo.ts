@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { withTenantScope } from "@/lib/db/tenant-scope";
 
 type CreateStudentInput = {
     instituteId: string;
@@ -28,12 +29,12 @@ export const studentRepository = {
 
     findByPhoneInInstitute: async (instituteId: string, phone: string) =>
         prisma.student.findFirst({
-            where: { instituteId, phone },
+            where: withTenantScope(instituteId, { phone }),
         }),
 
     listByInstitute: async (instituteId: string) =>
         prisma.student.findMany({
-            where: { instituteId },
+            where: withTenantScope(instituteId),
             orderBy: { createdAt: "desc" },
         }),
 

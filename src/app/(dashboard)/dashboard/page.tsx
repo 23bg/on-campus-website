@@ -12,6 +12,7 @@ import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, IndianRupee, AlertTriangle, GraduationCap, UserPlus, Users } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
+import MetricCard from "@/components/layout/dashboard/MetricCard";
 
 type Metrics = {
     leadsThisMonth: number;
@@ -76,6 +77,11 @@ type Defaulter = {
 
 const PAGE_SIZE = 5;
 
+type DashboardOverviewResponse = {
+    metrics: Metrics;
+    defaulters: Defaulter[];
+};
+
 export default function DashboardPage() {
     const [metrics, setMetrics] = useState<Metrics | null>(null);
     const [defaulters, setDefaulters] = useState<Defaulter[]>([]);
@@ -92,12 +98,12 @@ export default function DashboardPage() {
     useEffect(() => {
         const load = async () => {
             try {
-                const [metricsRes, defaultersRes] = await Promise.all([
-                    api.get(API.INTERNAL.DASHBOARD.METRICS),
-                    api.get(API.INTERNAL.DASHBOARD.DEFAULTERS),
-                ]);
-                setMetrics(metricsRes.data?.data ?? null);
-                setDefaulters(defaultersRes.data?.data ?? []);
+                const overviewRes = await api.get<{ success: boolean; data: DashboardOverviewResponse }>(
+                    API.INTERNAL.DASHBOARD.OVERVIEW
+                );
+                const payload = overviewRes.data?.data;
+                setMetrics(payload?.metrics ?? null);
+                setDefaulters(payload?.defaulters ?? []);
             } catch {
                 // silently fail — show zeros
             } finally {
@@ -174,15 +180,13 @@ export default function DashboardPage() {
                         <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Key Metrics</h2>
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                             {cards.map((card) => (
-                                <Card key={card.label}>
-                                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                        <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
-                                        <card.icon className={`h-5 w-5 ${card.color}`} />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-2xl font-bold">{card.value}</p>
-                                    </CardContent>
-                                </Card>
+                                <MetricCard
+                                    key={card.label}
+                                    label={card.label}
+                                    value={card.value}
+                                    icon={card.icon}
+                                    iconClassName={card.color}
+                                />
                             ))}
                         </div>
                     </section>

@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import { Linkedin, MessageCircle, Twitter } from "lucide-react";
-import { DashboardAppSidebar } from "@/components/dashboard/side-bar";
+import dynamic from "next/dynamic";
 import {
     SidebarInset,
     SidebarProvider,
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DashboardHeader from "@/components/layout/dashboard/DashboardHeader";
-import DashboardShowcaseTour from "@/components/dashboard/DashboardShowcaseTour";
+
+const DashboardAppSidebar = dynamic(
+    () => import("@/components/dashboard/side-bar").then((mod) => mod.DashboardAppSidebar)
+);
+const DashboardShowcaseTour = dynamic(
+    () => import("@/components/dashboard/DashboardShowcaseTour")
+);
 
 export default function DashboardLayout({
     children,

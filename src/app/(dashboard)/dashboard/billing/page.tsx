@@ -10,6 +10,7 @@ import api from "@/lib/axios";
 import { Loader2, CreditCard } from "lucide-react";
 import { PLAN_CONFIG, PlanType } from "@/config/plans";
 import type { BillingInterval } from "@/features/subscription/services/subscription.service";
+import Script from "next/script";
 
 type RazorpayCheckoutResponse = {
     razorpay_payment_id: string;
@@ -237,6 +238,11 @@ export default function BillingPage() {
 
     return (
         <main className="p-6 max-w-2xl">
+            <Script
+                id="razorpay-checkout-js"
+                src="https://checkout.razorpay.com/v1/checkout.js"
+                strategy="afterInteractive"
+            />
             <h1 className=" text-2xl font-semibold">Billing</h1>
             <p className="mt-1 text-muted-foreground">Manage your subscription and billing.</p>
 

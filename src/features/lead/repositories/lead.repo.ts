@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { withTenantScope } from "@/lib/db/tenant-scope";
 
 type CreateLeadInput = {
     instituteId: string;
@@ -44,7 +45,7 @@ export const leadRepository = {
 
     findByPhoneInInstitute: async (instituteId: string, phone: string) =>
         prisma.lead.findFirst({
-            where: { instituteId, phone },
+            where: withTenantScope(instituteId, { phone }),
         }),
 
     updateStatus: async (input: UpdateLeadStatusInput) =>
@@ -55,7 +56,7 @@ export const leadRepository = {
 
     findByIdInInstitute: async (instituteId: string, leadId: string) =>
         prisma.lead.findFirst({
-            where: { id: leadId, instituteId },
+            where: withTenantScope(instituteId, { id: leadId }),
         }),
 
     updateByIdInInstitute: async (
@@ -75,7 +76,7 @@ export const leadRepository = {
     list: async (input: ListLeadInput) =>
         prisma.lead.findMany({
             where: {
-                instituteId: input.instituteId,
+                ...withTenantScope(input.instituteId),
                 ...(input.status ? { status: input.status } : {}),
                 ...(input.query
                     ? {
