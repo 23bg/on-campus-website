@@ -67,6 +67,13 @@ export default function StudentsPage() {
         }
     }, [searchParams, searchQuery]);
 
+    useEffect(() => {
+        if (searchParams.get("action") === "add") {
+            openCreate();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
     const load = useCallback(async () => {
         setLoading(true);
         try {

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -161,7 +162,7 @@ export default function DashboardPage() {
     return (
         <main className="p-6">
             <h1 className=" text-2xl font-semibold">Dashboard</h1>
-            <p className="mt-1 text-muted-foreground">Monthly performance snapshot.</p>
+            <p className="mt-1 text-muted-foreground">Operational overview for admissions, academics, and collections.</p>
 
             {loading ? (
                 <div className="mt-8 flex justify-center">
@@ -169,278 +170,308 @@ export default function DashboardPage() {
                 </div>
             ) : (
                 <>
-                    <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                        {cards.map((card) => (
-                            <Card key={card.label}>
-                                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                    <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
-                                    <card.icon className={`h-5 w-5 ${card.color}`} />
+                    <section className="mt-6 space-y-3">
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Key Metrics</h2>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                            {cards.map((card) => (
+                                <Card key={card.label}>
+                                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                        <CardTitle className="text-sm font-medium text-muted-foreground">{card.label}</CardTitle>
+                                        <card.icon className={`h-5 w-5 ${card.color}`} />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-2xl font-bold">{card.value}</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="mt-8 space-y-3">
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick Actions</h2>
+                        <Card>
+                            <CardContent className="pt-6 space-y-4">
+                                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                    <Button asChild variant="outline" className="justify-start">
+                                        <Link href="/leads">Add Lead</Link>
+                                    </Button>
+                                    <Button asChild variant="outline" className="justify-start">
+                                        <Link href="/students?action=add">Add Student</Link>
+                                    </Button>
+                                    <Button asChild variant="outline" className="justify-start">
+                                        <Link href="/fees">Record Payment</Link>
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="justify-start"
+                                        onClick={() => document.getElementById("announcement-title")?.focus()}
+                                    >
+                                        Post Announcement
+                                    </Button>
+                                </div>
+
+                                <div id="announcement-composer" className="rounded-lg border p-4">
+                                    <p className="text-sm font-medium">Announcement Composer</p>
+                                    <p className="mb-3 text-xs text-muted-foreground">Share updates with students and parents.</p>
+                                    <div className="space-y-3">
+                                        <Input
+                                            id="announcement-title"
+                                            placeholder="Announcement title"
+                                            value={announcementTitle}
+                                            onChange={(event) => setAnnouncementTitle(event.target.value)}
+                                            maxLength={120}
+                                        />
+                                        <Textarea
+                                            placeholder="Holiday notice, exam schedule, batch update..."
+                                            value={announcementBody}
+                                            onChange={(event) => setAnnouncementBody(event.target.value)}
+                                            rows={3}
+                                            maxLength={1000}
+                                        />
+                                        <div className="flex justify-end">
+                                            <Button onClick={postAnnouncement} disabled={postingAnnouncement}>
+                                                {postingAnnouncement ? "Posting..." : "Post Announcement"}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    <section className="mt-8 space-y-3">
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Today Overview</h2>
+                        <Card>
+                            <CardContent className="pt-6">
+                                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                                    <div className="rounded-lg border p-3">
+                                        <p className="text-xs text-muted-foreground">New Leads</p>
+                                        <p className="text-xl font-semibold">{metrics?.todayOverview?.newLeads ?? 0}</p>
+                                    </div>
+                                    <div className="rounded-lg border p-3">
+                                        <p className="text-xs text-muted-foreground">Fees Collected Today</p>
+                                        <p className="text-xl font-semibold">{formatCurrency(metrics?.todayOverview?.feesCollected ?? 0)}</p>
+                                    </div>
+                                    <div className="rounded-lg border p-3">
+                                        <p className="text-xs text-muted-foreground">Fees Due Today</p>
+                                        <p className="text-xl font-semibold">{metrics?.todayOverview?.feesDueToday ?? 0}</p>
+                                    </div>
+                                    <div className="rounded-lg border p-3">
+                                        <p className="text-xs text-muted-foreground">New Students</p>
+                                        <p className="text-xl font-semibold">{metrics?.todayOverview?.newStudents ?? 0}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    <section className="mt-8 space-y-3">
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Follow-ups</h2>
+                        <div className="grid gap-6 lg:grid-cols-2">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-base">Today&apos;s Follow-ups</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-2xl font-bold">{card.value}</p>
+                                    {!todayFollowUps.length ? (
+                                        <p className="text-sm text-muted-foreground">No follow-ups scheduled for today.</p>
+                                    ) : (
+                                        <>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Name</TableHead>
+                                                        <TableHead>Phone</TableHead>
+                                                        <TableHead>Date</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {paginatedTodayFollowUps.map((lead) => (
+                                                        <TableRow key={lead.id}>
+                                                            <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                                            <TableCell>{lead.phone}</TableCell>
+                                                            <TableCell>{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                            <TablePaginationControls
+                                                className="mt-3"
+                                                page={todayFollowUpsPage}
+                                                pageSize={PAGE_SIZE}
+                                                totalItems={todayFollowUps.length}
+                                                onPageChange={setTodayFollowUpsPage}
+                                            />
+                                        </>
+                                    )}
                                 </CardContent>
                             </Card>
-                        ))}
-                    </div>
 
-                    <Card className="mt-6">
-                        <CardHeader>
-                            <CardTitle className="text-base">Today Overview</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                                <div className="rounded-lg border p-3">
-                                    <p className="text-xs text-muted-foreground">New Leads</p>
-                                    <p className="text-xl font-semibold">{metrics?.todayOverview?.newLeads ?? 0}</p>
-                                </div>
-                                <div className="rounded-lg border p-3">
-                                    <p className="text-xs text-muted-foreground">Fees Collected</p>
-                                    <p className="text-xl font-semibold">{formatCurrency(metrics?.todayOverview?.feesCollected ?? 0)}</p>
-                                </div>
-                                <div className="rounded-lg border p-3">
-                                    <p className="text-xs text-muted-foreground">Fees Due Today</p>
-                                    <p className="text-xl font-semibold">{metrics?.todayOverview?.feesDueToday ?? 0}</p>
-                                </div>
-                                <div className="rounded-lg border p-3">
-                                    <p className="text-xs text-muted-foreground">New Students</p>
-                                    <p className="text-xl font-semibold">{metrics?.todayOverview?.newStudents ?? 0}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="mt-6">
-                        <CardHeader>
-                            <CardTitle className="text-base">Post Announcement</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <Input
-                                placeholder="Announcement title"
-                                value={announcementTitle}
-                                onChange={(event) => setAnnouncementTitle(event.target.value)}
-                                maxLength={120}
-                            />
-                            <Textarea
-                                placeholder="Holiday notice, exam schedule, batch update..."
-                                value={announcementBody}
-                                onChange={(event) => setAnnouncementBody(event.target.value)}
-                                rows={3}
-                                maxLength={1000}
-                            />
-                            <div className="flex justify-end">
-                                <Button onClick={postAnnouncement} disabled={postingAnnouncement}>
-                                    {postingAnnouncement ? "Posting..." : "Post Announcement"}
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <div className="mt-6 grid gap-6 lg:grid-cols-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">Today&apos;s Follow-ups</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {!todayFollowUps.length ? (
-                                    <p className="text-sm text-muted-foreground">No follow-ups scheduled for today.</p>
-                                ) : (
-                                    <>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Name</TableHead>
-                                                    <TableHead>Phone</TableHead>
-                                                    <TableHead>Date</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {paginatedTodayFollowUps.map((lead) => (
-                                                    <TableRow key={lead.id}>
-                                                        <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                        <TableCell>{lead.phone}</TableCell>
-                                                        <TableCell>{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                            <Card className="border-red-200 bg-red-50/30 dark:bg-red-950/10">
+                                <CardHeader>
+                                    <CardTitle className="text-base text-red-600">Overdue Follow-ups</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {!overdueFollowUps.length ? (
+                                        <p className="text-sm text-muted-foreground">No overdue follow-ups.</p>
+                                    ) : (
+                                        <>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Name</TableHead>
+                                                        <TableHead>Phone</TableHead>
+                                                        <TableHead>Due</TableHead>
                                                     </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                        <TablePaginationControls
-                                            className="mt-3"
-                                            page={todayFollowUpsPage}
-                                            pageSize={PAGE_SIZE}
-                                            totalItems={todayFollowUps.length}
-                                            onPageChange={setTodayFollowUpsPage}
-                                        />
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {paginatedOverdueFollowUps.map((lead) => (
+                                                        <TableRow key={lead.id}>
+                                                            <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                                            <TableCell>{lead.phone}</TableCell>
+                                                            <TableCell className="text-red-600">{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                            <TablePaginationControls
+                                                className="mt-3"
+                                                page={overdueFollowUpsPage}
+                                                pageSize={PAGE_SIZE}
+                                                totalItems={overdueFollowUps.length}
+                                                onPageChange={setOverdueFollowUpsPage}
+                                            />
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </section>
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base text-red-600">Overdue Follow-ups</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {!overdueFollowUps.length ? (
-                                    <p className="text-sm text-muted-foreground">No overdue follow-ups.</p>
-                                ) : (
-                                    <>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Name</TableHead>
-                                                    <TableHead>Phone</TableHead>
-                                                    <TableHead>Due</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {paginatedOverdueFollowUps.map((lead) => (
-                                                    <TableRow key={lead.id}>
-                                                        <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                        <TableCell>{lead.phone}</TableCell>
-                                                        <TableCell className="text-red-600">{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
+                    <section className="mt-8 space-y-3">
+                        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent Activity</h2>
+                        <div className="grid gap-6 xl:grid-cols-3">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-base">Recent Leads</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {!recentLeads.length ? (
+                                        <p className="text-sm text-muted-foreground">No recent leads yet. Share your institute link to start receiving enquiries.</p>
+                                    ) : (
+                                        <>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Name</TableHead>
+                                                        <TableHead>Phone</TableHead>
+                                                        <TableHead>Status</TableHead>
                                                     </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                        <TablePaginationControls
-                                            className="mt-3"
-                                            page={overdueFollowUpsPage}
-                                            pageSize={PAGE_SIZE}
-                                            totalItems={overdueFollowUps.length}
-                                            onPageChange={setOverdueFollowUpsPage}
-                                        />
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {paginatedRecentLeads.map((lead) => (
+                                                        <TableRow key={lead.id}>
+                                                            <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
+                                                            <TableCell>{lead.phone}</TableCell>
+                                                            <TableCell>{lead.status}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                            <TablePaginationControls
+                                                className="mt-3"
+                                                page={recentLeadsPage}
+                                                pageSize={PAGE_SIZE}
+                                                totalItems={recentLeads.length}
+                                                onPageChange={setRecentLeadsPage}
+                                            />
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">Recent Leads</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {!recentLeads.length ? (
-                                    <p className="text-sm text-muted-foreground">No recent leads yet. Share your institute link to start receiving enquiries.</p>
-                                ) : (
-                                    <>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Name</TableHead>
-                                                    <TableHead>Phone</TableHead>
-                                                    <TableHead>Status</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {paginatedRecentLeads.map((lead) => (
-                                                    <TableRow key={lead.id}>
-                                                        <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                        <TableCell>{lead.phone}</TableCell>
-                                                        <TableCell>{lead.status}</TableCell>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-base">Recent Payments</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {!recentPayments.length ? (
+                                        <p className="text-sm text-muted-foreground">No recent payments found.</p>
+                                    ) : (
+                                        <>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Student</TableHead>
+                                                        <TableHead className="text-right">Amount</TableHead>
+                                                        <TableHead>Method</TableHead>
                                                     </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                        <TablePaginationControls
-                                            className="mt-3"
-                                            page={recentLeadsPage}
-                                            pageSize={PAGE_SIZE}
-                                            totalItems={recentLeads.length}
-                                            onPageChange={setRecentLeadsPage}
-                                        />
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {paginatedRecentPayments.map((payment) => (
+                                                        <TableRow key={payment.id}>
+                                                            <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
+                                                            <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
+                                                            <TableCell className="max-w-[140px] truncate" title={payment.method || "-"}>{payment.method || "-"}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                            <TablePaginationControls
+                                                className="mt-3"
+                                                page={recentPaymentsPage}
+                                                pageSize={PAGE_SIZE}
+                                                totalItems={recentPayments.length}
+                                                onPageChange={setRecentPaymentsPage}
+                                            />
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">Recent Payments</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {!recentPayments.length ? (
-                                    <p className="text-sm text-muted-foreground">No recent payments found.</p>
-                                ) : (
-                                    <>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Student</TableHead>
-                                                    <TableHead className="text-right">Amount</TableHead>
-                                                    <TableHead>Method</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {paginatedRecentPayments.map((payment) => (
-                                                    <TableRow key={payment.id}>
-                                                        <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
-                                                        <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
-                                                        <TableCell className="max-w-[140px] truncate" title={payment.method || "-"}>{payment.method || "-"}</TableCell>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2 text-base">
+                                        <AlertTriangle className="h-5 w-5 text-red-600" />
+                                        Fee Defaulters
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {!defaulters.length ? (
+                                        <p className="text-sm text-muted-foreground">No fee defaulters right now.</p>
+                                    ) : (
+                                        <>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Student</TableHead>
+                                                        <TableHead>Course</TableHead>
+                                                        <TableHead className="text-right">Pending</TableHead>
                                                     </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                        <TablePaginationControls
-                                            className="mt-3"
-                                            page={recentPaymentsPage}
-                                            pageSize={PAGE_SIZE}
-                                            totalItems={recentPayments.length}
-                                            onPageChange={setRecentPaymentsPage}
-                                        />
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Defaulters List */}
-                    {defaulters.length > 0 ? (
-                        <Card className="mt-8">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <AlertTriangle className="h-5 w-5 text-red-600" />
-                                    Fee Defaulters ({defaulters.length})
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Sr. No.</TableHead>
-                                            <TableHead>Student</TableHead>
-                                            <TableHead>Phone</TableHead>
-                                            <TableHead>Course</TableHead>
-                                            <TableHead className="text-right">Total Fees</TableHead>
-                                            <TableHead className="text-right">Paid</TableHead>
-                                            <TableHead className="text-right">Pending</TableHead>
-                                            <TableHead>Due Date</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {paginatedDefaulters.map((d, index) => (
-                                            <TableRow key={d.studentId}>
-                                                <TableCell>{(defaultersPage - 1) * PAGE_SIZE + index + 1}</TableCell>
-                                                <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
-                                                <TableCell>{d.phone}</TableCell>
-                                                <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
-                                                <TableCell className="text-right">{formatCurrency(d.totalFees)}</TableCell>
-                                                <TableCell className="text-right text-green-600">{formatCurrency(d.totalPaid)}</TableCell>
-                                                <TableCell className="text-right font-medium text-red-600">{formatCurrency(d.pending)}</TableCell>
-                                                <TableCell>{d.dueDate ? new Date(d.dueDate).toLocaleDateString() : "-"}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                <TablePaginationControls
-                                    className="mt-3"
-                                    page={defaultersPage}
-                                    pageSize={PAGE_SIZE}
-                                    totalItems={defaulters.length}
-                                    onPageChange={setDefaultersPage}
-                                />
-                            </CardContent>
-                        </Card>
-                    ) : null}
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {paginatedDefaulters.map((d) => (
+                                                        <TableRow key={d.studentId}>
+                                                            <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
+                                                            <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
+                                                            <TableCell className="text-right font-medium text-red-600">{formatCurrency(d.pending)}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                            <TablePaginationControls
+                                                className="mt-3"
+                                                page={defaultersPage}
+                                                pageSize={PAGE_SIZE}
+                                                totalItems={defaulters.length}
+                                                onPageChange={setDefaultersPage}
+                                            />
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </section>
                 </>
             )}
         </main>

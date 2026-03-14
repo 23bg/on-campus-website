@@ -14,7 +14,7 @@ export function NavMain({
     menuTitle,
     items,
 }: {
-    menuTitle: string;
+    menuTitle?: string;
     items: {
         title: string;
         url: string;
@@ -27,7 +27,7 @@ export function NavMain({
 
     return (
         <SidebarGroup>
-            <SidebarGroupLabel>{menuTitle}</SidebarGroupLabel>
+            {menuTitle ? <SidebarGroupLabel>{menuTitle}</SidebarGroupLabel> : null}
             <SidebarMenu>
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>

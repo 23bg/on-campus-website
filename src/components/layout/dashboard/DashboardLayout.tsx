@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
+import { Linkedin, MessageCircle, Twitter } from "lucide-react";
 import { DashboardAppSidebar } from "@/components/dashboard/side-bar";
 import {
     SidebarInset,
@@ -44,13 +45,36 @@ export default function DashboardLayout({
                         flex flex-col sm:flex-row justify-between items-center
                         gap-2 px-6 py-3 text-xs text-muted-foreground
                     ">
-                            <span>©2026 OnCampus, built for modern coaching institutes.</span>
+                            <span>© 2026 OnCampus, built for modern coaching institutes.</span>
 
-                            <div className="flex gap-3">
-                                <Link href="#" className="hover:text-primary transition">License</Link>
-                                <Link href="#" className="hover:text-primary transition">More Themes</Link>
-                                <Link href="#" className="hover:text-primary transition">Documentation</Link>
-                                <Link href="#" className="hover:text-primary transition">Support</Link>
+                            <div className="flex items-center gap-3 text-muted-foreground">
+                                <Link
+                                    href={process.env.NEXT_PUBLIC_WHATSAPP || "#"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="OnCampus WhatsApp"
+                                    className="transition hover:text-foreground"
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                </Link>
+                                <Link
+                                    href={process.env.NEXT_PUBLIC_X || "#"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="OnCampus X"
+                                    className="transition hover:text-foreground"
+                                >
+                                    <Twitter className="h-4 w-4" />
+                                </Link>
+                                <Link
+                                    href={process.env.NEXT_PUBLIC_LINKEDIN || "#"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="OnCampus LinkedIn"
+                                    className="transition hover:text-foreground"
+                                >
+                                    <Linkedin className="h-4 w-4" />
+                                </Link>
                             </div>
                         </div>
                     </footer>
