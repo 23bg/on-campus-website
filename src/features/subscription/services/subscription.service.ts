@@ -4,6 +4,7 @@ import { assertRazorpayReady, razorpay, verifyRazorpayCheckoutSignature } from "
 import { env } from "@/lib/config/env";
 import { DEFAULT_PLAN_TYPE, isPlanType, PLAN_CONFIG, PlanType } from "@/config/plans";
 import { userRepository } from "@/features/auth/repositories/user.repo";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 export type SubscriptionState = "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
 type SubscriptionRecord = {
@@ -26,7 +27,7 @@ const DASHBOARD_ALLOWED: SubscriptionState[] = ["TRIAL", "ACTIVE"];
 export type BillingInterval = "MONTHLY" | "YEARLY";
 
 const normalizeStoredPlanType = (storedPlanType: string | null | undefined, userLimit?: number | null): PlanType => {
-    if (storedPlanType === "STARTER" || storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
+    if (storedPlanType === "STARTER" || storedPlanType === "TEAM" || storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
         return storedPlanType;
     }
 
@@ -35,10 +36,16 @@ const normalizeStoredPlanType = (storedPlanType: string | null | undefined, user
     }
 
     if (storedPlanType === "TEAM") {
-        const scaleLimit = PLAN_CONFIG.SCALE.userLimit ?? Infinity;
-        if ((userLimit ?? 0) >= scaleLimit) {
+        const normalizedLimit = userLimit ?? 0;
+
+        if (normalizedLimit === 0) {
             return "SCALE";
         }
+
+        if (normalizedLimit <= (PLAN_CONFIG.TEAM.userLimit ?? 5)) {
+            return "TEAM";
+        }
+
         return "GROWTH";
     }
 
@@ -63,6 +70,10 @@ export const subscriptionService = {
                 MONTHLY: env.RAZORPAY_PLAN_ID_STARTER_MONTHLY,
                 YEARLY: env.RAZORPAY_PLAN_ID_STARTER_YEARLY,
             },
+            TEAM: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_TEAM_MONTHLY ?? env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_TEAM_YEARLY ?? env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
+            },
             GROWTH: {
                 MONTHLY: env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
                 YEARLY: env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
@@ -82,7 +93,17 @@ export const subscriptionService = {
     },
 
     async createSubscription(instituteId: string, planType: PlanType = DEFAULT_PLAN_TYPE) {
-        return subscriptionRepository.createTrial(instituteId, planType);
+        const created = await subscriptionRepository.createTrial(instituteId, planType);
+
+        await eventDispatcherService.dispatch({
+            event: "TRIAL_STARTED",
+            instituteId,
+            message: "Trial has started for your institute.",
+            link: "/billing",
+            metadata: { planType },
+        });
+
+        return created;
     },
 
     async syncTrialStatus(subscription: SubscriptionRecord): Promise<SubscriptionRecord> {
@@ -224,6 +245,14 @@ export const subscriptionService = {
             paymentMethodAddedAt: new Date(),
         });
 
+        await eventDispatcherService.dispatch({
+            event: "SUBSCRIPTION_CREATED",
+            instituteId: input.instituteId,
+            message: "Subscription has been created successfully.",
+            link: "/billing",
+            metadata: { razorpaySubId: input.subscriptionId },
+        });
+
         return {
             instituteId: updated.instituteId,
             razorpaySubId: updated.razorpaySubId,
@@ -273,29 +302,88 @@ export const subscriptionService = {
         }
 
         if (input.razorpaySubId && input.instituteId) {
-            return subscriptionRepository.upsertByRazorpaySubId(input.razorpaySubId, input.instituteId, {
+            const updated = await subscriptionRepository.upsertByRazorpaySubId(input.razorpaySubId, input.instituteId, {
                 status,
                 currentPeriodEnd: input.currentPeriodEnd,
                 ...(input.event === "subscription.charged" ? { lastChargedAt: new Date() } : {}),
             });
+
+            await this.emitWebhookNotificationEvent(input.event, updated.instituteId, input.razorpaySubId);
+            return updated;
         }
 
         if (input.razorpaySubId) {
-            return subscriptionRepository.updateByRazorpaySubId(input.razorpaySubId, {
+            await subscriptionRepository.updateByRazorpaySubId(input.razorpaySubId, {
                 status,
                 currentPeriodEnd: input.currentPeriodEnd,
                 ...(input.event === "subscription.charged" ? { lastChargedAt: new Date() } : {}),
             });
+
+            const target = await subscriptionRepository.findByRazorpaySubId(input.razorpaySubId);
+            if (!target) {
+                throw new AppError("Subscription not found for webhook subscription id", 404, "SUBSCRIPTION_NOT_FOUND");
+            }
+
+            await this.emitWebhookNotificationEvent(input.event, target.instituteId, input.razorpaySubId);
+            return target;
         }
 
         if (!input.instituteId) {
             throw new AppError("instituteId or razorpaySubId is required", 400, "SUBSCRIPTION_TARGET_MISSING");
         }
 
-        return subscriptionRepository.updateByInstituteId(input.instituteId, {
+        const updated = await subscriptionRepository.updateByInstituteId(input.instituteId, {
             status,
             currentPeriodEnd: input.currentPeriodEnd,
             ...(input.event === "subscription.charged" ? { lastChargedAt: new Date() } : {}),
         });
+
+        await this.emitWebhookNotificationEvent(input.event, updated.instituteId, input.razorpaySubId);
+        return updated;
+    },
+
+    async emitWebhookNotificationEvent(event: string, instituteId: string, razorpaySubId?: string) {
+        if (event === "subscription.charged") {
+            await eventDispatcherService.dispatch({
+                event: "SUBSCRIPTION_PAYMENT_SUCCESS",
+                instituteId,
+                message: "Subscription payment successful.",
+                link: "/billing",
+                metadata: { razorpaySubId },
+            });
+            return;
+        }
+
+        if (event === "payment.failed") {
+            await eventDispatcherService.dispatch({
+                event: "SUBSCRIPTION_PAYMENT_FAILED",
+                instituteId,
+                message: "Subscription payment failed.",
+                link: "/billing",
+                metadata: { razorpaySubId },
+            });
+            return;
+        }
+
+        if (event === "subscription.cancelled") {
+            await eventDispatcherService.dispatch({
+                event: "SUBSCRIPTION_CANCELLED",
+                instituteId,
+                message: "Subscription cancelled.",
+                link: "/billing",
+                metadata: { razorpaySubId },
+            });
+            return;
+        }
+
+        if (event === "subscription.activated") {
+            await eventDispatcherService.dispatch({
+                event: "SUBSCRIPTION_CREATED",
+                instituteId,
+                message: "Subscription activated.",
+                link: "/billing",
+                metadata: { razorpaySubId },
+            });
+        }
     },
 };

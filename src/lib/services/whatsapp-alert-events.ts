@@ -2,16 +2,13 @@ import { prisma } from "@/lib/db/prisma";
 import { logger } from "@/lib/utils/logger";
 import { sendSystemAlert } from "@/lib/services/whatsapp";
 import { whatsappIntegrationService } from "@/features/whatsapp/services/whatsapp-integration.service";
+import {
+    type NotificationEvent,
+    getPreferredWhatsAppSenderType,
+    supportsWhatsAppForEvent,
+} from "@/lib/notifications/event-catalog";
 
-export type WhatsAppAlertEvent =
-    | "LEAD_CREATED"
-    | "LEAD_CONVERTED_TO_STUDENT"
-    | "STUDENT_CREATED"
-    | "PAYMENT_RECEIVED"
-    | "STUDENT_PORTAL_CREDENTIALS_SET"
-    | "TEAM_MEMBER_ADDED"
-    | "INSTITUTE_ONBOARDING_COMPLETED"
-    | "INSTITUTE_PROFILE_UPDATED";
+export type WhatsAppAlertEvent = NotificationEvent;
 
 export type PlatformNotificationEvent =
     | "new_enquiry_alert"
@@ -26,12 +23,12 @@ const WHATSAPP_SAMPLE_MESSAGE = [
     "WhatsApp Business Platform sample message",
 ].join("\n");
 
-const DEFAULT_TEMPLATE_EVENT_BY_ALERT_EVENT: Record<WhatsAppAlertEvent, PlatformNotificationEvent> = {
+const DEFAULT_TEMPLATE_EVENT_BY_ALERT_EVENT: Partial<Record<WhatsAppAlertEvent, PlatformNotificationEvent>> = {
     LEAD_CREATED: "new_enquiry_alert",
     LEAD_CONVERTED_TO_STUDENT: "admission_confirmed",
     STUDENT_CREATED: "admission_confirmed",
     PAYMENT_RECEIVED: "payment_received",
-    STUDENT_PORTAL_CREDENTIALS_SET: "follow_up_reminder",
+    STUDENT_PORTAL_CREDENTIALS_CREATED: "follow_up_reminder",
     TEAM_MEMBER_ADDED: "lead_assigned",
     INSTITUTE_ONBOARDING_COMPLETED: "follow_up_reminder",
     INSTITUTE_PROFILE_UPDATED: "follow_up_reminder",
@@ -84,6 +81,15 @@ export const sendEventBasedWhatsAppAlert = async (input: {
         institute_name?: string;
     };
 }): Promise<{ sent: boolean; blocked: boolean; billable: boolean; reason?: string } | null> => {
+    if (!supportsWhatsAppForEvent(input.event)) {
+        logger.info({
+            event: "whatsapp_event_alert_skipped_channel_not_enabled",
+            alertEvent: input.event,
+            instituteId: input.instituteId,
+        });
+        return null;
+    }
+
     const destination = normalizePhoneForWhatsApp(input.phoneNumber) ?? (await resolveInstituteDestination(input.instituteId));
 
     if (!destination) {
@@ -96,8 +102,10 @@ export const sendEventBasedWhatsAppAlert = async (input: {
     }
 
     try {
-        const templateEvent = input.templateEvent ?? DEFAULT_TEMPLATE_EVENT_BY_ALERT_EVENT[input.event];
+        const templateEvent =
+            input.templateEvent ?? DEFAULT_TEMPLATE_EVENT_BY_ALERT_EVENT[input.event] ?? "follow_up_reminder";
         const isEnabled = await whatsappIntegrationService.isNotificationEnabled(input.instituteId, templateEvent);
+        const senderType = getPreferredWhatsAppSenderType(input.event) ?? "ONCAMPUS_SYSTEM_NUMBER";
 
         if (!isEnabled) {
             logger.info({
@@ -125,13 +133,15 @@ export const sendEventBasedWhatsAppAlert = async (input: {
         const result = await sendSystemAlert(
             input.instituteId,
             destination,
-            renderedMessage || input.message || WHATSAPP_SAMPLE_MESSAGE
+            renderedMessage || input.message || WHATSAPP_SAMPLE_MESSAGE,
+            senderType
         );
 
         logger.info({
             event: "whatsapp_event_alert_dispatched",
             alertEvent: input.event,
             templateEvent,
+            senderType,
             instituteId: input.instituteId,
             destination,
             sent: result.sent,

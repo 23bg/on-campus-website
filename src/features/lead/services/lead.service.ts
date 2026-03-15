@@ -4,8 +4,8 @@ import { studentRepository } from "@/features/student/repositories/student.repo"
 import { instituteRepository } from "@/features/institute/repositories/institute.repo";
 import { AppError } from "@/lib/utils/error";
 import { leadActivityService } from "@/features/lead/services/lead-activity.service";
-import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
 import { billingService } from "@/features/billing/services/billing.service";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 const leadInputSchema = z.object({
     instituteId: z.string().min(1),
@@ -60,10 +60,13 @@ export const leadService = {
             });
         }
 
-        await sendEventBasedWhatsAppAlert({
+        await eventDispatcherService.dispatch({
             event: "LEAD_CREATED",
             instituteId: created.instituteId,
             message: `New enquiry received: ${created.name} (${created.phone}).`,
+            link: `/leads/${created.id}`,
+            metadata: { leadId: created.id },
+            whatsappPhoneNumber: created.phone,
             templateEvent: "new_enquiry_alert",
             templateVariables: {
                 student_name: created.name,
@@ -117,6 +120,14 @@ export const leadService = {
                 title: "Status changed",
                 description: `${beforeUpdate.status} → ${status}`,
             });
+
+            await eventDispatcherService.dispatch({
+                event: "LEAD_STATUS_CHANGED",
+                instituteId,
+                message: `${updated.name} status changed from ${beforeUpdate.status} to ${status}.`,
+                link: `/leads/${updated.id}`,
+                metadata: { leadId: updated.id, previousStatus: beforeUpdate.status, status },
+            });
         }
 
         if (status === "ADMITTED") {
@@ -139,10 +150,13 @@ export const leadService = {
                 title: "Converted to student",
             });
 
-            await sendEventBasedWhatsAppAlert({
+            await eventDispatcherService.dispatch({
                 event: "LEAD_CONVERTED_TO_STUDENT",
                 instituteId,
                 message: `Lead converted to student: ${updated.name} (${updated.phone}).`,
+                link: `/students`,
+                whatsappPhoneNumber: updated.phone,
+                metadata: { leadId: updated.id },
                 templateEvent: "admission_confirmed",
                 templateVariables: {
                     student_name: updated.name,
@@ -209,6 +223,14 @@ export const leadService = {
                 activityType: "NOTE_ADDED",
                 title: "Note added",
             });
+
+            await eventDispatcherService.dispatch({
+                event: "LEAD_NOTE_ADDED",
+                instituteId,
+                message: `A new note was added for ${updated.name}.`,
+                link: `/leads/${updated.id}`,
+                metadata: { leadId: updated.id },
+            });
         }
 
         if (existing.followUpAt?.toISOString() !== updated.followUpAt?.toISOString()) {
@@ -220,12 +242,28 @@ export const leadService = {
                     title: "Follow-up scheduled",
                     description: `Next follow-up on ${updated.followUpAt.toISOString().slice(0, 10)}`,
                 });
+
+                await eventDispatcherService.dispatch({
+                    event: "FOLLOW_UP_SCHEDULED",
+                    instituteId,
+                    message: `Follow-up scheduled for ${updated.name} on ${updated.followUpAt.toISOString().slice(0, 10)}.`,
+                    link: `/leads/${updated.id}`,
+                    metadata: { leadId: updated.id, followUpAt: updated.followUpAt.toISOString() },
+                });
             } else if (existing.followUpAt && !updated.followUpAt) {
                 await leadActivityService.log({
                     leadId: updated.id,
                     instituteId,
                     activityType: "FOLLOWUP_COMPLETED",
                     title: "Follow-up completed",
+                });
+
+                await eventDispatcherService.dispatch({
+                    event: "FOLLOW_UP_COMPLETED",
+                    instituteId,
+                    message: `Follow-up completed for ${updated.name}.`,
+                    link: `/leads/${updated.id}`,
+                    metadata: { leadId: updated.id },
                 });
             }
         }

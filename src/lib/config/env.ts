@@ -35,6 +35,8 @@ const envSchema = z.object({
     RAZORPAY_PLAN_ID_TEAM: z.string().optional(),
     RAZORPAY_PLAN_ID_STARTER_MONTHLY: z.string().optional(),
     RAZORPAY_PLAN_ID_STARTER_YEARLY: z.string().optional(),
+    RAZORPAY_PLAN_ID_TEAM_MONTHLY: z.string().optional(),
+    RAZORPAY_PLAN_ID_TEAM_YEARLY: z.string().optional(),
     RAZORPAY_PLAN_ID_GROWTH_MONTHLY: z.string().optional(),
     RAZORPAY_PLAN_ID_GROWTH_YEARLY: z.string().optional(),
     RAZORPAY_PLAN_ID_SCALE_MONTHLY: z.string().optional(),

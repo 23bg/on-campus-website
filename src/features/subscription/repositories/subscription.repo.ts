@@ -6,6 +6,7 @@ const mapPlanTypeToDb = (planType: PlanType) => {
     switch (planType) {
         case "STARTER":
             return "SOLO" as const;
+        case "TEAM":
         case "GROWTH":
         case "SCALE":
             return "TEAM" as const;

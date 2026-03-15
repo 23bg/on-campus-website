@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { courseRepository } from "@/features/course/repositories/course.repo";
 import { AppError } from "@/lib/utils/error";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 const courseInputSchema = z.object({
     instituteId: z.string().min(1),
@@ -14,7 +15,17 @@ const courseInputSchema = z.object({
 export const courseService = {
     async createCourse(payload: unknown) {
         const input = courseInputSchema.parse(payload);
-        return courseRepository.create(input);
+        const course = await courseRepository.create(input);
+
+        await eventDispatcherService.dispatch({
+            event: "COURSE_CREATED",
+            instituteId: input.instituteId,
+            message: `Course created: ${course.name}.`,
+            link: `/courses/${course.id}`,
+            metadata: { courseId: course.id },
+        });
+
+        return course;
     },
 
     async updateCourse(
@@ -34,10 +45,20 @@ export const courseService = {
         if (payload.description !== undefined && payload.description !== null) {
             z.string().trim().max(1024).parse(payload.description);
         }
-        return courseRepository.update(instituteId, courseId, {
+        const result = await courseRepository.update(instituteId, courseId, {
             ...payload,
             banner: payload.banner === "" ? null : payload.banner,
         });
+
+        await eventDispatcherService.dispatch({
+            event: "COURSE_UPDATED",
+            instituteId,
+            message: "Course details updated.",
+            link: `/courses/${courseId}`,
+            metadata: { courseId },
+        });
+
+        return result;
     },
 
     async deleteCourse(instituteId: string, courseId: string) {

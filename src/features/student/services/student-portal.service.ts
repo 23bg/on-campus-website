@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { AppError } from "@/lib/utils/error";
-import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 export const studentPortalService = {
     async setCredentials(
@@ -42,17 +42,15 @@ export const studentPortalService = {
 
         const message = `Portal credentials set for student ${student.name}. Student can now log in to the portal.`;
 
-        await sendEventBasedWhatsAppAlert({
-            event: "STUDENT_PORTAL_CREDENTIALS_SET",
+        await eventDispatcherService.dispatch({
+            event: "STUDENT_PORTAL_CREDENTIALS_CREATED",
             instituteId,
+            studentId: student.id,
             message,
-            phoneNumber: student.phone,
-        });
-
-        await sendEventBasedWhatsAppAlert({
-            event: "STUDENT_PORTAL_CREDENTIALS_SET",
-            instituteId,
-            message,
+            whatsappPhoneNumber: student.phone,
+            emailTo: student.email ? [student.email] : undefined,
+            link: "/student",
+            metadata: { studentId: student.id },
         });
 
         return { success: true };
@@ -94,6 +92,15 @@ export const studentPortalService = {
             throw new AppError("Student not found", 404, "STUDENT_NOT_FOUND");
         }
 
+        await eventDispatcherService.dispatch({
+            event: "PORTAL_LOGIN",
+            instituteId: student.instituteId,
+            studentId: student.id,
+            message: "Login successful.",
+            link: "/student",
+            metadata: { studentId: student.id },
+        });
+
         return {
             studentId: student.id,
             instituteId: student.instituteId,
@@ -110,7 +117,7 @@ export const studentPortalService = {
             throw new AppError("Student not found", 404, "STUDENT_NOT_FOUND");
         }
 
-        const [course, batch, institute] = await Promise.all([
+        const [course, batch, institute, notifications] = await Promise.all([
             student.courseId
                 ? prisma.course.findFirst({
                     where: { id: student.courseId, instituteId },
@@ -126,6 +133,11 @@ export const studentPortalService = {
             prisma.institute.findFirst({
                 where: { id: instituteId },
                 select: { id: true, name: true },
+            }),
+            prisma.studentNotification.findMany({
+                where: { studentId },
+                orderBy: { createdAt: "desc" },
+                take: 30,
             }),
         ]);
 
@@ -155,6 +167,7 @@ export const studentPortalService = {
                 institute,
             },
             announcements,
+            notifications,
         };
     },
 
@@ -173,6 +186,26 @@ export const studentPortalService = {
                 title: payload.title.trim(),
                 body: payload.body.trim(),
             },
+        });
+
+        await eventDispatcherService.dispatch({
+            event: "ANNOUNCEMENT_CREATED",
+            instituteId,
+            batchId: payload.batchId ?? null,
+            title: payload.title.trim(),
+            message: payload.body.trim(),
+            link: "/student/announcements",
+            metadata: { batchId: payload.batchId ?? null },
+        });
+
+        await eventDispatcherService.dispatch({
+            event: "NEW_ANNOUNCEMENT_AVAILABLE",
+            instituteId,
+            batchId: payload.batchId ?? null,
+            title: payload.title.trim(),
+            message: payload.body.trim(),
+            link: "/student/announcements",
+            metadata: { batchId: payload.batchId ?? null },
         });
 
         return { success: true };

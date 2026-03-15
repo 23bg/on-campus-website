@@ -54,9 +54,7 @@ export default function Pricing() {
             name: t("starterPlan"),
             description: t("starterSubtext"),
             users: t("starterUsers"),
-            whatsapp: t("starterWhatsApp"),
-            dailyAlerts: t("starterWhatsAppDaily"),
-            extra: PLAN_CONFIG.STARTER.extraConversationCost,
+            // whatsapp: t("starterWhatsApp"),
             features: [
                 t("starterFeature1"),
                 t("starterFeature2"),
@@ -65,12 +63,33 @@ export default function Pricing() {
                 t("starterFeature5"),
                 t("starterFeature6"),
                 t("starterFeature7"),
-                t("starterFeature8"),
             ],
             outcome: t("starterOutcome"),
             cta: t("startSoloTrial"),
             link: "/signup",
             variant: "outline",
+        },
+        {
+            key: "TEAM",
+            price: PLAN_CONFIG.TEAM.priceMonthly,
+            name: t("teamPlan"),
+            description: t("teamSubtext"),
+            users: t("teamUsers"),
+            whatsapp: t("teamWhatsApp"),
+            features: [
+                t("teamFeature1"),
+                t("teamFeature2"),
+                t("teamFeature3"),
+                t("teamFeature4"),
+                t("teamFeature5"),
+                t("teamFeature6"),
+                t("teamFeature7"),
+            ],
+            outcome: t("teamOutcome"),
+            cta: t("startTeamTrial"),
+            link: "/signup",
+
+            highlight: true,
         },
 
         {
@@ -80,8 +99,6 @@ export default function Pricing() {
             description: t("growthSubtext"),
             users: t("growthUsers"),
             whatsapp: t("growthWhatsApp"),
-            dailyAlerts: t("growthWhatsAppDaily"),
-            extra: PLAN_CONFIG.GROWTH.extraConversationCost,
             features: [
                 t("growthFeature1"),
                 t("growthFeature2"),
@@ -89,13 +106,13 @@ export default function Pricing() {
                 t("growthFeature4"),
                 t("growthFeature5"),
                 t("growthFeature6"),
-                t("growthFeature7"),
-                t("growthFeature8"),
+                t("growthFeature7")
             ],
             outcome: t("growthOutcome"),
-            cta: t("startTeamTrial"),
+            cta: t("startGrowthTrial"),
             link: "/signup",
-            highlight: true,
+            variant: "outline",
+
         },
 
         {
@@ -105,8 +122,6 @@ export default function Pricing() {
             description: t("scaleSubtext"),
             users: t("scaleUsers"),
             whatsapp: t("scaleWhatsApp"),
-            dailyAlerts: t("scaleWhatsAppDaily"),
-            extra: PLAN_CONFIG.SCALE.extraConversationCost,
             features: [
                 t("scaleFeature1"),
                 t("scaleFeature2"),
@@ -115,7 +130,6 @@ export default function Pricing() {
                 t("scaleFeature5"),
                 t("scaleFeature6"),
                 t("scaleFeature7"),
-                t("scaleFeature8"),
                 t("scaleFeature9"),
             ],
             outcome: t("scaleOutcome"),
@@ -220,7 +234,7 @@ export default function Pricing() {
 
                 {/* PRICING CARDS */}
 
-                <div className="mt-12 grid gap-8 lg:grid-cols-3">
+                <div className="mt-12 grid gap-6 xl:grid-cols-4">
 
                     {plans.map((plan) => (
 
@@ -258,15 +272,7 @@ export default function Pricing() {
                                     {plan.users}
                                 </p>
 
-                                <Badge variant="secondary">{plan.whatsapp}</Badge>
-
-                                <p className="text-xs text-muted-foreground">
-                                    {plan.dailyAlerts}
-                                </p>
-
-                                <p className="text-xs text-muted-foreground">
-                                    Extra alerts: ₹{plan.extra.toFixed(2)} per alert after plan limit
-                                </p>
+                                {/* <Badge variant="secondary">{plan.whatsapp}</Badge> */}
 
                             </CardHeader>
 
@@ -323,27 +329,29 @@ export default function Pricing() {
                                     <th className="text-left p-4">{t("tableFeature")}</th>
                                     <th className="p-4">{t("tableSolo")}</th>
                                     <th className="p-4">{t("tableTeam")}</th>
+                                    <th className="p-4">{t("tableGrowth")}</th>
                                     <th className="p-4">{t("tableScale")}</th>
                                 </tr>
                             </thead>
 
                             <tbody>
 
-                                <Row name={t("tableUsers")} solo="1" team="10" scale="Unlimited" />
-                                <Row name={t("tablePublicPage")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableUnlimitedStudents")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableUnlimitedCourses")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableUnlimitedEnquiries")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableUnlimitedFollowUps")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableUnlimitedNotes")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableLeadPipeline")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableStudentRecords")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableExcelImport")} solo="✓" team="✓" scale="✓" />
+                                <Row name={t("tableUsers")} solo="1" team="5" growth="20" scale="Unlimited" />
+                                <Row name={t("tablePublicPage")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedStudents")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedCourses")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedEnquiries")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedFollowUps")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableUnlimitedNotes")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableLeadPipeline")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableStudentRecords")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableExcelImport")} solo="✓" team="✓" growth="✓" scale="✓" />
 
                                 <Row
                                     name={t("tableRazorpay")}
                                     solo="✓"
                                     team="✓"
+                                    growth="✓"
                                     scale="✓"
                                     tooltip="Institutes connect their Razorpay account to manage subscription billing securely."
                                 />
@@ -352,6 +360,7 @@ export default function Pricing() {
                                     name={t("tableRoles")}
                                     solo="—"
                                     team="✓"
+                                    growth="✓"
                                     scale="✓"
                                 />
 
@@ -359,14 +368,16 @@ export default function Pricing() {
                                     name={t("tableLeadOwnership")}
                                     solo="—"
                                     team="✓"
+                                    growth="✓"
                                     scale="✓"
                                 />
 
                                 <Row
                                     name={t("tableWhatsAppAlerts")}
-                                    solo="1,000"
-                                    team="3,000"
-                                    scale="10,000"
+                                    solo={t("tableWhatsAppOptional")}
+                                    team={t("tableWhatsAppOptional")}
+                                    growth={t("tableWhatsAppOptional")}
+                                    scale={t("tableWhatsAppOptional")}
                                     tooltip={t("whatsAppAlertsTooltip")}
                                 />
 
@@ -374,12 +385,13 @@ export default function Pricing() {
                                     name={t("tableCustomWhatsAppNumber")}
                                     solo="✓"
                                     team="✓"
+                                    growth="✓"
                                     scale="✓"
                                 />
 
-                                <Row name={t("tableSubdomainSupport")} solo="✓" team="✓" scale="✓" />
-                                <Row name={t("tableCustomDomainSupport")} solo="—" team="✓" scale="✓" />
-                                <Row name={t("tableFullWhiteLabel")} solo="—" team="—" scale="✓" />
+                                <Row name={t("tableSubdomainSupport")} solo="✓" team="✓" growth="✓" scale="✓" />
+                                <Row name={t("tableCustomDomainSupport")} solo="—" team="—" growth="✓" scale="✓" />
+                                <Row name={t("tableFullWhiteLabel")} solo="—" team="—" growth="—" scale="✓" />
 
                             </tbody>
 
@@ -458,12 +470,14 @@ function Row({
     name,
     solo,
     team,
+    growth,
     scale,
     tooltip,
 }: {
     name: string;
     solo: string;
     team: string;
+    growth: string;
     scale: string;
     tooltip?: string;
 }) {
@@ -483,6 +497,10 @@ function Row({
 
             <td className="p-4 text-center font-medium">
                 {team}
+            </td>
+
+            <td className="p-4 text-center font-medium">
+                {growth}
             </td>
 
             <td className="p-4 text-center font-medium">

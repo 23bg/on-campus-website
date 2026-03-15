@@ -61,20 +61,17 @@ export const billingService = {
     async getUsageSnapshot(instituteId: string, now = new Date()) {
         const subscription = await subscriptionService.getSubscription(instituteId);
         const planType = toStoredPlanType(subscription.planType, subscription.userLimit);
-        const plan = PLAN_CONFIG[planType];
         const { start, end } = getCurrentMonthWindow(now);
 
         const alertsUsed = await billingRepository.countOutboundAlertsInWindow(instituteId, start, end);
-        const extraAlerts = Math.max(0, alertsUsed - plan.whatsappMonthlyLimit);
-        const estimatedUsageCost = round2(extraAlerts * plan.extraConversationCost);
 
         return {
             planType,
             alertsUsed,
-            alertsIncluded: plan.whatsappMonthlyLimit,
-            extraAlerts,
-            extraAlertRate: plan.extraConversationCost,
-            estimatedUsageCost,
+            alertsIncluded: 0,
+            extraAlerts: 0,
+            extraAlertRate: 0,
+            estimatedUsageCost: 0,
         };
     },
 
@@ -85,8 +82,8 @@ export const billingService = {
 
         const period = getClosedBillingPeriod(runAt);
         const alertsUsed = await billingRepository.countOutboundAlertsInWindow(instituteId, period.periodStart, period.periodEnd);
-        const extraAlerts = Math.max(0, alertsUsed - plan.whatsappMonthlyLimit);
-        const usageCharge = round2(extraAlerts * plan.extraConversationCost);
+        const extraAlerts = 0;
+        const usageCharge = 0;
 
         const interval = subscription.billingInterval ?? "MONTHLY";
         const chargedInThisPeriod = Boolean(
@@ -114,10 +111,10 @@ export const billingService = {
             planCode: planType,
             billingInterval: interval,
             planCharge,
-            includedAlerts: plan.whatsappMonthlyLimit,
+            includedAlerts: 0,
             alertsUsed,
             extraAlerts,
-            extraAlertRate: plan.extraConversationCost,
+            extraAlertRate: 0,
             usageCharge,
             totalAmount,
             dueDate: getDueDate(runAt),

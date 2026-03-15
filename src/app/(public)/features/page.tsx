@@ -56,6 +56,10 @@ export default async function FeaturesPage() {
             title: "section6Title",
             items: ["section6Item1", "section6Item2", "section6Item3"],
         },
+        {
+            title: "section7Title",
+            items: ["section7Item1", "section7Item2", "section7Item3"],
+        },
     ];
 
     return (
@@ -86,6 +90,12 @@ export default async function FeaturesPage() {
                 <Link href={ROUTES.FEATURE_DETAILS.STUDENT_RECORDS} className="text-sm text-muted-foreground hover:text-foreground">{t("linkStudentRecords")}</Link>
                 <Link href={ROUTES.FEATURE_DETAILS.PUBLIC_INSTITUTE_PAGE} className="text-sm text-muted-foreground hover:text-foreground">{t("linkPublicInstitutePage")}</Link>
                 <Link href={ROUTES.FEATURE_DETAILS.SUBSCRIPTION_BILLING} className="text-sm text-muted-foreground hover:text-foreground">{t("linkSubscriptionBilling")}</Link>
+            </div>
+
+            <div className="mt-6 rounded-xl border p-5">
+                <h2 className="text-lg font-semibold">{t("integrationsFlowTitle")}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{t("integrationsFlowPath")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("integrationsFlowDescription")}</p>
             </div>
 
             <div className="mt-6 rounded-xl border p-5">

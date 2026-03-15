@@ -252,6 +252,9 @@ export default function SettingsPage() {
                     <Button asChild variant="outline" className="justify-start">
                         <Link href="/settings/notifications">Settings → Notifications</Link>
                     </Button>
+                    <Button asChild variant="outline" className="justify-start">
+                        <Link href="/settings/integrations">Settings → Integrations</Link>
+                    </Button>
                 </CardContent>
             </Card>
 

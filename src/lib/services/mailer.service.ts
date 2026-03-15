@@ -106,4 +106,36 @@ export const mailerService = {
             throw new AppError("Unable to send OTP email. Please try again.", 500, "OTP_EMAIL_SEND_FAILED");
         }
     },
+
+    async sendNotificationEmail(input: {
+        to: string;
+        subject: string;
+        text: string;
+        html?: string;
+    }): Promise<void> {
+        let transport = getTransporter();
+
+        const message = {
+            from: `"${env.SMTP_HOST_NAME}" <${env.SMTP_FROM}>`,
+            to: input.to,
+            subject: input.subject,
+            text: input.text,
+            html: input.html,
+        };
+
+        try {
+            await transport.sendMail(message);
+        } catch (error) {
+            if (shouldRetryWithFlippedSecure(error)) {
+                const fallbackSecure = !resolveSecureDefault();
+                transport = createTransporter(fallbackSecure);
+                await transport.sendMail(message);
+                transporter = transport;
+                return;
+            }
+
+            logger.error({ error, to: input.to, subject: input.subject }, "Failed to send notification email");
+            throw new AppError("Unable to send notification email.", 500, "NOTIFICATION_EMAIL_SEND_FAILED");
+        }
+    },
 };

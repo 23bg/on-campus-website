@@ -2,7 +2,7 @@ import { z } from "zod";
 import { userRepository } from "@/features/auth/repositories/user.repo";
 import { AppError } from "@/lib/utils/error";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
-import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 const roleSchema = z.enum(["MANAGER", "VIEWER"]);
 const memberEmailSchema = z.string().trim().max(120).email();
@@ -56,15 +56,12 @@ export const teamService = {
                 name: name ?? existing.name,
             });
 
-            await sendEventBasedWhatsAppAlert({
+            await eventDispatcherService.dispatch({
                 event: "TEAM_MEMBER_ADDED",
                 instituteId,
                 message: `Team member added: ${updatedMember?.name || email} (${role}).`,
-                templateEvent: "lead_assigned",
-                templateVariables: {
-                    student_name: updatedMember?.name || email,
-                    course_name: role,
-                },
+                link: "/team",
+                metadata: { memberId: updatedMember?.id, role },
             });
 
             return updatedMember;
@@ -78,15 +75,12 @@ export const teamService = {
             emailVerified: false,
         });
 
-        await sendEventBasedWhatsAppAlert({
+        await eventDispatcherService.dispatch({
             event: "TEAM_MEMBER_ADDED",
             instituteId,
             message: `Team member added: ${createdMember.name || email} (${role}).`,
-            templateEvent: "lead_assigned",
-            templateVariables: {
-                student_name: createdMember.name || email,
-                course_name: role,
-            },
+            link: "/team",
+            metadata: { memberId: createdMember.id, role },
         });
 
         return createdMember;
@@ -114,6 +108,14 @@ export const teamService = {
             throw new AppError("Team member not found", 404, "TEAM_MEMBER_NOT_FOUND");
         }
 
+        await eventDispatcherService.dispatch({
+            event: "TEAM_MEMBER_ROLE_UPDATED",
+            instituteId,
+            message: `Team member role updated to ${nextRole}.`,
+            link: "/team",
+            metadata: { memberId, role: nextRole },
+        });
+
         return { updated: true };
     },
 
@@ -135,6 +137,14 @@ export const teamService = {
         if (result.count === 0) {
             throw new AppError("Team member not found", 404, "TEAM_MEMBER_NOT_FOUND");
         }
+
+        await eventDispatcherService.dispatch({
+            event: "TEAM_MEMBER_REMOVED",
+            instituteId,
+            message: "A team member has been removed.",
+            link: "/team",
+            metadata: { memberId },
+        });
 
         return { deleted: true };
     },
