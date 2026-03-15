@@ -39,8 +39,8 @@ export default function PricingPage() {
         offers: {
             "@type": "Offer",
             priceCurrency: "INR",
-            price: "999",
-            description: "Starter monthly plan",
+            price: "399",
+            description: "Solo monthly plan",
         },
     };
 

@@ -55,6 +55,14 @@
         },
         STUDENT_PORTAL: {
             ME: '/student-portal/me',
+            NOTIFICATIONS: '/student-portal/notifications',
+        },
+        NOTIFICATIONS: {
+            ADMIN: '/notifications/admin',
+            REMINDERS: '/notifications/reminders',
+        },
+        INTEGRATIONS: {
+            ROOT: '/integrations',
         },
         ANNOUNCEMENTS: {
             ROOT: '/announcements',

@@ -6,7 +6,7 @@ import { courseRepository } from "@/features/course/repositories/course.repo";
 import { AppError } from "@/lib/utils/error";
 import { prisma } from "@/lib/db/prisma";
 import { normalizePhone } from "@/lib/utils/phone";
-import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 const phoneSchema = z
     .string()
@@ -287,16 +287,15 @@ const sendOnboardingWhatsAppMessage = async (institute: {
         return;
     }
 
-    const result = await sendEventBasedWhatsAppAlert({
+    await eventDispatcherService.dispatch({
         event: "INSTITUTE_ONBOARDING_COMPLETED",
         instituteId: institute.id,
-        phoneNumber: normalizedDestination,
+        whatsappPhoneNumber: normalizedDestination,
         message: `Onboarding completed for ${institute.name || "your institute"}. Your workspace is ready to use.`,
+        link: "/dashboard",
     });
 
-    if (result?.sent) {
-        await instituteRepository.updateById(institute.id, { whatsappOnboardingSent: true });
-    }
+    await instituteRepository.updateById(institute.id, { whatsappOnboardingSent: true });
 };
 
 export const instituteService = {
@@ -456,10 +455,11 @@ export const instituteService = {
             isOnboarded,
         });
 
-        await sendEventBasedWhatsAppAlert({
+        await eventDispatcherService.dispatch({
             event: "INSTITUTE_PROFILE_UPDATED",
             instituteId,
             message: `Institute profile updated successfully for ${updated.name || "your institute"}.`,
+            link: "/institute",
         });
 
         return withSocialLinks(updated);

@@ -64,10 +64,10 @@ export default function DashboardLayout({
                                     href="/help"
                                     className="hover:text-foreground transition"
                                 >
-                                    Help & Support
+                                    Help
                                 </Link>
 
-                                <span>|</span>
+
 
                                 <Link
                                     href="/contact"
@@ -76,7 +76,7 @@ export default function DashboardLayout({
                                     Contact
                                 </Link>
 
-                                <span>|</span>
+
 
                                 <Link
                                     href="/about"

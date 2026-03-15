@@ -3,7 +3,8 @@ import { studentRepository } from "@/features/student/repositories/student.repo"
 import { courseRepository } from "@/features/course/repositories/course.repo";
 import { feeRepository } from "@/features/fee/repositories/fee.repo";
 import { AppError } from "@/lib/utils/error";
-import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
+import { prisma } from "@/lib/db/prisma";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 const studentInputSchema = z.object({
     instituteId: z.string().min(1),
@@ -52,10 +53,14 @@ export const studentService = {
             });
         }
 
-        await sendEventBasedWhatsAppAlert({
+        await eventDispatcherService.dispatch({
             event: "STUDENT_CREATED",
             instituteId: input.instituteId,
+            studentId: student.id,
             message: `Student created: ${student.name} (${student.phone}).`,
+            link: `/students/${student.id}`,
+            whatsappPhoneNumber: student.phone,
+            metadata: { studentId: student.id },
             templateEvent: "admission_confirmed",
             templateVariables: {
                 student_name: student.name,
@@ -81,11 +86,62 @@ export const studentService = {
             z.string().trim().max(120).email().parse(payload.email);
         }
 
-        return studentRepository.update({
+        const before = await prisma.student.findFirst({
+            where: { id: studentId, instituteId },
+            select: { id: true, name: true, batchId: true, courseId: true },
+        });
+
+        if (!before) {
+            throw new AppError("Student not found", 404, "STUDENT_NOT_FOUND");
+        }
+
+        await studentRepository.update({
             instituteId,
             studentId,
             ...payload,
         });
+
+        const updated = await prisma.student.findFirst({
+            where: { id: studentId, instituteId },
+            select: { id: true, name: true, batchId: true, courseId: true },
+        });
+
+        if (!updated) {
+            throw new AppError("Student not found", 404, "STUDENT_NOT_FOUND");
+        }
+
+        await eventDispatcherService.dispatch({
+            event: "STUDENT_UPDATED",
+            instituteId,
+            studentId,
+            message: `Student profile updated for ${updated.name}.`,
+            link: `/students/${studentId}`,
+            metadata: { studentId },
+        });
+
+        if (before.batchId !== updated.batchId) {
+            await eventDispatcherService.dispatch({
+                event: "STUDENT_BATCH_CHANGED",
+                instituteId,
+                studentId,
+                message: `Batch changed for ${updated.name}.`,
+                link: `/students/${studentId}`,
+                metadata: { studentId, previousBatchId: before.batchId, batchId: updated.batchId },
+            });
+        }
+
+        if (before.courseId !== updated.courseId) {
+            await eventDispatcherService.dispatch({
+                event: "STUDENT_COURSE_CHANGED",
+                instituteId,
+                studentId,
+                message: `Course changed for ${updated.name}.`,
+                link: `/students/${studentId}`,
+                metadata: { studentId, previousCourseId: before.courseId, courseId: updated.courseId },
+            });
+        }
+
+        return { count: 1 };
     },
 
     async listStudents(instituteId: string) {

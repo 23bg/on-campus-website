@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/utils/error";
 
-const { mockLeadRepo, mockStudentRepo, mockInstituteRepo, mockLeadActivityService } = vi.hoisted(() => ({
+const { mockLeadRepo, mockStudentRepo, mockInstituteRepo, mockLeadActivityService, mockEventDispatcherService } = vi.hoisted(() => ({
     mockLeadRepo: {
         create: vi.fn(),
         findByPhoneInInstitute: vi.fn(),
@@ -21,6 +21,9 @@ const { mockLeadRepo, mockStudentRepo, mockInstituteRepo, mockLeadActivityServic
         log: vi.fn(),
         listByLead: vi.fn(),
     },
+    mockEventDispatcherService: {
+        dispatch: vi.fn(),
+    },
 }));
 
 vi.mock("@/features/lead/repositories/lead.repo", () => ({
@@ -37,6 +40,10 @@ vi.mock("@/features/institute/repositories/institute.repo", () => ({
 
 vi.mock("@/features/lead/services/lead-activity.service", () => ({
     leadActivityService: mockLeadActivityService,
+}));
+
+vi.mock("@/lib/notifications/event-dispatcher.service", () => ({
+    eventDispatcherService: mockEventDispatcherService,
 }));
 
 import { leadService } from "@/features/lead/services/lead.service";
@@ -56,6 +63,7 @@ describe("leadService", () => {
             email: "r@test.com",
         });
         expect(mockLeadRepo.create).toHaveBeenCalledWith(expect.objectContaining({ status: "NEW" }));
+        expect(mockEventDispatcherService.dispatch).toHaveBeenCalled();
     });
 
     it("throws duplicate lead error for same phone in institute", async () => {
@@ -67,7 +75,7 @@ describe("leadService", () => {
                 name: "Rahul",
                 phone: "9876543210",
             })
-        ).rejects.toMatchObject<AppError>({
+        ).rejects.toMatchObject({
             statusCode: 409,
             code: "DUPLICATE_LEAD",
         });
@@ -160,7 +168,7 @@ describe("leadService", () => {
     it("throws when timeline requested for missing lead", async () => {
         mockLeadRepo.findByIdInInstitute.mockResolvedValue(null);
 
-        await expect(leadService.getLeadTimeline("inst1", "missing")).rejects.toMatchObject<AppError>({
+        await expect(leadService.getLeadTimeline("inst1", "missing")).rejects.toMatchObject({
             statusCode: 404,
             code: "LEAD_NOT_FOUND",
         });

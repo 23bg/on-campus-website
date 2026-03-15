@@ -7,16 +7,17 @@ export const billingArticle: HelpArticle = {
     title: "Subscription and Billing",
     description: "Understand OnCampus plans, free trial, billing cycle, and how to manage your subscription.",
     overview: "Review plans, trial details, billing options, and upgrade rules for your institute account.",
-    lastUpdated: "2026-06-01",
+    lastUpdated: "2026-03-16",
     steps: [
         {
             id: "step1",
             title: "Choose plan",
-            description: "Select Starter, Growth, or Scale based on users and WhatsApp alert quota.",
+            description: "Select Solo, Team, Growth, or Scale based on user seats and collaboration needs.",
             bullets: [
-                "Starter: 1 user, 1,000 alerts/month",
-                "Growth: up to 10 users, 3,000 alerts/month",
-                "Scale: unlimited users, 10,000 alerts/month",
+                "Solo: 1 user, INR 399/month",
+                "Team: up to 5 users, INR 899/month",
+                "Growth: up to 20 users, INR 1,799/month",
+                "Scale: unlimited users, INR 3,999/month",
             ],
         },
         {
@@ -35,6 +36,7 @@ export const billingArticle: HelpArticle = {
             bullets: [
                 "Annual billing gives 2 months saving",
                 "Plan changes apply immediately",
+                "WhatsApp Business integration is optional and Meta conversation charges are billed directly to institutes",
             ],
         },
     ],

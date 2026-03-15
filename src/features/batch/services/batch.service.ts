@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { batchRepository } from "@/features/batch/repositories/batch.repo";
 import { AppError } from "@/lib/utils/error";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 const batchInputSchema = z.object({
     instituteId: z.string().min(1),
@@ -14,10 +15,20 @@ const batchInputSchema = z.object({
 export const batchService = {
     async createBatch(payload: unknown) {
         const input = batchInputSchema.parse(payload);
-        return batchRepository.create({
+        const batch = await batchRepository.create({
             ...input,
             startDate: input.startDate ? new Date(input.startDate) : undefined,
         });
+
+        await eventDispatcherService.dispatch({
+            event: "BATCH_CREATED",
+            instituteId: input.instituteId,
+            message: `Batch created: ${batch.name}.`,
+            link: `/batches/${batch.id}`,
+            metadata: { batchId: batch.id, courseId: batch.courseId },
+        });
+
+        return batch;
     },
 
     async updateBatch(
@@ -31,12 +42,22 @@ export const batchService = {
         if (payload.schedule !== undefined && payload.schedule !== null) {
             z.string().trim().max(120).parse(payload.schedule);
         }
-        return batchRepository.update(instituteId, batchId, {
+        const updated = await batchRepository.update(instituteId, batchId, {
             name: payload.name,
             startDate: payload.startDate ? new Date(payload.startDate) : payload.startDate === null ? null : undefined,
             schedule: payload.schedule,
             teacherId: payload.teacherId,
         });
+
+        await eventDispatcherService.dispatch({
+            event: "BATCH_UPDATED",
+            instituteId,
+            message: "Batch details updated.",
+            link: `/batches/${batchId}`,
+            metadata: { batchId },
+        });
+
+        return updated;
     },
 
     async deleteBatch(instituteId: string, batchId: string) {

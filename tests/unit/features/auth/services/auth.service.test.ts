@@ -127,7 +127,7 @@ describe("authService.verifyOtp", () => {
     it("throws unauthorized for invalid otp", async () => {
         mockOtpRepository.verifyOtp.mockResolvedValue(false);
 
-        await expect(authService.verifyOtp({ email: "owner@acme.com", otp: "99999" })).rejects.toMatchObject<AppError>({
+        await expect(authService.verifyOtp({ email: "owner@acme.com", otp: "99999" })).rejects.toMatchObject({
             statusCode: 401,
             code: "INVALID_OTP",
         });

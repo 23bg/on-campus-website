@@ -346,7 +346,7 @@ export default function BillingPage() {
                         </Button>
                     </div>
 
-                    <div className="grid gap-2 pt-2 sm:grid-cols-3">
+                    <div className="grid gap-2 pt-2 sm:grid-cols-4">
                         <Button
                             variant={selectedPlan === "STARTER" ? "default" : "outline"}
                             disabled={creating}
@@ -356,6 +356,16 @@ export default function BillingPage() {
                             }}
                         >
                             {creating && selectedPlan === "STARTER" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Starter (₹${PLAN_CONFIG.STARTER.priceMonthly})`}
+                        </Button>
+                        <Button
+                            variant={selectedPlan === "TEAM" ? "default" : "outline"}
+                            disabled={creating}
+                            onClick={() => {
+                                setSelectedPlan("TEAM");
+                                void createSubscription("TEAM");
+                            }}
+                        >
+                            {creating && selectedPlan === "TEAM" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Team (₹${PLAN_CONFIG.TEAM.priceMonthly})`}
                         </Button>
                         <Button
                             variant={selectedPlan === "GROWTH" ? "default" : "outline"}
@@ -384,17 +394,17 @@ export default function BillingPage() {
             <Card className="mt-6">
                 <CardHeader>
                     <CardTitle>Usage Summary</CardTitle>
-                    <CardDescription>Current month WhatsApp alerts usage and estimated overage.</CardDescription>
+                    <CardDescription>Current month WhatsApp activity across system alerts and connected sender mode.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                     {isUsageWarning ? (
                         <div className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-                            Usage warning: {usage?.alertsUsed ?? 0} of {usage?.alertsIncluded ?? 0} alerts used (80% threshold: {usageWarningThreshold ?? 0}).
+                            High WhatsApp activity detected: {usage?.alertsUsed ?? 0} alerts sent this month (volume benchmark: {usageWarningThreshold ?? 0}).
                         </div>
                     ) : null}
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Alerts used</span>
-                        <span className="font-medium">{usage?.alertsUsed ?? 0} / {usage?.alertsIncluded ?? 0}</span>
+                        <span className="text-muted-foreground">Alerts sent</span>
+                        <span className="font-medium">{usage?.alertsUsed ?? 0}</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Sender mode</span>
@@ -405,16 +415,12 @@ export default function BillingPage() {
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Extra alerts</span>
-                        <span className="font-medium">{usage?.extraAlerts ?? 0}</span>
+                        <span className="text-muted-foreground">WhatsApp billing</span>
+                        <span className="font-medium">Meta charges apply directly to connected institute numbers</span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Extra alert rate</span>
-                        <span className="font-medium">₹{usage?.extraAlertRate?.toFixed(2) ?? "0.00"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Estimated usage cost</span>
-                        <span className="font-semibold">₹{usage?.estimatedUsageCost?.toFixed(2) ?? "0.00"}</span>
+                        <span className="text-muted-foreground">In plan</span>
+                        <span className="font-medium">OnCampus system alerts for institute staff</span>
                     </div>
                 </CardContent>
             </Card>
@@ -422,7 +428,7 @@ export default function BillingPage() {
             <Card className="mt-6">
                 <CardHeader>
                     <CardTitle>Invoice History</CardTitle>
-                    <CardDescription>One monthly invoice including plan and usage charges.</CardDescription>
+                    <CardDescription>One monthly invoice focused on your subscription plan.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {invoices.length === 0 ? (

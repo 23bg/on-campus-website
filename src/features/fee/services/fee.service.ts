@@ -2,7 +2,7 @@ import { z } from "zod";
 import { feeRepository } from "@/features/fee/repositories/fee.repo";
 import { AppError } from "@/lib/utils/error";
 import { billingService } from "@/features/billing/services/billing.service";
-import { sendEventBasedWhatsAppAlert } from "@/lib/services/whatsapp-alert-events";
+import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
 const feePlanSchema = z.object({
     studentId: z.string().min(1),
@@ -24,12 +24,23 @@ export const feeService = {
     // Fee Plan CRUD
     async createPlan(payload: unknown) {
         const input = feePlanSchema.parse(payload);
-        return feeRepository.createPlan({
+        const created = await feeRepository.createPlan({
             studentId: input.studentId,
             instituteId: input.instituteId,
             totalAmount: input.totalAmount,
             dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
         });
+
+        await eventDispatcherService.dispatch({
+            event: "FEE_PLAN_CREATED",
+            instituteId: input.instituteId,
+            studentId: input.studentId,
+            message: `Fee plan created with total amount INR ${input.totalAmount}.`,
+            link: `/fees/${created.id}`,
+            metadata: { feePlanId: created.id, totalAmount: input.totalAmount },
+        });
+
+        return created;
     },
 
     async updatePlan(planId: string, instituteId: string, payload: { totalAmount?: number; dueDate?: string | null }) {
@@ -94,15 +105,35 @@ export const feeService = {
             paidOn,
         });
 
-        await sendEventBasedWhatsAppAlert({
+        await eventDispatcherService.dispatch({
             event: "PAYMENT_RECEIVED",
             instituteId: plan.instituteId,
+            studentId: plan.studentId,
             message: `Payment received: ₹${input.amount}`,
+            link: `/payments`,
             templateEvent: "payment_received",
             templateVariables: {
                 student_name: "Student",
                 course_name: "Course",
             },
+        });
+
+        await eventDispatcherService.dispatch({
+            event: "NEW_PAYMENT_RECORDED",
+            instituteId: plan.instituteId,
+            studentId: plan.studentId,
+            message: `New payment recorded: INR ${input.amount}.`,
+            link: "/student",
+            metadata: { feePlanId: plan.id, amount: input.amount },
+        });
+
+        await eventDispatcherService.dispatch({
+            event: "INSTALLMENT_ADDED",
+            instituteId: plan.instituteId,
+            studentId: plan.studentId,
+            message: `Installment of INR ${input.amount} recorded.`,
+            link: `/fees/${plan.id}`,
+            metadata: { feePlanId: plan.id, installmentId: installment.id },
         });
 
         return installment;
@@ -121,12 +152,23 @@ export const feeService = {
             throw new AppError("Fee plan not found", 404, "FEE_PLAN_NOT_FOUND");
         }
 
-        return feeRepository.createInstallment({
+        const installment = await feeRepository.createInstallment({
             feePlanId: input.feePlanId,
             instituteId: plan.instituteId,
             amount: input.amount,
             status: input.status,
         });
+
+        await eventDispatcherService.dispatch({
+            event: "INSTALLMENT_ADDED",
+            instituteId: plan.instituteId,
+            studentId: plan.studentId,
+            message: `Installment added with amount INR ${input.amount}.`,
+            link: `/fees/${plan.id}`,
+            metadata: { feePlanId: plan.id, installmentId: installment.id },
+        });
+
+        return installment;
     },
 
     async markInstallmentPaid(instituteId: string, installmentId: string) {

@@ -53,6 +53,18 @@ enum WhatsAppAccountStatus {
     FAILED
 }
 
+enum IntegrationProvider {
+    WHATSAPP
+    EMAIL
+    RAZORPAY
+}
+
+enum IntegrationStatus {
+    CONNECTED
+    DISCONNECTED
+    DEGRADED
+}
+
 model User {
     id                  String    @id @default(auto()) @map("_id") @db.ObjectId
     email               String    @unique
@@ -447,4 +459,52 @@ model BillingInvoice {
     @@index([instituteId, status])
     @@index([dueDate])
     @@map("billing_invoices")
+}
+
+model AdminNotification {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String   @db.ObjectId
+    eventType   String
+    title       String
+    message     String
+    link        String?
+    read        Boolean  @default(false)
+    metadata    Json?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@index([instituteId, createdAt])
+    @@index([instituteId, read])
+    @@map("admin_notifications")
+}
+
+model StudentNotification {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    studentId String   @db.ObjectId
+    eventType String
+    title     String
+    message   String
+    link      String?
+    read      Boolean  @default(false)
+    metadata  Json?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([studentId, createdAt])
+    @@index([studentId, read])
+    @@map("student_notifications")
+}
+
+model Integration {
+    id          String              @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String              @db.ObjectId
+    provider    IntegrationProvider
+    status      IntegrationStatus
+    config      Json?
+    createdAt   DateTime            @default(now())
+    updatedAt   DateTime            @updatedAt
+
+    @@unique([instituteId, provider])
+    @@index([instituteId])
+    @@map("integrations")
 }

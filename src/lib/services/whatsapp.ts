@@ -7,6 +7,7 @@ import { subscriptionService } from "@/features/subscription/services/subscripti
 import { billingService } from "@/features/billing/services/billing.service";
 import { billingRepository } from "@/features/billing/repositories/billing.repo";
 import { whatsappIntegrationService } from "@/features/whatsapp/services/whatsapp-integration.service";
+import type { WhatsAppSenderType } from "@/lib/notifications/event-catalog";
 
 const resolveApiVersion = () => env.WHATSAPP_API_VERSION || "v19.0";
 
@@ -152,7 +153,8 @@ const getDayWindow = (now = new Date()) => ({
 export const sendSystemAlert = async (
     instituteId: string,
     phoneNumber: string,
-    message: string
+    message: string,
+    senderType: WhatsAppSenderType = "ONCAMPUS_SYSTEM_NUMBER"
 ): Promise<SendSystemAlertResult> => {
     try {
         const policy = await billingService.getOperationalPolicy(instituteId);
@@ -195,7 +197,14 @@ export const sendSystemAlert = async (
         const nextDayCount = dayCount + 1;
         const billable = nextMonthCount > plan.whatsappMonthlyLimit;
 
-        const sender = await whatsappIntegrationService.getSenderRouting(instituteId);
+        const sender =
+            senderType === "INSTITUTE_WHATSAPP_NUMBER"
+                ? await whatsappIntegrationService.getSenderRouting(instituteId)
+                : {
+                    mode: "ONCAMPUS_SHARED" as const,
+                    senderPhoneNumberId: env.WHATSAPP_PHONE_NUMBER_ID ?? null,
+                    fallbackPhoneNumberId: env.WHATSAPP_PHONE_NUMBER_ID ?? null,
+                };
 
         // Send the message as approved template for now.
         // Previous dynamic text mode kept below for quick restore after template updates.
