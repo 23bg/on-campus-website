@@ -1,4 +1,4 @@
-import { PLAN_CONFIG, PlanType } from "@/config/plans";
+import { getPlanPricing, isGrandfatheredSubscription, PLAN_CONFIG, PlanType } from "@/config/plans";
 import { billingRepository } from "@/features/billing/repositories/billing.repo";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
 import { assertRazorpayReady, razorpay } from "@/lib/billing/razorpay";
@@ -22,9 +22,21 @@ const toStoredPlanType = (storedPlanType: string | null | undefined, userLimit?:
     }
 
     if (storedPlanType === "TEAM") {
-        return (userLimit ?? 0) >= (PLAN_CONFIG.SCALE.userLimit ?? Number.MAX_SAFE_INTEGER)
-            ? "SCALE"
-            : "GROWTH";
+        const normalizedLimit = userLimit ?? 0;
+
+        if (normalizedLimit === 0) {
+            return "SCALE";
+        }
+
+        if (normalizedLimit <= (PLAN_CONFIG.TEAM.userLimit ?? 5)) {
+            return "TEAM";
+        }
+
+        if (normalizedLimit <= (PLAN_CONFIG.GROWTH.userLimit ?? 20)) {
+            return "GROWTH";
+        }
+
+        return "SCALE";
     }
 
     return "STARTER";
@@ -78,7 +90,9 @@ export const billingService = {
     async createOrUpdateClosedMonthInvoice(instituteId: string, runAt = new Date()) {
         const subscription = await subscriptionService.getSubscription(instituteId);
         const planType = toStoredPlanType(subscription.planType, subscription.userLimit);
-        const plan = PLAN_CONFIG[planType];
+        const pricing = getPlanPricing(planType, {
+            grandfathered: isGrandfatheredSubscription(subscription.createdAt),
+        });
 
         const period = getClosedBillingPeriod(runAt);
         const alertsUsed = await billingRepository.countOutboundAlertsInWindow(instituteId, period.periodStart, period.periodEnd);
@@ -96,9 +110,9 @@ export const billingService = {
             ? 0
             : interval === "YEARLY"
                 ? chargedInThisPeriod
-                    ? plan.priceYearly
+                    ? pricing.yearly
                     : 0
-                : plan.priceMonthly;
+                : pricing.monthly;
 
         const totalAmount = round2(planCharge + usageCharge);
 

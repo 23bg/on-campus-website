@@ -1,4 +1,10 @@
 export type PlanType = "STARTER" | "TEAM" | "GROWTH" | "SCALE";
+export type PricingVersion = "LEGACY" | "CURRENT";
+
+export type PlanPricing = {
+    monthly: number;
+    yearly: number;
+};
 
 type PlanConfig = {
     key: PlanType;
@@ -17,9 +23,9 @@ type PlanConfig = {
 export const PLAN_CONFIG: Record<PlanType, PlanConfig> = {
     STARTER: {
         key: "STARTER",
-        name: "Solo",
-        priceMonthly: 399,
-        priceYearly: 3990,
+        name: "Starter",
+        priceMonthly: 499,
+        priceYearly: 4990,
         userLimit: 1,
         whatsappMonthlyLimit: 30,
         whatsappDailyLimit: 5,
@@ -29,8 +35,8 @@ export const PLAN_CONFIG: Record<PlanType, PlanConfig> = {
     TEAM: {
         key: "TEAM",
         name: "Team",
-        priceMonthly: 899,
-        priceYearly: 8990,
+        priceMonthly: 999,
+        priceYearly: 9990,
         userLimit: 5,
         whatsappMonthlyLimit: 150,
         whatsappDailyLimit: 20,
@@ -40,8 +46,8 @@ export const PLAN_CONFIG: Record<PlanType, PlanConfig> = {
     GROWTH: {
         key: "GROWTH",
         name: "Growth",
-        priceMonthly: 1799,
-        priceYearly: 17990,
+        priceMonthly: 1999,
+        priceYearly: 19990,
         userLimit: 20,
         whatsappMonthlyLimit: 600,
         whatsappDailyLimit: 80,
@@ -62,6 +68,44 @@ export const PLAN_CONFIG: Record<PlanType, PlanConfig> = {
 };
 
 export const DEFAULT_PLAN_TYPE: PlanType = "STARTER";
+
+// Existing institutes created before this timestamp are grandfathered on legacy prices.
+export const PRICING_V2_EFFECTIVE_AT = new Date("2026-03-16T00:00:00+05:30");
+
+export const PLAN_PRICING_LEGACY: Record<PlanType, PlanPricing> = {
+    STARTER: { monthly: 399, yearly: 3990 },
+    TEAM: { monthly: 899, yearly: 8990 },
+    GROWTH: { monthly: 1799, yearly: 17990 },
+    SCALE: { monthly: 3999, yearly: 39990 },
+};
+
+export const PLAN_PRICING_CURRENT: Record<PlanType, PlanPricing> = {
+    STARTER: { monthly: 499, yearly: 4990 },
+    TEAM: { monthly: 999, yearly: 9990 },
+    GROWTH: { monthly: 1999, yearly: 19990 },
+    SCALE: { monthly: 3999, yearly: 39990 },
+};
+
+export const AUTOMATION_PACK_PRICING: PlanPricing = {
+    monthly: 499,
+    yearly: 4990,
+};
+
+export const isGrandfatheredSubscription = (createdAt?: Date | null): boolean => {
+    if (!createdAt) {
+        return false;
+    }
+
+    return createdAt.getTime() < PRICING_V2_EFFECTIVE_AT.getTime();
+};
+
+export const getPlanPricing = (
+    planType: PlanType,
+    options?: { grandfathered?: boolean; version?: PricingVersion }
+): PlanPricing => {
+    const version = options?.version ?? (options?.grandfathered ? "LEGACY" : "CURRENT");
+    return version === "LEGACY" ? PLAN_PRICING_LEGACY[planType] : PLAN_PRICING_CURRENT[planType];
+};
 
 export const isPlanType = (value: string): value is PlanType =>
     value === "STARTER" || value === "TEAM" || value === "GROWTH" || value === "SCALE";

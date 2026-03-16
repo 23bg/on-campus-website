@@ -2,7 +2,7 @@ import { AppError } from "@/lib/utils/error";
 import { subscriptionRepository } from "@/features/subscription/repositories/subscription.repo";
 import { assertRazorpayReady, razorpay, verifyRazorpayCheckoutSignature } from "@/lib/billing/razorpay";
 import { env } from "@/lib/config/env";
-import { DEFAULT_PLAN_TYPE, isPlanType, PLAN_CONFIG, PlanType } from "@/config/plans";
+import { DEFAULT_PLAN_TYPE, getPlanPricing, isGrandfatheredSubscription, isPlanType, PLAN_CONFIG, PlanType, PricingVersion } from "@/config/plans";
 import { userRepository } from "@/features/auth/repositories/user.repo";
 import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
@@ -16,6 +16,7 @@ type SubscriptionRecord = {
     razorpaySubId?: string | null;
     currentPeriodEnd?: Date | null;
     updatedAt?: Date;
+    createdAt?: Date;
     billingInterval?: BillingInterval | null;
     lastChargedAt?: Date | null;
     autopayEnabled?: boolean;
@@ -64,8 +65,12 @@ export const subscriptionService = {
         return DEFAULT_PLAN_TYPE;
     },
 
-    getRazorpayPlanId(planType: PlanType, interval: BillingInterval = "MONTHLY"): string {
-        const lookup: Record<PlanType, Record<BillingInterval, string | undefined>> = {
+    getRazorpayPlanId(
+        planType: PlanType,
+        interval: BillingInterval = "MONTHLY",
+        options?: { grandfathered?: boolean }
+    ): string {
+        const currentLookup: Record<PlanType, Record<BillingInterval, string | undefined>> = {
             STARTER: {
                 MONTHLY: env.RAZORPAY_PLAN_ID_STARTER_MONTHLY,
                 YEARLY: env.RAZORPAY_PLAN_ID_STARTER_YEARLY,
@@ -84,7 +89,27 @@ export const subscriptionService = {
             },
         };
 
-        const planId = lookup[planType]?.[interval];
+        const legacyLookup: Record<PlanType, Record<BillingInterval, string | undefined>> = {
+            STARTER: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_SOLO ?? env.RAZORPAY_PLAN_ID_STARTER_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_STARTER_YEARLY,
+            },
+            TEAM: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_TEAM ?? env.RAZORPAY_PLAN_ID_TEAM_MONTHLY ?? env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_TEAM_YEARLY ?? env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
+            },
+            GROWTH: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
+            },
+            SCALE: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_SCALE_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_SCALE_YEARLY,
+            },
+        };
+
+        const lookup = options?.grandfathered ? legacyLookup : currentLookup;
+        const planId = lookup[planType]?.[interval] ?? currentLookup[planType]?.[interval];
         if (!planId) {
             throw new AppError(`Missing Razorpay plan id for ${planType}/${interval}`, 500, "RAZORPAY_PLAN_ID_MISSING");
         }
@@ -135,6 +160,9 @@ export const subscriptionService = {
         const subscription = await this.getSubscription(instituteId);
         const planType = normalizeStoredPlanType(subscription.planType, subscription.userLimit);
         const plan = PLAN_CONFIG[planType];
+        const isGrandfathered = isGrandfatheredSubscription(subscription.createdAt);
+        const price = getPlanPricing(planType, { grandfathered: isGrandfathered });
+        const pricingVersion: PricingVersion = isGrandfathered ? "LEGACY" : "CURRENT";
         const usersUsed = await userRepository.countByInstitute(instituteId);
         const userLimit = subscription.userLimit ?? plan.userLimit;
         const hasAnySubscriptionActivity = Boolean(subscription.razorpaySubId || subscription.currentPeriodEnd || subscription.status === "ACTIVE");
@@ -147,8 +175,9 @@ export const subscriptionService = {
         return {
             planType,
             planName: plan.name,
-            planAmount: plan.priceMonthly,
-            planAmountYearly: plan.priceYearly,
+            planAmount: price.monthly,
+            planAmountYearly: price.yearly,
+            pricingVersion,
             currency: "INR",
             billingInterval: subscription.billingInterval ?? "MONTHLY",
             userLimit,
@@ -160,7 +189,7 @@ export const subscriptionService = {
             trialPaymentReminder,
             nextBillingDate: subscription.currentPeriodEnd ?? subscription.trialEndsAt,
             razorpaySubId: subscription.razorpaySubId,
-            lastPaymentAmount: hasAnySubscriptionActivity ? plan.priceMonthly : null,
+            lastPaymentAmount: hasAnySubscriptionActivity ? price.monthly : null,
             lastPaymentDate: hasAnySubscriptionActivity ? subscription.updatedAt : null,
         };
     },
@@ -173,9 +202,10 @@ export const subscriptionService = {
         assertRazorpayReady();
         const planType = this.resolvePlanType(requestedPlanType);
         const plan = PLAN_CONFIG[planType];
-        const planId = this.getRazorpayPlanId(planType, interval);
 
         const existing = await subscriptionRepository.findByInstituteId(instituteId);
+        const grandfathered = isGrandfatheredSubscription(existing?.createdAt);
+        const planId = this.getRazorpayPlanId(planType, interval, { grandfathered });
         const existingPlanType = existing
             ? normalizeStoredPlanType(existing.planType, existing.userLimit)
             : null;

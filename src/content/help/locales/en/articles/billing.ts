@@ -12,11 +12,11 @@ export const billingArticle: HelpArticle = {
         {
             id: "step1",
             title: "Choose plan",
-            description: "Select Solo, Team, Growth, or Scale based on user seats and collaboration needs.",
+            description: "Select Starter, Team, Growth, or Scale based on user seats and collaboration needs.",
             bullets: [
-                "Solo: 1 user, INR 399/month",
-                "Team: up to 5 users, INR 899/month",
-                "Growth: up to 20 users, INR 1,799/month",
+                "Starter: 1 user, INR 499/month",
+                "Team: up to 5 users, INR 999/month",
+                "Growth: up to 20 users, INR 1,999/month",
                 "Scale: unlimited users, INR 3,999/month",
             ],
         },
