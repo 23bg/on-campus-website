@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -131,7 +132,19 @@ export default function TeamPage() {
             setOpen(false);
             await load();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Failed to save member");
+            const apiErrorCode = error?.response?.data?.error?.code;
+            if (apiErrorCode === "PLAN_USER_LIMIT_REACHED") {
+                toast.error("User limit reached for your current plan. Upgrade billing to add more users.", {
+                    action: {
+                        label: "Upgrade",
+                        onClick: () => {
+                            window.location.href = "/dashboard/billing";
+                        },
+                    },
+                });
+            } else {
+                toast.error(error?.response?.data?.error?.message ?? "Failed to save member");
+            }
         } finally {
             setSaving(false);
         }
@@ -166,6 +179,7 @@ export default function TeamPage() {
                 <p><span className="font-medium">OWNER</span> — Full control over team, data, and billing.</p>
                 <p><span className="font-medium">EDITOR</span> — Manage leads, students, courses, batches, and fees.</p>
                 <p><span className="font-medium">VIEWER</span> — Read-only access.</p>
+                <p className="mt-2 text-muted-foreground">Need more seats? Upgrade from <Link href="/dashboard/billing" className="underline">Billing</Link>.</p>
             </div>
 
             {loading ? (

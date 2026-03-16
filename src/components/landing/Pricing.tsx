@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { PLAN_CONFIG } from "@/config/plans";
+import { AUTOMATION_PACK_PRICING, PLAN_CONFIG } from "@/config/plans";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -33,16 +33,12 @@ export default function Pricing() {
 
     const [yearlyBilling, setYearlyBilling] = useState(false);
 
-    const yearlyMonthsCharged = 10;
-
     const billingSuffix = yearlyBilling
         ? t("yearlyPriceSuffix")
         : t("monthlyPriceSuffix");
 
-    const getDisplayPrice = (monthlyPrice: number) => {
-        const amount = yearlyBilling
-            ? monthlyPrice * yearlyMonthsCharged
-            : monthlyPrice;
+    const getDisplayPrice = (monthlyPrice: number, yearlyPrice: number) => {
+        const amount = yearlyBilling ? yearlyPrice : monthlyPrice;
 
         return amount.toLocaleString("en-IN");
     };
@@ -50,11 +46,11 @@ export default function Pricing() {
     const plans = [
         {
             key: "STARTER",
-            price: PLAN_CONFIG.STARTER.priceMonthly,
+            priceMonthly: PLAN_CONFIG.STARTER.priceMonthly,
+            priceYearly: PLAN_CONFIG.STARTER.priceYearly,
             name: t("starterPlan"),
             description: t("starterSubtext"),
             users: t("starterUsers"),
-            // whatsapp: t("starterWhatsApp"),
             features: [
                 t("starterFeature1"),
                 t("starterFeature2"),
@@ -71,11 +67,11 @@ export default function Pricing() {
         },
         {
             key: "TEAM",
-            price: PLAN_CONFIG.TEAM.priceMonthly,
+            priceMonthly: PLAN_CONFIG.TEAM.priceMonthly,
+            priceYearly: PLAN_CONFIG.TEAM.priceYearly,
             name: t("teamPlan"),
             description: t("teamSubtext"),
             users: t("teamUsers"),
-            whatsapp: t("teamWhatsApp"),
             features: [
                 t("teamFeature1"),
                 t("teamFeature2"),
@@ -94,11 +90,11 @@ export default function Pricing() {
 
         {
             key: "GROWTH",
-            price: PLAN_CONFIG.GROWTH.priceMonthly,
+            priceMonthly: PLAN_CONFIG.GROWTH.priceMonthly,
+            priceYearly: PLAN_CONFIG.GROWTH.priceYearly,
             name: t("growthPlan"),
             description: t("growthSubtext"),
             users: t("growthUsers"),
-            whatsapp: t("growthWhatsApp"),
             features: [
                 t("growthFeature1"),
                 t("growthFeature2"),
@@ -112,16 +108,15 @@ export default function Pricing() {
             cta: t("startGrowthTrial"),
             link: "/signup",
             variant: "outline",
-
         },
 
         {
             key: "SCALE",
-            price: PLAN_CONFIG.SCALE.priceMonthly,
+            priceMonthly: PLAN_CONFIG.SCALE.priceMonthly,
+            priceYearly: PLAN_CONFIG.SCALE.priceYearly,
             name: t("scalePlan"),
             description: t("scaleSubtext"),
             users: t("scaleUsers"),
-            whatsapp: t("scaleWhatsApp"),
             features: [
                 t("scaleFeature1"),
                 t("scaleFeature2"),
@@ -192,6 +187,8 @@ export default function Pricing() {
                     <span className={`text-sm ${yearlyBilling ? "font-medium text-foreground" : "text-muted-foreground"}`}>
                         {t("yearlyToggle")}
                     </span>
+
+                    <Badge variant="secondary">{t("yearlyBadge")}</Badge>
                 </div>
 
                 <p className="mt-3 text-center text-sm text-muted-foreground">
@@ -200,6 +197,10 @@ export default function Pricing() {
 
                 <p className="mt-6 text-center text-sm font-medium text-foreground rounded-md border bg-primary/5 py-3 px-4">
                     {t("trialBadge")}
+                </p>
+
+                <p className="mt-3 text-center text-sm text-muted-foreground">
+                    {t("grandfatheredLine")}
                 </p>
 
                 {/* UNLIMITED USAGE */}
@@ -232,6 +233,35 @@ export default function Pricing() {
 
                 </div>
 
+                <div className="mt-8 rounded-lg border bg-background p-6">
+                    <h3 className="text-xl font-semibold text-center">{t("sectionAddons")}</h3>
+                    <p className="text-center mt-2 text-muted-foreground">{t("addonsDescription")}</p>
+
+                    <div className="mt-5 rounded-lg border p-5">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="text-lg font-semibold">{t("addonAutomationPackTitle")}</p>
+                                <p className="text-sm text-muted-foreground">{t("addonAutomationPackSubtitle")}</p>
+                            </div>
+
+                            <p className="text-lg font-semibold">
+                                ₹{getDisplayPrice(AUTOMATION_PACK_PRICING.monthly, AUTOMATION_PACK_PRICING.yearly)}
+                                <span className="ml-1 text-sm font-normal text-muted-foreground">{billingSuffix}</span>
+                            </p>
+                        </div>
+
+                        <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                            <li>• {t("addonAutomationPackItem1")}</li>
+                            <li>• {t("addonAutomationPackItem2")}</li>
+                            <li>• {t("addonAutomationPackItem3")}</li>
+                            <li>• {t("addonAutomationPackItem4")}</li>
+                        </ul>
+
+                        <p className="mt-4 text-sm text-muted-foreground">{t("addonAutomationPackNote1")}</p>
+                        <p className="text-sm text-muted-foreground">{t("addonAutomationPackNote2")}</p>
+                    </div>
+                </div>
+
                 {/* PRICING CARDS */}
 
                 <div className="mt-12 grid gap-6 xl:grid-cols-4">
@@ -248,7 +278,7 @@ export default function Pricing() {
                                 <div className="flex justify-between">
 
                                     <CardTitle className="text-4xl font-semibold">
-                                        ₹{getDisplayPrice(plan.price)}
+                                        ₹{getDisplayPrice(plan.priceMonthly, plan.priceYearly)}
                                     </CardTitle>
 
                                     {plan.highlight && (

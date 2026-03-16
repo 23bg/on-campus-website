@@ -27,6 +27,8 @@ build/
 # Environment & secrets
 # ------------------------------------------------------
 .env
+.env.development
+.env.production
 .env.*.local
 .env.local
 .env.development.local

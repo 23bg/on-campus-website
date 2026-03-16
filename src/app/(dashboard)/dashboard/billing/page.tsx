@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { API } from "@/constants/api";
 import api from "@/lib/axios";
 import { Loader2, CreditCard } from "lucide-react";
-import { PLAN_CONFIG, PlanType } from "@/config/plans";
+import { getPlanPricing, PLAN_CONFIG, PlanType, PricingVersion } from "@/config/plans";
 import type { BillingInterval } from "@/features/subscription/services/subscription.service";
 import Script from "next/script";
 
@@ -40,6 +40,7 @@ type BillingSummary = {
     planName?: string;
     planAmount: number;
     planAmountYearly?: number;
+    pricingVersion?: PricingVersion;
     currency: string;
     userLimit: number | null;
     usersUsed: number;
@@ -121,6 +122,8 @@ export default function BillingPage() {
 
     const usageWarningThreshold = usage ? Math.floor(usage.alertsIncluded * 0.8) : null;
     const isUsageWarning = usage && usage.alertsIncluded > 0 && usage.alertsUsed >= (usageWarningThreshold ?? 0);
+    const selectedPricingVersion: PricingVersion = summary?.pricingVersion ?? "CURRENT";
+    const getDisplayPlanPrice = (planType: PlanType) => getPlanPricing(planType, { version: selectedPricingVersion }).monthly;
 
     const loadSummary = async () => {
         try {
@@ -302,7 +305,9 @@ export default function BillingPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Users</span>
-                        <span className="font-medium">{summary?.usersUsed ?? 0}/{summary?.userLimit ?? 1}</span>
+                        <span className="font-medium">
+                            {summary?.usersUsed ?? 0}/{summary?.userLimit === null ? "Unlimited" : (summary?.userLimit ?? 1)}
+                        </span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Next billing date</span>
@@ -339,7 +344,7 @@ export default function BillingPage() {
                             disabled={creating}
                             onClick={() => setSelectedInterval("YEARLY")}
                         >
-                            Yearly (10-month price)
+                            Yearly (2 months free)
                         </Button>
                         <Button variant="outline" disabled={generatingInvoice} onClick={() => void generateInvoice()}>
                             {generatingInvoice ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : "Generate Last Invoice"}
@@ -355,7 +360,7 @@ export default function BillingPage() {
                                 void createSubscription("STARTER");
                             }}
                         >
-                            {creating && selectedPlan === "STARTER" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Starter (₹${PLAN_CONFIG.STARTER.priceMonthly})`}
+                            {creating && selectedPlan === "STARTER" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Starter (₹${getDisplayPlanPrice("STARTER")})`}
                         </Button>
                         <Button
                             variant={selectedPlan === "TEAM" ? "default" : "outline"}
@@ -365,7 +370,7 @@ export default function BillingPage() {
                                 void createSubscription("TEAM");
                             }}
                         >
-                            {creating && selectedPlan === "TEAM" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Team (₹${PLAN_CONFIG.TEAM.priceMonthly})`}
+                            {creating && selectedPlan === "TEAM" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Team (₹${getDisplayPlanPrice("TEAM")})`}
                         </Button>
                         <Button
                             variant={selectedPlan === "GROWTH" ? "default" : "outline"}
@@ -375,7 +380,7 @@ export default function BillingPage() {
                                 void createSubscription("GROWTH");
                             }}
                         >
-                            {creating && selectedPlan === "GROWTH" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Growth (₹${PLAN_CONFIG.GROWTH.priceMonthly})`}
+                            {creating && selectedPlan === "GROWTH" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Growth (₹${getDisplayPlanPrice("GROWTH")})`}
                         </Button>
                         <Button
                             variant={selectedPlan === "SCALE" ? "default" : "outline"}
@@ -385,7 +390,7 @@ export default function BillingPage() {
                                 void createSubscription("SCALE");
                             }}
                         >
-                            {creating && selectedPlan === "SCALE" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Scale (₹${PLAN_CONFIG.SCALE.priceMonthly})`}
+                            {creating && selectedPlan === "SCALE" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Scale (₹${getDisplayPlanPrice("SCALE")})`}
                         </Button>
                     </div>
                 </CardContent>
