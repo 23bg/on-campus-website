@@ -292,7 +292,7 @@ const sendOnboardingWhatsAppMessage = async (institute: {
         instituteId: institute.id,
         whatsappPhoneNumber: normalizedDestination,
         message: `Onboarding completed for ${institute.name || "your institute"}. Your workspace is ready to use.`,
-        link: "/dashboard",
+        link: "/overview",
     });
 
     await instituteRepository.updateById(institute.id, { whatsappOnboardingSent: true });

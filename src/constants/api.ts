@@ -83,6 +83,8 @@
             ROOT: '/students',
             BY_ID: (id: string) => `/students/${id}`,
             UPLOAD: '/students/upload',
+            COURSES: (id: string) => `/students/${id}/courses`,
+            COURSE_ASSIGNMENT: (id: string, assignmentId: string) => `/students/${id}/courses/${assignmentId}`,
         },
         COURSES: {
             ROOT: '/courses',
@@ -105,6 +107,13 @@
             ROOT: '/leads',
             BY_ID: (id: string) => `/leads/${id}`,
             TIMELINE: (id: string) => `/leads/${id}/timeline`,
+            IMPORT: '/leads/import',
+        },
+        NOTES: {
+            ROOT: '/notes',
+        },
+        ATTENDANCE: {
+            ROOT: '/attendance',
         },
         SEARCH: '/search',
     },

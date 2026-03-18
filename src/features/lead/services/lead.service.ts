@@ -7,6 +7,16 @@ import { leadActivityService } from "@/features/lead/services/lead-activity.serv
 import { billingService } from "@/features/billing/services/billing.service";
 import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
+const leadImportRowSchema = z.object({
+    name: z.string().trim().min(2).max(80),
+    phone: z.string().regex(/^[6-9]\d{9}$/),
+    email: z.string().trim().max(120).email().optional(),
+    source: z.string().trim().max(80).optional(),
+    course: z.string().trim().max(120).optional(),
+    city: z.string().trim().max(80).optional(),
+    message: z.string().trim().max(1024).optional(),
+});
+
 const leadInputSchema = z.object({
     instituteId: z.string().min(1),
     name: z.string().trim().min(2).max(80),
@@ -319,5 +329,81 @@ export const leadService = {
             source: lead.source ?? "",
             createdAt: lead.createdAt.toISOString(),
         }));
+    },
+
+    async importLeads(
+        instituteId: string,
+        rows: unknown[],
+        options?: { createdBy?: string; dryRun?: boolean }
+    ) {
+        if (!Array.isArray(rows) || rows.length === 0) {
+            throw new AppError("Import file does not contain any rows", 400, "EMPTY_IMPORT_FILE");
+        }
+
+        const errors: Array<{ row: number; message: string }> = [];
+        const skippedDuplicates: Array<{ row: number; phone: string }> = [];
+        const validRows: Array<z.infer<typeof leadImportRowSchema>> = [];
+        const seenPhones = new Set<string>();
+
+        for (let index = 0; index < rows.length; index += 1) {
+            const rowNumber = index + 1;
+            const raw = rows[index] as Record<string, unknown>;
+
+            const normalized = {
+                name: typeof raw.name === "string" ? raw.name.trim() : "",
+                phone: typeof raw.phone === "string" ? raw.phone.trim() : String(raw.phone ?? "").trim(),
+                email: typeof raw.email === "string" && raw.email.trim().length > 0 ? raw.email.trim() : undefined,
+                source: typeof raw.source === "string" && raw.source.trim().length > 0 ? raw.source.trim() : undefined,
+                course: typeof raw.course === "string" && raw.course.trim().length > 0 ? raw.course.trim() : undefined,
+                city: typeof raw.city === "string" && raw.city.trim().length > 0 ? raw.city.trim() : undefined,
+                message: typeof raw.message === "string" && raw.message.trim().length > 0 ? raw.message.trim() : undefined,
+            };
+
+            const parsed = leadImportRowSchema.safeParse(normalized);
+            if (!parsed.success) {
+                errors.push({ row: rowNumber, message: parsed.error.issues[0]?.message ?? "Invalid row" });
+                continue;
+            }
+
+            if (seenPhones.has(parsed.data.phone)) {
+                skippedDuplicates.push({ row: rowNumber, phone: parsed.data.phone });
+                continue;
+            }
+
+            const existing = await leadRepository.findByPhoneInInstitute(instituteId, parsed.data.phone);
+            if (existing) {
+                skippedDuplicates.push({ row: rowNumber, phone: parsed.data.phone });
+                continue;
+            }
+
+            seenPhones.add(parsed.data.phone);
+            validRows.push(parsed.data);
+        }
+
+        if (!options?.dryRun && validRows.length > 0) {
+            await leadRepository.bulkCreate(
+                validRows.map((row) => ({
+                    instituteId,
+                    name: row.name,
+                    phone: row.phone,
+                    email: row.email,
+                    source: row.source,
+                    course: row.course,
+                    message: row.message,
+                    status: "NEW",
+                }))
+            );
+        }
+
+        return {
+            totalRows: rows.length,
+            validRows: validRows.length,
+            failedRows: errors.length,
+            duplicateRows: skippedDuplicates.length,
+            errors,
+            duplicates: skippedDuplicates,
+            preview: validRows.slice(0, 100),
+            imported: options?.dryRun ? 0 : validRows.length,
+        };
     },
 };

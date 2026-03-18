@@ -66,7 +66,7 @@ export default function OnboardingIndexPage() {
                 const data = response.data?.data ?? {};
 
                 if (data.isOnboarded) {
-                    router.push("/dashboard");
+                    router.push("/overview");
                     return;
                 }
 
@@ -134,7 +134,7 @@ export default function OnboardingIndexPage() {
             });
 
             toast.success("Institute setup complete!");
-            router.push("/dashboard");
+            router.push("/overview");
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error. Please try again.");
         } finally {

@@ -48,7 +48,7 @@ export default function NotificationSettingsPage() {
 
         try {
             await api.put(API.INTERNAL.INSTITUTE.NOTIFICATIONS, { [key]: value });
-            toast.success("Notification settings updated");
+            toast.success("Notification settings updated", { description: "Your preferences have been saved." });
         } catch {
             setPrefs(prefs);
             toast.error("Failed to update notification settings");

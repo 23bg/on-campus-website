@@ -138,7 +138,7 @@ export default function TeamPage() {
                     action: {
                         label: "Upgrade",
                         onClick: () => {
-                            window.location.href = "/dashboard/billing";
+                            window.location.href = "/billing";
                         },
                     },
                 });
@@ -179,7 +179,7 @@ export default function TeamPage() {
                 <p><span className="font-medium">OWNER</span> — Full control over team, data, and billing.</p>
                 <p><span className="font-medium">EDITOR</span> — Manage leads, students, courses, batches, and fees.</p>
                 <p><span className="font-medium">VIEWER</span> — Read-only access.</p>
-                <p className="mt-2 text-muted-foreground">Need more seats? Upgrade from <Link href="/dashboard/billing" className="underline">Billing</Link>.</p>
+                <p className="mt-2 text-muted-foreground">Need more seats? Upgrade from <Link href="/billing" className="underline">Billing</Link>.</p>
             </div>
 
             {loading ? (

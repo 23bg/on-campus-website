@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { HelpCircle, SquareScissors } from "lucide-react";
 
 export const inter = Inter({
   subsets: ["latin"],
@@ -91,9 +92,24 @@ export default async function RootLayout({
               {children}
               <Toaster
                 duration={3000}
-                position={"top-center"}
+                position={"bottom-right"}
                 richColors
-                expand={false}
+                expand={true}
+
+
+                offset={{ bottom: '30px' }}
+                // closeButton
+
+                style={
+                  {
+                    background: "var(--background)",
+                    color: "var(--foreground)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "8px",
+                  }
+
+                }
+
               />
             </ReduxProvider>
           </NextIntlClientProvider>

@@ -25,7 +25,7 @@ export type AuthResult = {
     instituteId: string;
     role: "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
     subscriptionStatus: SubscriptionStatus;
-    redirectTo: "/dashboard" | "/pricing" | "/onboarding";
+    redirectTo: "/overview" | "/pricing" | "/onboarding";
 };
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -141,7 +141,7 @@ export const authService = {
             redirectTo: !isOnboarded
                 ? "/onboarding"
                 : subscriptionStatus === "ACTIVE" || subscriptionStatus === "TRIAL"
-                    ? "/dashboard"
+                    ? "/overview"
                     : "/pricing",
         };
     },

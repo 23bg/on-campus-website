@@ -65,6 +65,17 @@ enum IntegrationStatus {
     DEGRADED
 }
 
+enum StudentCourseStatus {
+    ACTIVE
+    COMPLETED
+    DROPPED
+}
+
+enum AttendanceStatus {
+    PRESENT
+    ABSENT
+}
+
 model User {
     id                  String    @id @default(auto()) @map("_id") @db.ObjectId
     email               String    @unique
@@ -323,6 +334,66 @@ model Student {
     @@unique([instituteId, phone])
     @@index([instituteId])
     @@map("students")
+}
+
+model StudentCourse {
+    id          String              @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String              @db.ObjectId
+    studentId   String              @db.ObjectId
+    courseId    String              @db.ObjectId
+    batchId     String?             @db.ObjectId
+    joinedAt    DateTime            @default(now())
+    status      StudentCourseStatus @default(ACTIVE)
+    createdBy   String?             @db.ObjectId
+    deletedAt   DateTime?
+    createdAt   DateTime            @default(now())
+    updatedAt   DateTime            @updatedAt
+
+    @@index([instituteId])
+    @@index([studentId])
+    @@index([courseId])
+    @@index([batchId])
+    @@map("student_courses")
+}
+
+model Note {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    title       String
+    description String?
+    fileUrl     String?
+    courseId    String?   @db.ObjectId
+    batchId     String?   @db.ObjectId
+    createdBy   String?   @db.ObjectId
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([instituteId])
+    @@index([courseId])
+    @@index([batchId])
+    @@map("notes")
+}
+
+model Attendance {
+    id          String           @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String           @db.ObjectId
+    studentId   String           @db.ObjectId
+    batchId     String?          @db.ObjectId
+    courseId    String?          @db.ObjectId
+    date        DateTime
+    status      AttendanceStatus
+    markedBy    String?          @db.ObjectId
+    deletedAt   DateTime?
+    createdAt   DateTime         @default(now())
+    updatedAt   DateTime         @updatedAt
+
+    @@index([instituteId])
+    @@index([studentId])
+    @@index([courseId])
+    @@index([batchId])
+    @@index([date])
+    @@map("attendance")
 }
 
 model FeePlan {

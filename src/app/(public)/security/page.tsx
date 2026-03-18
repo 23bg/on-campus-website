@@ -107,7 +107,7 @@ export default function SecurityPage() {
                         const Icon = section.icon;
 
                         return (
-                            <article key={section.title} className="rounded-2xl border bg-background p-6 shadow-sm">
+                            <article key={section.title} className="rounded border bg-background p-6 shadow-sm">
                                 <div className="flex items-start gap-4">
                                     <div className="rounded-xl border bg-primary/5 p-3 text-primary">
                                         <Icon className="h-5 w-5" />
@@ -139,7 +139,7 @@ export default function SecurityPage() {
 
             <section className="mx-auto w-full max-w-6xl px-4 pb-12 md:px-6 lg:pb-16">
                 <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-                    <article className="rounded-2xl border bg-background p-6 shadow-sm">
+                    <article className="rounded border bg-background p-6 shadow-sm">
                         <h2 className="text-2xl font-semibold tracking-tight">Institute Data Ownership</h2>
                         <div className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
                             <p>Institutes fully own their data.</p>
@@ -148,7 +148,7 @@ export default function SecurityPage() {
                         </div>
                     </article>
 
-                    <article className="rounded-2xl border bg-background p-6 shadow-sm">
+                    <article className="rounded border bg-background p-6 shadow-sm">
                         <h2 className="text-2xl font-semibold tracking-tight">Continuous Security Practices</h2>
                         <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                             {practices.map((item) => (

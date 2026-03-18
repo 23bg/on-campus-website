@@ -8,7 +8,16 @@ import ImraboChat from "@/modules/ai/components/ImraboChat";
 import UserMenu from "@/modules/auth/components/UserMenu";
 import GlobalSearch from "@/components/layout/dashboard/GlobalSearch";
 import ROUTES from "@/constants/routes";
-import { Bell, CircleHelp } from "lucide-react";
+import { Bell, Building2, CircleHelp } from "lucide-react";
+
+
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 const routeLabelMap: Record<string, string> = {
     dashboard: "Dashboard",
@@ -74,12 +83,65 @@ export default function DashboardHeader() {
 
             <div className="flex items-center gap-3">
                 <GlobalSearch />
-                {/* <ImraboChat /> */}
-                <Button asChild variant="ghost" size="icon" aria-label="Notifications">
-                    <Link href="/settings/notifications">
-                        <Bell className="h-4 w-4" />
+                <ImraboChat />
+                <Button asChild variant="outline" size="icon" aria-label="Notifications">
+                    <Link href={ROUTES.DASHBOARD.INSTITUTE}>
+                        <Building2 className="h-4 w-4" />
                     </Link>
                 </Button>
+
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" size="icon" className="relative" aria-label="Notifications">
+                            <Bell className="h-4 w-4" />
+
+                            {/* unread badge */}
+                            <span className="absolute -top-1 -right-1">
+                                <Badge variant="destructive" className="h-4 w-4 p-0 text-[10px] flex items-center justify-center">
+                                    3
+                                </Badge>
+                            </span>
+                        </Button>
+                    </PopoverTrigger>
+
+                    <PopoverContent align="end" className="w-80 p-0">
+                        <div className="flex items-center justify-between px-4 py-2 border-b">
+                            <span className="text-sm font-medium">Notifications</span>
+                            <button className="text-xs text-muted-foreground hover:text-foreground">
+                                Mark all read
+                            </button>
+                        </div>
+
+                        <ScrollArea className="h-80">
+                            <div className="flex flex-col">
+                                {/* Example Notification */}
+                                <div className="px-4 py-3 border-b hover:bg-muted/50 cursor-pointer">
+                                    <p className="text-sm font-medium">New student registered</p>
+                                    <p className="text-xs text-muted-foreground">2 min ago</p>
+                                </div>
+
+                                <div className="px-4 py-3 border-b hover:bg-muted/50 cursor-pointer">
+                                    <p className="text-sm font-medium">Payment received</p>
+                                    <p className="text-xs text-muted-foreground">10 min ago</p>
+                                </div>
+
+                                <div className="px-4 py-3 border-b hover:bg-muted/50 cursor-pointer">
+                                    <p className="text-sm font-medium">Batch updated</p>
+                                    <p className="text-xs text-muted-foreground">1 hour ago</p>
+                                </div>
+                            </div>
+                        </ScrollArea>
+
+                        {/* <div className="p-2 border-t text-center">
+                            <Link
+                                href="/settings/notifications"
+                                className="text-xs text-primary hover:underline"
+                            >
+                                View all notifications
+                            </Link>
+                        </div> */}
+                    </PopoverContent>
+                </Popover>
 
                 <UserMenu />
                 {/* <Button asChild variant="ghost" size="icon" aria-label="Help Center">

@@ -50,7 +50,7 @@ export function InstitutePageShell({ slug, institute, title, subtitle, children 
 
     return (
         <main className="mx-auto max-w-6xl space-y-8 px-4 py-6 md:py-10">
-            <header className="rounded-2xl border bg-card p-4 md:p-6">
+            <header className="rounded border bg-card p-4 md:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <p className="text-sm text-muted-foreground">Institute Website</p>
@@ -100,7 +100,7 @@ export function InstituteHeroSection({ slug, institute }: HeroSectionProps) {
 
     return (
         <Dialog>
-            <section className="relative overflow-hidden rounded-2xl border">
+            <section className="relative overflow-hidden rounded border">
                 <Image
                     src={heroImage}
                     alt={institute.name || "Institute"}

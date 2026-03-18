@@ -43,6 +43,21 @@ export const leadRepository = {
             },
         }),
 
+    bulkCreate: async (rows: CreateLeadInput[]) =>
+        prisma.lead.createMany({
+            data: rows.map((payload) => ({
+                instituteId: payload.instituteId,
+                name: payload.name,
+                phone: payload.phone,
+                email: payload.email,
+                source: payload.source,
+                course: payload.course,
+                message: payload.message,
+                followUpAt: payload.followUpAt,
+                status: payload.status ?? "NEW",
+            })),
+        }),
+
     findByPhoneInInstitute: async (instituteId: string, phone: string) =>
         prisma.lead.findFirst({
             where: withTenantScope(instituteId, { phone }),
