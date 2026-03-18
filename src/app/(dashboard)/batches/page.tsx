@@ -1,3 +1,447 @@
-import BatchesPage from "@/app/(dashboard)/dashboard/batches/page";
+"use client";
 
-export default BatchesPage;
+import { useEffect, useState, useCallback } from "react";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { API } from "@/constants/api";
+import api from "@/lib/axios";
+import { Loader2, Pencil, Trash2, Plus, Layers, Eye } from "lucide-react";
+import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
+
+type Course = { id: string; name: string };
+type Teacher = { id: string; name: string; subject?: string | null };
+type Batch = {
+    id: string;
+    courseId: string;
+    name: string;
+    startDate?: string | null;
+    schedule?: string | null;
+    teacherId?: string | null;
+};
+type Student = { id: string; name: string; phone: string };
+type BatchNote = { id: string; title: string; description?: string | null; fileUrl?: string | null; createdAt: string };
+type BatchAttendance = { id: string; studentId: string; date: string; status: "PRESENT" | "ABSENT" };
+
+type BatchForm = { courseId: string; name: string; startDate: string; schedule: string; teacherId: string };
+const emptyForm: BatchForm = { courseId: "", name: "", startDate: "", schedule: "", teacherId: "" };
+const PAGE_SIZE = 10;
+
+export default function BatchesPage() {
+    const [batches, setBatches] = useState<Batch[]>([]);
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [viewDialogOpen, setViewDialogOpen] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+    const [students, setStudents] = useState<Student[]>([]);
+    const [batchNotes, setBatchNotes] = useState<BatchNote[]>([]);
+    const [batchAttendance, setBatchAttendance] = useState<BatchAttendance[]>([]);
+    const [noteForm, setNoteForm] = useState({ title: "", description: "", fileUrl: "" });
+    const [attendanceDate, setAttendanceDate] = useState("");
+    const [attendanceStudentId, setAttendanceStudentId] = useState("");
+    const [attendanceStatus, setAttendanceStatus] = useState<"PRESENT" | "ABSENT">("PRESENT");
+    const [savingNote, setSavingNote] = useState(false);
+    const [savingAttendance, setSavingAttendance] = useState(false);
+    const [form, setForm] = useState<BatchForm>(emptyForm);
+    const [page, setPage] = useState(1);
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [batchRes, courseRes, teacherRes, studentRes] = await Promise.all([
+                api.get(API.INTERNAL.BATCHES.ROOT),
+                api.get(API.INTERNAL.COURSES.ROOT),
+                api.get(API.INTERNAL.TEACHERS.ROOT),
+                api.get(API.INTERNAL.STUDENTS.ROOT),
+            ]);
+            setBatches(batchRes.data?.data ?? []);
+            setCourses(courseRes.data?.data ?? []);
+            setTeachers(teacherRes.data?.data ?? []);
+            setStudents(studentRes.data?.data ?? []);
+        } catch {
+            toast.error("Failed to load data");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [batches.length]);
+
+    const paginatedBatches = batches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const courseMap = Object.fromEntries(courses.map((c) => [c.id, c.name]));
+    const teacherMap = Object.fromEntries(teachers.map((t) => [t.id, t.name]));
+
+    const openCreate = () => {
+        setEditingId(null);
+        setForm(emptyForm);
+        setDialogOpen(true);
+    };
+
+    const openEdit = (batch: Batch) => {
+        setEditingId(batch.id);
+        setForm({
+            courseId: batch.courseId,
+            name: batch.name,
+            startDate: batch.startDate ? batch.startDate.slice(0, 10) : "",
+            schedule: batch.schedule ?? "",
+            teacherId: batch.teacherId ?? "",
+        });
+        setDialogOpen(true);
+    };
+
+    const saveBatch = async () => {
+        if (!form.courseId || !form.name.trim()) {
+            toast.error("Course and batch name are required");
+            return;
+        }
+        setSaving(true);
+        try {
+            const url = editingId ? API.INTERNAL.BATCHES.BY_ID(editingId) : API.INTERNAL.BATCHES.ROOT;
+            const method = editingId ? "PATCH" : "POST";
+            const body: Record<string, unknown> = { courseId: form.courseId, name: form.name };
+            if (form.startDate) body.startDate = form.startDate;
+            if (form.schedule) body.schedule = form.schedule;
+            if (form.teacherId) body.teacherId = form.teacherId;
+
+            await api.request({ method, url, data: body });
+            toast.success(editingId ? "Batch updated" : "Batch added");
+            setDialogOpen(false);
+            await load();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const deleteBatch = async (id: string) => {
+        try {
+            await api.delete(API.INTERNAL.BATCHES.BY_ID(id));
+            toast.success("Batch deleted");
+            await load();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Network error");
+        }
+    };
+
+    const loadBatchSidePanels = async (batch: Batch) => {
+        try {
+            const [noteRes, attendanceRes] = await Promise.all([
+                api.get(`${API.INTERNAL.NOTES.ROOT}?batchId=${batch.id}&page=1&pageSize=10`),
+                api.get(`${API.INTERNAL.ATTENDANCE.ROOT}?batchId=${batch.id}`),
+            ]);
+
+            setBatchNotes(noteRes.data?.data?.items ?? []);
+            setBatchAttendance(attendanceRes.data?.data ?? []);
+        } catch {
+            setBatchNotes([]);
+            setBatchAttendance([]);
+        }
+    };
+
+    const openView = (batch: Batch) => {
+        setSelectedBatch(batch);
+        setNoteForm({ title: "", description: "", fileUrl: "" });
+        setAttendanceDate("");
+        setAttendanceStudentId("");
+        setAttendanceStatus("PRESENT");
+        setViewDialogOpen(true);
+        void loadBatchSidePanels(batch);
+    };
+
+    const studentsInBatch = selectedBatch ? students.filter((student) => student.id === selectedBatch.id) : [];
+
+    const saveBatchNote = async () => {
+        if (!selectedBatch) return;
+        if (!noteForm.title.trim()) {
+            toast.error("Note title is required");
+            return;
+        }
+
+        setSavingNote(true);
+        try {
+            await api.post(API.INTERNAL.NOTES.ROOT, {
+                title: noteForm.title,
+                description: noteForm.description || undefined,
+                fileUrl: noteForm.fileUrl || undefined,
+                batchId: selectedBatch.id,
+                courseId: selectedBatch.courseId,
+            });
+            toast.success("Note added");
+            setNoteForm({ title: "", description: "", fileUrl: "" });
+            await loadBatchSidePanels(selectedBatch);
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Failed to add note");
+        } finally {
+            setSavingNote(false);
+        }
+    };
+
+    const saveAttendance = async () => {
+        if (!selectedBatch) return;
+        if (!attendanceStudentId || !attendanceDate) {
+            toast.error("Student and date are required");
+            return;
+        }
+
+        setSavingAttendance(true);
+        try {
+            await api.post(API.INTERNAL.ATTENDANCE.ROOT, {
+                studentId: attendanceStudentId,
+                batchId: selectedBatch.id,
+                courseId: selectedBatch.courseId,
+                date: attendanceDate,
+                status: attendanceStatus,
+            });
+            toast.success("Attendance marked");
+            await loadBatchSidePanels(selectedBatch);
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message ?? "Failed to mark attendance");
+        } finally {
+            setSavingAttendance(false);
+        }
+    };
+
+    return (
+        <main className="p-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className=" text-2xl font-semibold flex items-center gap-2">
+                        <Layers className="h-6 w-6" /> Batches
+                    </h1>
+                    <p className="text-muted-foreground text-sm mt-1">{batches.length} total batches</p>
+                </div>
+                <Button onClick={openCreate} disabled={courses.length === 0}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Batch
+                </Button>
+            </div>
+
+            {courses.length === 0 && !loading ? (
+                <p className="mt-4 text-sm text-muted-foreground">Add courses first before creating batches.</p>
+            ) : null}
+
+            <div className="mt-4 rounded border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Sr. No.</TableHead>
+                            <TableHead>Batch Name</TableHead>
+                            <TableHead>Course</TableHead>
+                            <TableHead>Start Date</TableHead>
+                            <TableHead>Schedule</TableHead>
+                            <TableHead>Teacher</TableHead>
+                            <TableHead className="w-[120px]">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={7} className="text-center py-8">
+                                    <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                                </TableCell>
+                            </TableRow>
+                        ) : batches.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                    No batches yet.
+                                </TableCell>
+                            </TableRow>
+                        ) : paginatedBatches.map((batch, index) => (
+                            <TableRow key={batch.id}>
+                                <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
+                                <TableCell className="font-medium max-w-[180px] truncate" title={batch.name}>{batch.name}</TableCell>
+                                <TableCell className="max-w-[180px] truncate" title={courseMap[batch.courseId] ?? "-"}>{courseMap[batch.courseId] ?? "-"}</TableCell>
+                                <TableCell>{batch.startDate ? new Date(batch.startDate).toLocaleDateString() : "-"}</TableCell>
+                                <TableCell className="max-w-[180px] truncate" title={batch.schedule || "-"}>{batch.schedule || "-"}</TableCell>
+                                <TableCell className="max-w-[180px] truncate" title={batch.teacherId ? (teacherMap[batch.teacherId] ?? "-") : "-"}>{batch.teacherId ? (teacherMap[batch.teacherId] ?? "-") : "-"}</TableCell>
+                                <TableCell>
+                                    <div className="flex gap-1">
+                                        <Button variant="ghost" size="icon" onClick={() => openEdit(batch)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => openView(batch)}>
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => deleteBatch(batch.id)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+            <TablePaginationControls
+                className="mt-3"
+                page={page}
+                pageSize={PAGE_SIZE}
+                totalItems={batches.length}
+                onPageChange={setPage}
+            />
+
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editingId ? "Edit Batch" : "Add Batch"}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-2">
+                            <Label>Course *</Label>
+                            <Select value={form.courseId} onValueChange={(v) => setForm({ ...form, courseId: v })}>
+                                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
+                                <SelectContent>
+                                    {courses.map((c) => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Batch Name *</Label>
+                            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Morning Batch, Weekend Batch" minLength={2} maxLength={120} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Start Date</Label>
+                            <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Schedule</Label>
+                            <Input value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} placeholder="e.g. Mon-Fri 9AM-12PM" maxLength={120} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Teacher</Label>
+                            <Select value={form.teacherId} onValueChange={(v) => setForm({ ...form, teacherId: v })}>
+                                <SelectTrigger><SelectValue placeholder="Assign teacher (optional)" /></SelectTrigger>
+                                <SelectContent>
+                                    {teachers.map((t) => (
+                                        <SelectItem key={t.id} value={t.id}>{t.name}{t.subject ? ` — ${t.subject}` : ""}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={saveBatch} disabled={saving}>
+                            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            {editingId ? "Update" : "Add"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Batch Details</DialogTitle>
+                    </DialogHeader>
+                    {selectedBatch ? (
+                        <div className="space-y-3 py-2 text-sm">
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Batch Name</span><span className="font-medium">{selectedBatch.name}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Course</span><span>{courseMap[selectedBatch.courseId] ?? "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Start Date</span><span>{selectedBatch.startDate ? new Date(selectedBatch.startDate).toLocaleDateString() : "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Schedule</span><span>{selectedBatch.schedule || "-"}</span></div>
+                            <div className="flex justify-between gap-4"><span className="text-muted-foreground">Teacher</span><span>{selectedBatch.teacherId ? (teacherMap[selectedBatch.teacherId] ?? "-") : "-"}</span></div>
+
+                            <div className="rounded border p-3 space-y-3">
+                                <p className="font-medium">Notes</p>
+                                <div className="grid gap-2 md:grid-cols-3">
+                                    <Input placeholder="Title" value={noteForm.title} onChange={(e) => setNoteForm((prev) => ({ ...prev, title: e.target.value }))} />
+                                    <Input placeholder="File URL (optional)" value={noteForm.fileUrl} onChange={(e) => setNoteForm((prev) => ({ ...prev, fileUrl: e.target.value }))} />
+                                    <Button onClick={saveBatchNote} disabled={savingNote}>{savingNote ? "Saving..." : "Add Note"}</Button>
+                                </div>
+                                <Input placeholder="Description (optional)" value={noteForm.description} onChange={(e) => setNoteForm((prev) => ({ ...prev, description: e.target.value }))} />
+
+                                <div className="rounded border overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Title</TableHead>
+                                                <TableHead>Description</TableHead>
+                                                <TableHead>Created</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {batchNotes.length === 0 ? (
+                                                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No notes yet.</TableCell></TableRow>
+                                            ) : batchNotes.map((note) => (
+                                                <TableRow key={note.id}>
+                                                    <TableCell>{note.title}</TableCell>
+                                                    <TableCell>{note.description || "-"}</TableCell>
+                                                    <TableCell>{new Date(note.createdAt).toLocaleDateString()}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+
+                            <div className="rounded border p-3 space-y-3">
+                                <p className="font-medium">Attendance</p>
+                                <div className="grid gap-2 md:grid-cols-4">
+                                    <Input type="date" value={attendanceDate} onChange={(e) => setAttendanceDate(e.target.value)} />
+                                    <Select value={attendanceStudentId} onValueChange={setAttendanceStudentId}>
+                                        <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+                                        <SelectContent>
+                                            {studentsInBatch.map((student) => (
+                                                <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={attendanceStatus} onValueChange={(value) => setAttendanceStatus(value as "PRESENT" | "ABSENT")}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="PRESENT">Present</SelectItem>
+                                            <SelectItem value="ABSENT">Absent</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Button onClick={saveAttendance} disabled={savingAttendance}>{savingAttendance ? "Saving..." : "Mark"}</Button>
+                                </div>
+
+                                <div className="rounded border overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Date</TableHead>
+                                                <TableHead>Student</TableHead>
+                                                <TableHead>Status</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {batchAttendance.length === 0 ? (
+                                                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No attendance records yet.</TableCell></TableRow>
+                                            ) : batchAttendance.map((row) => (
+                                                <TableRow key={row.id}>
+                                                    <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
+                                                    <TableCell>{students.find((student) => student.id === row.studentId)?.name ?? "-"}</TableCell>
+                                                    <TableCell>{row.status}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setViewDialogOpen(false)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </main>
+    );
+}

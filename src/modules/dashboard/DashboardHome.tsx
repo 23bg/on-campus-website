@@ -1,3 +1,3 @@
-import DashboardHomePage from "@/app/(dashboard)/dashboard/page";
+import DashboardHomePage from "@/app/(dashboard)/overview/page";
 
 export default DashboardHomePage;

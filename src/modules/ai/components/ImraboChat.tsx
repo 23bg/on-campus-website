@@ -143,7 +143,7 @@ export default function ImraboChat() {
     return (
         <Sheet>
             <SheetTrigger asChild>
-                <Button variant="outline">Ask Imrabo</Button>
+                <Button variant="ghost" size='icon' className="bg-green-500"><Bot className="h-4 w-4" /></Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[400px] sm:w-[420px] p-0">
                 <SheetHeader className="px-4 py-3 border-b">

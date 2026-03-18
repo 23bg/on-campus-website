@@ -39,7 +39,7 @@ export default function InstitutePublicView({ slug, institute }: any) {
     return (
         <Dialog>
             <main className="mx-auto max-w-6xl space-y-12 px-4 py-10">
-                <section className="relative overflow-hidden rounded-2xl border">
+                <section className="relative overflow-hidden rounded border">
                     <Image
                         src={heroImage}
                         alt="hero"
@@ -187,7 +187,7 @@ export default function InstitutePublicView({ slug, institute }: any) {
                     </div>
                 </section>
 
-                <section className="rounded-2xl border bg-muted/30 p-6">
+                <section className="rounded border bg-muted/30 p-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="space-y-1">
                             <p className="text-sm font-medium text-primary">Powered by OnCampus</p>

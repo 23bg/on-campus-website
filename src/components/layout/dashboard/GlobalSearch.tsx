@@ -36,6 +36,7 @@ export default function GlobalSearch() {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS);
+    const [mounted, setMounted] = useState(false);
 
     const hasAnyResult = useMemo(
         () => results.leads.length > 0 || results.students.length > 0 || results.courses.length > 0,
@@ -43,6 +44,8 @@ export default function GlobalSearch() {
     );
 
     useEffect(() => {
+        setMounted(true);
+
         const onKeyDown = (event: KeyboardEvent) => {
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
                 event.preventDefault();
@@ -100,109 +103,113 @@ export default function GlobalSearch() {
                 <Search className="h-4 w-4" />
             </Button> */}
 
-            <CommandDialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    setOpen(nextOpen);
-                    if (!nextOpen) setQuery("");
-                }}
-                title="Global Search"
-                description="Search across pages, leads, students, courses, and quick actions"
-            >
-                <CommandInput
-                    value={query}
-                    onValueChange={setQuery}
-                    placeholder="Search leads, students, courses..."
-                />
-                <CommandList>
-                    <CommandEmpty>
-                        {loading ? "Searching..." : "No results found."}
-                    </CommandEmpty>
+            {mounted && (
+                <CommandDialog
+                    open={open}
+                    onOpenChange={(nextOpen) => {
+                        setOpen(nextOpen);
+                        if (!nextOpen) setQuery("");
+                    }}
+                    title="Global Search"
+                    description="Search across pages, leads, students, courses, and quick actions"
+                >
+                    <CommandInput
+                        value={query}
+                        onValueChange={setQuery}
+                        placeholder="Search leads, students, courses..."
+                    />
+                    <CommandList>
+                        <CommandEmpty>
+                            {loading ? "Searching..." : "No results found."}
+                        </CommandEmpty>
 
-                    <CommandGroup heading="Pages">
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.ROOT)}>Dashboard</CommandItem>
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.LEADS)}>Leads</CommandItem>
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.STUDENTS)}>Students</CommandItem>
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.COURSES)}>Courses</CommandItem>
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BATCHES)}>Batches</CommandItem>
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.FEES)}>Fees</CommandItem>
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.PAYMENTS)}>Payments</CommandItem>
-                    </CommandGroup>
+                        <CommandGroup heading="Pages">
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.ROOT)}>Dashboard</CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.LEADS)}>Leads</CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.STUDENTS)}>Students</CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.COURSES)}>Courses</CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BATCHES)}>Batches</CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.FEES)}>Fees</CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BILLING)}>Billing</CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BILLING_PAYMENTS)}>Payments</CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.INTEGRATIONS)}>Integrations</CommandItem>
+                        </CommandGroup>
 
-                    <CommandSeparator />
+                        <CommandSeparator />
 
-                    <CommandGroup heading="Quick Actions">
-                        <CommandItem onSelect={() => navigateTo(`${ROUTES.DASHBOARD.LEADS}?focus=recent`)}>
-                            <PlusCircle className="h-4 w-4" />
-                            Add Lead
-                        </CommandItem>
-                        <CommandItem onSelect={() => navigateTo(`${ROUTES.DASHBOARD.STUDENTS}?action=add`)}>
-                            <UserPlus className="h-4 w-4" />
-                            Add Student
-                        </CommandItem>
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.FEES)}>
-                            <HandCoins className="h-4 w-4" />
-                            Record Payment
-                        </CommandItem>
-                        <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BATCHES)}>
-                            <Layers className="h-4 w-4" />
-                            Create Batch
-                        </CommandItem>
-                    </CommandGroup>
+                        <CommandGroup heading="Quick Actions">
+                            <CommandItem onSelect={() => navigateTo(`${ROUTES.DASHBOARD.LEADS}?focus=recent`)}>
+                                <PlusCircle className="h-4 w-4" />
+                                Add Lead
+                            </CommandItem>
+                            <CommandItem onSelect={() => navigateTo(`${ROUTES.DASHBOARD.STUDENTS}?action=add`)}>
+                                <UserPlus className="h-4 w-4" />
+                                Add Student
+                            </CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.FEES)}>
+                                <HandCoins className="h-4 w-4" />
+                                Record Payment
+                            </CommandItem>
+                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BATCHES)}>
+                                <Layers className="h-4 w-4" />
+                                Create Batch
+                            </CommandItem>
+                        </CommandGroup>
 
-                    {query.trim().length >= 2 ? (
-                        <>
-                            <CommandSeparator />
-                            <CommandGroup heading="Leads">
-                                {results.leads.map((lead) => (
-                                    <CommandItem
-                                        key={`lead-${lead.id}`}
-                                        onSelect={() => navigateTo(`${ROUTES.DASHBOARD.LEADS}?query=${encodeURIComponent(lead.phone || lead.name)}`)}
-                                    >
-                                        <div className="flex w-full items-center justify-between gap-2">
-                                            <span>{lead.name}</span>
-                                            <span className="text-xs text-muted-foreground">{lead.status}</span>
-                                        </div>
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
+                        {query.trim().length >= 2 ? (
+                            <>
+                                <CommandSeparator />
+                                <CommandGroup heading="Leads">
+                                    {results.leads.map((lead) => (
+                                        <CommandItem
+                                            key={`lead-${lead.id}`}
+                                            onSelect={() => navigateTo(`${ROUTES.DASHBOARD.LEADS}?query=${encodeURIComponent(lead.phone || lead.name)}`)}
+                                        >
+                                            <div className="flex w-full items-center justify-between gap-2">
+                                                <span>{lead.name}</span>
+                                                <span className="text-xs text-muted-foreground">{lead.status}</span>
+                                            </div>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
 
-                            <CommandGroup heading="Students">
-                                {results.students.map((student) => (
-                                    <CommandItem
-                                        key={`student-${student.id}`}
-                                        onSelect={() => navigateTo(`${ROUTES.DASHBOARD.STUDENTS}?query=${encodeURIComponent(student.phone || student.name)}`)}
-                                    >
-                                        <div className="flex w-full items-center justify-between gap-2">
-                                            <span>{student.name}</span>
-                                            <span className="text-xs text-muted-foreground">{student.phone}</span>
-                                        </div>
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
+                                <CommandGroup heading="Students">
+                                    {results.students.map((student) => (
+                                        <CommandItem
+                                            key={`student-${student.id}`}
+                                            onSelect={() => navigateTo(`${ROUTES.DASHBOARD.STUDENTS}?query=${encodeURIComponent(student.phone || student.name)}`)}
+                                        >
+                                            <div className="flex w-full items-center justify-between gap-2">
+                                                <span>{student.name}</span>
+                                                <span className="text-xs text-muted-foreground">{student.phone}</span>
+                                            </div>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
 
-                            <CommandGroup heading="Courses">
-                                {results.courses.map((course) => (
-                                    <CommandItem
-                                        key={`course-${course.id}`}
-                                        onSelect={() => navigateTo(`${ROUTES.DASHBOARD.COURSES}?query=${encodeURIComponent(course.name)}`)}
-                                    >
-                                        <div className="flex w-full items-center justify-between gap-2">
-                                            <span>{course.name}</span>
-                                            <span className="text-xs text-muted-foreground">{course.duration || "Duration not set"}</span>
-                                        </div>
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </>
-                    ) : null}
+                                <CommandGroup heading="Courses">
+                                    {results.courses.map((course) => (
+                                        <CommandItem
+                                            key={`course-${course.id}`}
+                                            onSelect={() => navigateTo(`${ROUTES.DASHBOARD.COURSES}?query=${encodeURIComponent(course.name)}`)}
+                                        >
+                                            <div className="flex w-full items-center justify-between gap-2">
+                                                <span>{course.name}</span>
+                                                <span className="text-xs text-muted-foreground">{course.duration || "Duration not set"}</span>
+                                            </div>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </>
+                        ) : null}
 
-                    <CommandSeparator />
-                    <CommandGroup heading="Help">
-                        <CommandItem onSelect={() => navigateTo(ROUTES.HELP)}>Open Help Center</CommandItem>
-                    </CommandGroup>
-                </CommandList>
-            </CommandDialog>
+                        <CommandSeparator />
+                        <CommandGroup heading="Help">
+                            <CommandItem onSelect={() => navigateTo(ROUTES.HELP)}>Open Help Center</CommandItem>
+                        </CommandGroup>
+                    </CommandList>
+                </CommandDialog>
+            )}
         </>
     );
 }

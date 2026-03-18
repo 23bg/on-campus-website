@@ -77,33 +77,53 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                     title: "Courses",
                     url: ROUTES.DASHBOARD.COURSES,
                     icon: BookOpen,
+
                 },
-                {
-                    title: "Batches",
-                    url: ROUTES.DASHBOARD.BATCHES,
-                    icon: Layers,
-                },
+
 
                 {
                     title: "Fees",
                     url: ROUTES.DASHBOARD.FEES,
                     icon: IndianRupee,
                 },
-                {
-                    title: "Payments",
-                    url: ROUTES.DASHBOARD.PAYMENTS,
-                    icon: Wallet,
-                },
 
-                {
-                    title: "Institute",
-                    url: ROUTES.DASHBOARD.INSTITUTE,
-                    icon: Building2,
-                },
+                // {
+                //     title: "Institute",
+                //     url: ROUTES.DASHBOARD.INSTITUTE,
+                //     icon: Building2,
+                // },
                 {
                     title: "Team",
                     url: ROUTES.DASHBOARD.TEAM,
                     icon: Users,
+                },
+                {
+                    title: "Integrations",
+                    url: ROUTES.DASHBOARD.INTEGRATIONS,
+                    icon: Layers,
+                },
+                {
+                    title: "Billing",
+                    // url: ROUTES.DASHBOARD.BILLING,
+                    icon: Wallet,
+                    children: [
+                        // {
+                        //     title: "Billing Overview",
+                        //     url: ROUTES.DASHBOARD.BILLING,
+                        // },
+                        {
+                            title: "Payments",
+                            url: ROUTES.DASHBOARD.BILLING_PAYMENTS,
+                        },
+                        {
+                            title: "Payment Details",
+                            url: ROUTES.DASHBOARD.BILLING_PAYMENT_DETAILS,
+                        },
+                        {
+                            title: "Plans",
+                            url: ROUTES.DASHBOARD.BILLING_PLANS,
+                        },
+                    ],
                 },
             ],
         },
@@ -112,18 +132,20 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
     return (
         <Sidebar collapsible='offcanvas' {...props} variant="inset" className="h-screen overflow-hidden " >
             <SidebarHeader className="mx-0 px-0 ">
-                <SidebarGroup>
-                    <SidebarMenu>
-                        <SidebarMenuItem >
-                            <SidebarMenuButton >
-                                <Link id="dashboard-brand" href={ROUTES.DASHBOARD.ROOT} className="flex items-center gap-2">
-                                    {state === "collapsed" ? (
-                                        <span className="text-xl font-semibold text-primary"></span>) : (
-                                        <div className="flex items-center gap-2">
+                <SidebarGroup >
+                    <SidebarMenu >
+                        <SidebarMenuItem  >
+                            <SidebarMenuButton variant='default' className="h-10 hover:bg-transparent target:bg-transparent open:bg-transparent" isActive={false} >
+                                <Link id="dashboard-brand" href={ROUTES.DASHBOARD.ROOT} >
 
-                                            <span className="text-xl font-semibold text-primary">OnCampus</span>
-                                        </div>
-                                    )}
+
+
+
+                                    <p className="text-xl font-semibold text-primary">OnCampus</p>
+                                    <p className="text-xs text-muted-foreground hover:text-muted-foreground">Manage your institute</p>
+
+
+
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

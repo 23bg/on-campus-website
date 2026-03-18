@@ -238,6 +238,24 @@ export default function Pricing() {
                     <p className="text-center mt-2 text-muted-foreground">{t("addonsDescription")}</p>
 
                     <div className="mt-5 rounded-lg border p-5">
+                        <p className="text-sm font-medium">Available Add-ons</p>
+                        <div className="mt-3 grid gap-3 md:grid-cols-3 text-sm">
+                            <div className="rounded border p-3">
+                                <p className="font-medium">WhatsApp Automation</p>
+                                <p className="text-muted-foreground mt-1">Automated enquiry alerts and follow-up messaging workflows.</p>
+                            </div>
+                            <div className="rounded border p-3">
+                                <p className="font-medium">Email Notifications</p>
+                                <p className="text-muted-foreground mt-1">Email alerts, reminders, and campaign communication for admissions.</p>
+                            </div>
+                            <div className="rounded border p-3">
+                                <p className="font-medium">Razorpay Payments</p>
+                                <p className="text-muted-foreground mt-1">Accept online payments and reconcile billing records quickly.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 rounded-lg border p-5">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <p className="text-lg font-semibold">{t("addonAutomationPackTitle")}</p>

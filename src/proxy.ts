@@ -7,11 +7,15 @@ const PUBLIC_PATHS = ["/login", "/signup", "/verification", "/pricing", "/demo-i
 const ONBOARDING_PATH = "/onboarding";
 const BILLING_PATH = "/billing";
 const APP_PROTECTED_PATHS = [
+    "/overview",
     "/leads",
     "/students",
+    "/upload",
     "/team",
+    "/teachers",
     "/courses",
     "/batches",
+    "/defaulters",
     "/fees",
     "/institute",
     "/settings",
@@ -22,7 +26,7 @@ const APP_PROTECTED_PATHS = [
 const normalizeDashboardPath = (pathname: string): string | null => {
     if (!pathname.startsWith("/dashboard")) return null;
     const remainder = pathname.slice("/dashboard".length);
-    if (!remainder) return "/";
+    if (!remainder) return "/overview";
     return remainder.startsWith("/") ? remainder : `/${remainder}`;
 };
 
@@ -67,7 +71,7 @@ export function proxy(req: NextRequest) {
 
     if (resolvedHost.surface === "portal" && pathname === "/") {
         const destinationUrl = req.nextUrl.clone();
-        destinationUrl.pathname = "/dashboard";
+        destinationUrl.pathname = "/overview";
         edgeLogger.info("request_rewritten", {
             requestId,
             reason: "portal_root_to_dashboard",

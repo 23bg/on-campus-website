@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
                 disallow: [
                     "/login",
                     "/signup",
-                    "/dashboard",
+                    "/overview",
                     "/student",
                     "/onboarding",
                     "/verification",

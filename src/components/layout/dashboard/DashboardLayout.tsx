@@ -29,7 +29,7 @@ export default function DashboardLayout({
             <SidebarProvider className=" overflow-hidden h-screen">
                 <DashboardAppSidebar />
 
-                <SidebarInset className="border shadow-none bg-background rounded-2xl ">
+                <SidebarInset className="border-none shadow-none bg-background ">
                     <DashboardHeader />
 
                     {/* MAIN CONTENT */}
