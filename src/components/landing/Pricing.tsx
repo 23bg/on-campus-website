@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { AUTOMATION_PACK_PRICING, PLAN_CONFIG } from "@/config/plans";
+import { PLAN_CONFIG } from "@/config/plans";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -231,53 +231,6 @@ export default function Pricing() {
                         <p>• {t("unlimitedItem5")}</p>
                     </div>
 
-                </div>
-
-                <div className="mt-8 rounded-lg border bg-background p-6">
-                    <h3 className="text-xl font-semibold text-center">{t("sectionAddons")}</h3>
-                    <p className="text-center mt-2 text-muted-foreground">{t("addonsDescription")}</p>
-
-                    <div className="mt-5 rounded-lg border p-5">
-                        <p className="text-sm font-medium">Available Add-ons</p>
-                        <div className="mt-3 grid gap-3 md:grid-cols-3 text-sm">
-                            <div className="rounded border p-3">
-                                <p className="font-medium">WhatsApp Automation</p>
-                                <p className="text-muted-foreground mt-1">Automated enquiry alerts and follow-up messaging workflows.</p>
-                            </div>
-                            <div className="rounded border p-3">
-                                <p className="font-medium">Email Notifications</p>
-                                <p className="text-muted-foreground mt-1">Email alerts, reminders, and campaign communication for admissions.</p>
-                            </div>
-                            <div className="rounded border p-3">
-                                <p className="font-medium">Razorpay Payments</p>
-                                <p className="text-muted-foreground mt-1">Accept online payments and reconcile billing records quickly.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-5 rounded-lg border p-5">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p className="text-lg font-semibold">{t("addonAutomationPackTitle")}</p>
-                                <p className="text-sm text-muted-foreground">{t("addonAutomationPackSubtitle")}</p>
-                            </div>
-
-                            <p className="text-lg font-semibold">
-                                ₹{getDisplayPrice(AUTOMATION_PACK_PRICING.monthly, AUTOMATION_PACK_PRICING.yearly)}
-                                <span className="ml-1 text-sm font-normal text-muted-foreground">{billingSuffix}</span>
-                            </p>
-                        </div>
-
-                        <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                            <li>• {t("addonAutomationPackItem1")}</li>
-                            <li>• {t("addonAutomationPackItem2")}</li>
-                            <li>• {t("addonAutomationPackItem3")}</li>
-                            <li>• {t("addonAutomationPackItem4")}</li>
-                        </ul>
-
-                        <p className="mt-4 text-sm text-muted-foreground">{t("addonAutomationPackNote1")}</p>
-                        <p className="text-sm text-muted-foreground">{t("addonAutomationPackNote2")}</p>
-                    </div>
                 </div>
 
                 {/* PRICING CARDS */}
