@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { toAppError } from "@/lib/utils/error";
-import { studentCourseService } from "@/features/student/services/student-course.service";
+import { studentService } from "@/server/services/students.service";
 
 type RouteContext = {
     params: Promise<{ id: string }>;
@@ -19,7 +19,7 @@ export async function GET(_req: NextRequest, context: RouteContext) {
         }
 
         const { id } = await context.params;
-        const data = await studentCourseService.listStudentCourses(session.instituteId, id);
+        const data = await studentService.listStudentCourses(session.instituteId, id);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
         };
 
         const { id } = await context.params;
-        const data = await studentCourseService.assignCourse({
+        const data = await studentService.assignCourse({
             instituteId: session.instituteId,
             studentId: id,
             createdBy: session.userId,

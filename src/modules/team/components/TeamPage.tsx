@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import TeamForm, { TeamFormValues as TeamFormState } from "@/modules/team/forms/TeamForm";
 import TeamTable, { TeamRow } from "@/modules/team/components/TeamTable";
+import ListWidget from "@/components/custom/ListWidget";
+import { useDeleteTeamMemberMutation, useGetTeamDataQuery, useSaveTeamMemberMutation } from "@/services/dashboardTables.api";
 
 const emptyForm: TeamFormState = {
     name: "",
@@ -22,61 +22,16 @@ const emptyForm: TeamFormState = {
 };
 
 export default function TeamPage() {
-    const [rows, setRows] = useState<TeamRow[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading: loading, refetch } = useGetTeamDataQuery(undefined, { refetchOnMountOrArgChange: true });
+    const [saveTeamMember, { isLoading: saving }] = useSaveTeamMemberMutation();
+    const [deleteTeamMember] = useDeleteTeamMemberMutation();
+    const rows = data?.rows ?? [];
+    const sessionRole = data?.sessionRole ?? null;
     const [open, setOpen] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState<TeamRow | null>(null);
     const [form, setForm] = useState<TeamFormState>(emptyForm);
-    const [sessionRole, setSessionRole] = useState<"OWNER" | "MANAGER" | "VIEWER" | null>(null);
 
     const canManage = useMemo(() => sessionRole === "OWNER", [sessionRole]);
-
-    const load = async () => {
-        setLoading(true);
-        try {
-            const [sessionRes, teamsRes, teachersRes] = await Promise.all([
-                api.get(API.INTERNAL.AUTH.ME),
-                api.get(API.INTERNAL.TEAMS.ROOT),
-                api.get(API.INTERNAL.TEACHERS.ROOT),
-            ]);
-
-            setSessionRole(sessionRes.data?.data?.user?.role ?? null);
-
-            const teamRows: TeamRow[] = (teamsRes.data?.data ?? []).map((member: any) => ({
-                id: member.id,
-                name: member.name ?? member.email ?? "Unknown",
-                phone: "",
-                email: member.email ?? "",
-                role: member.role,
-                active: true,
-                source: "team",
-            }));
-
-            const teacherRows: TeamRow[] = (teachersRes.data?.data ?? []).map((teacher: any) => ({
-                id: teacher.id,
-                name: teacher.name,
-                phone: "",
-                email: "",
-                role: "TEACHER",
-                active: true,
-                subjects: teacher.subject ?? "",
-                experience: "",
-                bio: teacher.bio ?? "",
-                source: "teacher",
-            }));
-
-            setRows([...teamRows, ...teacherRows]);
-        } catch {
-            toast.error("Failed to load team");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        load();
-    }, []);
 
     const openCreate = () => {
         setEditing(null);
@@ -100,37 +55,11 @@ export default function TeamPage() {
     };
 
     const save = async (values: TeamFormState) => {
-        setSaving(true);
         try {
-            if (values.role === "TEACHER") {
-                const payload = {
-                    name: values.name,
-                    subject: values.subjects || undefined,
-                    bio: values.bio || undefined,
-                };
-
-                if (editing?.source === "teacher") {
-                    await api.patch(API.INTERNAL.TEACHERS.BY_ID(editing.id), payload);
-                } else {
-                    await api.post(API.INTERNAL.TEACHERS.ROOT, payload);
-                }
-            } else {
-                const mappedRole = values.role === "VIEWER" ? "VIEWER" : "MANAGER";
-
-                if (editing?.source === "team") {
-                    await api.patch(API.INTERNAL.TEAMS.BY_ID(editing.id), { role: mappedRole });
-                } else {
-                    await api.post(API.INTERNAL.TEAMS.ROOT, {
-                        name: values.name,
-                        email: values.email,
-                        role: mappedRole,
-                    });
-                }
-            }
-
+            await saveTeamMember({ values, editing }).unwrap();
             toast.success(editing ? "Team member updated" : "Team member created");
             setOpen(false);
-            await load();
+            await refetch();
         } catch (error: any) {
             const apiErrorCode = error?.response?.data?.error?.code;
             if (apiErrorCode === "PLAN_USER_LIMIT_REACHED") {
@@ -145,48 +74,41 @@ export default function TeamPage() {
             } else {
                 toast.error(error?.response?.data?.error?.message ?? "Failed to save member");
             }
-        } finally {
-            setSaving(false);
         }
     };
 
     const remove = async (member: TeamRow) => {
         try {
-            if (member.source === "teacher") {
-                await api.delete(API.INTERNAL.TEACHERS.BY_ID(member.id));
-            } else {
-                await api.delete(API.INTERNAL.TEAMS.BY_ID(member.id));
-            }
+            await deleteTeamMember(member).unwrap();
             toast.success("Team member removed");
-            await load();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Failed to remove member");
         }
     };
 
     return (
-        <main className="p-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className=" text-2xl font-semibold">Team</h1>
-                    <p className="text-sm text-muted-foreground mt-1">Manage owners, managers, counselors, teachers, and viewers.</p>
+        <>
+            <ListWidget
+                title="Team"
+                description="Manage owners, managers, counselors, teachers, and viewers."
+                loading={loading}
+                isEmpty={!loading && rows.length === 0}
+                emptyMessage="No team members found."
+                actions={canManage ? <Button onClick={openCreate}>Add Team Member</Button> : null}
+            >
+                <div className="space-y-4 px-6 py-4">
+                    <div className="rounded border p-3 text-sm">
+                        <p className="mb-2 font-medium">Role Access</p>
+                        <p><span className="font-medium">OWNER</span> - Full control over team, data, and billing.</p>
+                        <p><span className="font-medium">EDITOR</span> - Manage leads, students, courses, batches, and fees.</p>
+                        <p><span className="font-medium">VIEWER</span> - Read-only access.</p>
+                        <p className="mt-2 text-muted-foreground">Need more seats? Upgrade from <Link href="/billing" className="underline">Billing</Link>.</p>
+                    </div>
+
+                    <TeamTable rows={rows} canManage={canManage} onEdit={openEdit} onDelete={remove} />
                 </div>
-                {canManage ? <Button onClick={openCreate}>Add Team Member</Button> : null}
-            </div>
-
-            <div className="mt-4 rounded border p-3 text-sm">
-                <p className="font-medium mb-2">Role Access</p>
-                <p><span className="font-medium">OWNER</span> — Full control over team, data, and billing.</p>
-                <p><span className="font-medium">EDITOR</span> — Manage leads, students, courses, batches, and fees.</p>
-                <p><span className="font-medium">VIEWER</span> — Read-only access.</p>
-                <p className="mt-2 text-muted-foreground">Need more seats? Upgrade from <Link href="/billing" className="underline">Billing</Link>.</p>
-            </div>
-
-            {loading ? (
-                <p className="mt-6 text-sm text-muted-foreground">Loading team...</p>
-            ) : (
-                <TeamTable rows={rows} canManage={canManage} onEdit={openEdit} onDelete={remove} />
-            )}
+            </ListWidget>
 
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent>
@@ -202,6 +124,6 @@ export default function TeamPage() {
                     />
                 </DialogContent>
             </Dialog>
-        </main>
+        </>
     );
 }

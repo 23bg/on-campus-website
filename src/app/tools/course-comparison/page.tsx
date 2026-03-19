@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
 
 export const metadata: Metadata = {
     title: "Compare Coaching Courses Near You",
@@ -88,6 +88,15 @@ export default async function CourseComparisonPage({ searchParams }: CourseCompa
         })
         .filter((value): value is NonNullable<typeof value> => Boolean(value));
 
+    const columns: Column<(typeof rows)[number]>[] = [
+        { header: "Institute", accessor: "institute" },
+        { header: "Course", accessor: "course" },
+        { header: "Fees", accessor: "fees" },
+        { header: "Duration", accessor: "duration" },
+        { header: "Mode", accessor: "mode" },
+        { header: "City", accessor: "city" },
+    ];
+
     return (
         <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
             <div className="space-y-2">
@@ -115,38 +124,11 @@ export default async function CourseComparisonPage({ searchParams }: CourseCompa
                     <CardDescription>{rows.length} courses found</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Institute</TableHead>
-                                <TableHead>Course</TableHead>
-                                <TableHead>Fees</TableHead>
-                                <TableHead>Duration</TableHead>
-                                <TableHead>Mode</TableHead>
-                                <TableHead>City</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {rows.length ? (
-                                rows.map((row) => (
-                                    <TableRow key={row.id}>
-                                        <TableCell>{row.institute}</TableCell>
-                                        <TableCell>{row.course}</TableCell>
-                                        <TableCell>{row.fees}</TableCell>
-                                        <TableCell>{row.duration}</TableCell>
-                                        <TableCell>{row.mode}</TableCell>
-                                        <TableCell>{row.city}</TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        No courses found for selected filters.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                    {rows.length ? (
+                        <TableWidget columns={columns} data={rows} rowKey={(row) => row.id} />
+                    ) : (
+                        <p className="text-center text-muted-foreground">No courses found for selected filters.</p>
+                    )}
                 </CardContent>
             </Card>
 

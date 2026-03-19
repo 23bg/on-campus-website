@@ -1,18 +1,27 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
-import { Loader2, Pencil, Trash2, Plus, Upload, CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Loader2, Plus, Upload, CheckCircle2, AlertCircle, Eye, MoreHorizontal } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
+import ListWidget from "@/components/custom/ListWidget";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
+import {
+    useAssignStudentCourseMutation,
+    useDeleteStudentMutation,
+    useGetStudentAssignmentsQuery,
+    useGetStudentsDashboardQuery,
+    useSaveStudentMutation,
+    useUpdateStudentPortalCredentialsMutation,
+    useUploadStudentsCsvMutation,
+} from "@/services/dashboardTables.api";
 
 type Course = { id: string; name: string; defaultFees?: number | null };
 type Batch = { id: string; courseId: string; name: string };
@@ -49,30 +58,33 @@ const PAGE_SIZE = 10;
 
 export default function StudentsPage() {
     const searchParams = useSearchParams();
-    const [students, setStudents] = useState<Student[]>([]);
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [batches, setBatches] = useState<Batch[]>([]);
-    const [feeSummaries, setFeeSummaries] = useState<Record<string, FeeSummary>>({});
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const { data: dashboardState, isLoading: loading, refetch } = useGetStudentsDashboardQuery(undefined, { refetchOnMountOrArgChange: true });
+    const students = (dashboardState?.rows ?? []) as Student[];
+    const courses = (dashboardState?.courses ?? []) as Course[];
+    const batches = (dashboardState?.batches ?? []) as Batch[];
+    const feeSummaries = (dashboardState?.feeSummaries ?? {}) as Record<string, FeeSummary>;
+    const [saveStudentMutation, { isLoading: saving }] = useSaveStudentMutation();
+    const [deleteStudentMutation] = useDeleteStudentMutation();
+    const [assignStudentCourseMutation, { isLoading: assigningCourse }] = useAssignStudentCourseMutation();
+    const [updateStudentPortalCredentialsMutation, { isLoading: updatingPortalCredentials }] = useUpdateStudentPortalCredentialsMutation();
+    const [uploadStudentsCsvMutation, { isLoading: uploading }] = useUploadStudentsCsvMutation();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [viewDialogOpen, setViewDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [form, setForm] = useState<StudentForm>(emptyForm);
-    const [uploading, setUploading] = useState(false);
     const [uploadFileName, setUploadFileName] = useState<string | null>(null);
     const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [portalCredentials, setPortalCredentials] = useState<PortalCredentialForm>({ username: "", email: "", password: "" });
-    const [updatingPortalCredentials, setUpdatingPortalCredentials] = useState(false);
-    const [studentAssignments, setStudentAssignments] = useState<StudentAssignment[]>([]);
-    const [loadingAssignments, setLoadingAssignments] = useState(false);
-    const [assigningCourse, setAssigningCourse] = useState(false);
     const [assignmentForm, setAssignmentForm] = useState<{ courseId: string; batchId: string }>({ courseId: "", batchId: "" });
     const [page, setPage] = useState(1);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { data: studentAssignments = [], isLoading: loadingAssignments } = useGetStudentAssignmentsQuery(selectedStudent?.id ?? "", {
+        skip: !selectedStudent,
+        refetchOnMountOrArgChange: true,
+    });
 
     useEffect(() => {
         const query = searchParams.get("query") ?? "";
@@ -80,55 +92,6 @@ export default function StudentsPage() {
             setSearchQuery(query);
         }
     }, [searchParams, searchQuery]);
-
-    useEffect(() => {
-        if (searchParams.get("action") === "add") {
-            openCreate();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams]);
-
-    const load = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [studentRes, courseRes, batchRes] = await Promise.all([
-                api.get(API.INTERNAL.STUDENTS.ROOT),
-                api.get(API.INTERNAL.COURSES.ROOT),
-                api.get(API.INTERNAL.BATCHES.ROOT),
-            ]);
-            const studentList: Student[] = studentRes.data?.data ?? [];
-            setStudents(studentList);
-            setCourses(courseRes.data?.data ?? []);
-            setBatches(batchRes.data?.data ?? []);
-
-            // Load fee summaries for all students
-            const summaries: Record<string, FeeSummary> = {};
-            await Promise.all(
-                studentList.map(async (s) => {
-                    try {
-                        const response = await api.get(API.INTERNAL.FEES.WITH_STUDENT(s.id));
-                        const feeData = response.data?.data;
-                        if (feeData) {
-                            summaries[s.id] = {
-                                totalFees: feeData.totalFees ?? 0,
-                                totalPaid: feeData.totalPaid ?? 0,
-                                totalPending: feeData.totalPending ?? 0,
-                            };
-                        }
-                    } catch {
-                        // ignore
-                    }
-                })
-            );
-            setFeeSummaries(summaries);
-        } catch {
-            toast.error("Failed to load students");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { load(); }, [load]);
 
     const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
     const batchMap = Object.fromEntries(batches.map((b) => [b.id, b.name]));
@@ -170,11 +133,17 @@ export default function StudentsPage() {
         });
     };
 
-    const openCreate = () => {
+    function openCreate() {
         setEditingId(null);
         setForm(emptyForm);
         setDialogOpen(true);
-    };
+    }
+
+    useEffect(() => {
+        if (searchParams.get("action") === "add") {
+            openCreate();
+        }
+    }, [searchParams]);
 
     const openEdit = (student: Student) => {
         setEditingId(student.id);
@@ -195,10 +164,7 @@ export default function StudentsPage() {
             toast.error("Name and phone are required");
             return;
         }
-        setSaving(true);
         try {
-            const url = editingId ? API.INTERNAL.STUDENTS.BY_ID(editingId) : API.INTERNAL.STUDENTS.ROOT;
-            const method = editingId ? "PATCH" : "POST";
             const body: Record<string, unknown> = { name: form.name, phone: form.phone };
             if (form.email) body.email = form.email;
             if (form.courseId) body.courseId = form.courseId;
@@ -206,22 +172,20 @@ export default function StudentsPage() {
             if (form.admissionDate) body.admissionDate = form.admissionDate;
             if (!editingId && form.fees) body.fees = parseFloat(form.fees);
 
-            await api.request({ method, url, data: body });
+            await saveStudentMutation({ editingId, body }).unwrap();
             toast.success(editingId ? "Student updated" : "Student added");
             setDialogOpen(false);
-            await load();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
-        } finally {
-            setSaving(false);
         }
     };
 
     const deleteStudent = async (id: string) => {
         try {
-            await api.delete(API.INTERNAL.STUDENTS.BY_ID(id));
+            await deleteStudentMutation(id).unwrap();
             toast.success("Student deleted");
-            await load();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -235,18 +199,6 @@ export default function StudentsPage() {
             password: "",
         });
         setAssignmentForm({ courseId: "", batchId: "" });
-        setLoadingAssignments(true);
-        api
-            .get(API.INTERNAL.STUDENTS.COURSES(student.id))
-            .then((response) => {
-                setStudentAssignments(response.data?.data ?? []);
-            })
-            .catch(() => {
-                setStudentAssignments([]);
-            })
-            .finally(() => {
-                setLoadingAssignments(false);
-            });
         setViewDialogOpen(true);
     };
 
@@ -257,22 +209,19 @@ export default function StudentsPage() {
             return;
         }
 
-        setAssigningCourse(true);
         try {
-            await api.post(API.INTERNAL.STUDENTS.COURSES(selectedStudent.id), {
-                courseId: assignmentForm.courseId,
-                batchId: assignmentForm.batchId || undefined,
-            });
-
-            const response = await api.get(API.INTERNAL.STUDENTS.COURSES(selectedStudent.id));
-            setStudentAssignments(response.data?.data ?? []);
+            await assignStudentCourseMutation({
+                studentId: selectedStudent.id,
+                body: {
+                    courseId: assignmentForm.courseId,
+                    batchId: assignmentForm.batchId || undefined,
+                },
+            }).unwrap();
             setAssignmentForm({ courseId: "", batchId: "" });
             toast.success("Course assigned successfully");
-            await load();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Failed to assign course");
-        } finally {
-            setAssigningCourse(false);
         }
     };
 
@@ -283,37 +232,28 @@ export default function StudentsPage() {
             return;
         }
 
-        setUpdatingPortalCredentials(true);
         try {
-            await api.patch(`/students/${selectedStudent.id}/portal-credentials`, portalCredentials);
+            await updateStudentPortalCredentialsMutation({
+                studentId: selectedStudent.id,
+                body: portalCredentials,
+            }).unwrap();
             toast.success("Student portal credentials updated");
             setPortalCredentials((prev) => ({ ...prev, password: "" }));
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Failed to update portal credentials");
-        } finally {
-            setUpdatingPortalCredentials(false);
         }
     };
 
     const onUpload = async (file: File) => {
         setUploadFileName(file.name);
         setUploadResult(null);
-        const formData = new FormData();
-        formData.append("file", file);
-
-        setUploading(true);
         try {
-            const response = await api.post(API.INTERNAL.STUDENTS.UPLOAD, formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-            const data = response.data?.data as UploadResult;
+            const data = await uploadStudentsCsvMutation(file).unwrap();
             setUploadResult(data);
             toast.success(`${data.inserted} students imported`);
-            await load();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error during upload");
-        } finally {
-            setUploading(false);
         }
     };
 
@@ -330,93 +270,135 @@ export default function StudentsPage() {
         URL.revokeObjectURL(url);
     };
 
-    return (
-        <main className="p-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className=" text-2xl font-semibold">Students</h1>
-                    <p className="text-muted-foreground text-sm mt-1">{visibleStudents.length} shown • {students.length} total students</p>
+    const columns = useMemo<Column<Student>[]>(() => [
+        {
+            header: "Sr. No.",
+            cell: (_student, index) => (page - 1) * PAGE_SIZE + index + 1,
+        },
+        {
+            header: "Name",
+            accessor: "name",
+            className: "font-medium max-w-[180px] truncate",
+            hoverCard: true,
+            hoverCardContent: (student) => (
+                <div className="space-y-1 text-sm">
+                    <p className="font-medium">{student.name}</p>
+                    <p className="text-muted-foreground">Phone: {student.phone}</p>
+                    <p className="text-muted-foreground">Email: {student.email || "-"}</p>
+                    <p className="text-muted-foreground">Course: {student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Input
-                        value={searchQuery}
-                        onChange={(event) => setSearchQuery(event.target.value)}
-                        placeholder="Search student, phone, course, batch"
-                        className="w-72"
-                    />
-                    <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
-                        <Upload className="mr-2 h-4 w-4" /> Upload CSV
-                    </Button>
-                    <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Student</Button>
-                </div>
-            </div>
+            ),
+            sortable: true,
+        },
+        {
+            header: "Phone",
+            accessor: "phone",
+        },
+        {
+            header: "Course",
+            className: "max-w-[180px] truncate",
+            tooltip: true,
+            cell: (student) => {
+                const courseName = student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-";
+                return courseName;
+            },
+            tooltipContent: (student) => student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-",
+        },
+        {
+            header: "Batch",
+            className: "max-w-[180px] truncate",
+            tooltip: true,
+            cell: (student) => {
+                const batchName = student.batchId ? (batchMap[student.batchId] ?? "-") : "-";
+                return batchName;
+            },
+            tooltipContent: (student) => student.batchId ? (batchMap[student.batchId] ?? "-") : "-",
+        },
+        {
+            header: "Total Fees",
+            className: "text-right",
+            cell: (student) => formatCurrency(feeSummaries[student.id]?.totalFees ?? 0),
+        },
+        {
+            header: "Paid",
+            className: "text-right text-green-600",
+            cell: (student) => formatCurrency(feeSummaries[student.id]?.totalPaid ?? 0),
+        },
+        {
+            header: "Pending",
+            className: "text-right text-red-600",
+            cell: (student) => formatCurrency(feeSummaries[student.id]?.totalPending ?? 0),
+        },
+        {
+            header: "Actions",
+            type: "actions",
+            className: "w-[120px]",
+            cell: (student) => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openView(student)}>View</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEdit(student)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onClick={() => deleteStudent(student.id)}>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ),
+        },
+    ], [batchMap, courseMap, deleteStudent, feeSummaries, openEdit, openView, page]);
 
-            <div className="mt-4 rounded border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Sr. No.</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead>Course</TableHead>
-                            <TableHead>Batch</TableHead>
-                            <TableHead className="text-right">Total Fees</TableHead>
-                            <TableHead className="text-right">Paid</TableHead>
-                            <TableHead className="text-right">Pending</TableHead>
-                            <TableHead className="w-[120px]">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={9} className="text-center py-8">
-                                    <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
-                                </TableCell>
-                            </TableRow>
-                        ) : visibleStudents.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                                    No matching students found.
-                                </TableCell>
-                            </TableRow>
-                        ) : paginatedStudents.map((student, index) => {
-                            const fee = feeSummaries[student.id];
-                            return (
-                                <TableRow key={student.id}>
-                                    <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
-                                    <TableCell className="font-medium max-w-[180px] truncate" title={student.name}>{student.name}</TableCell>
-                                    <TableCell>{student.phone}</TableCell>
-                                    <TableCell className="max-w-[180px] truncate" title={student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}>{student.courseId ? (courseMap[student.courseId]?.name ?? "-") : "-"}</TableCell>
-                                    <TableCell className="max-w-[180px] truncate" title={student.batchId ? (batchMap[student.batchId] ?? "-") : "-"}>{student.batchId ? (batchMap[student.batchId] ?? "-") : "-"}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(fee?.totalFees ?? 0)}</TableCell>
-                                    <TableCell className="text-right text-green-600">{formatCurrency(fee?.totalPaid ?? 0)}</TableCell>
-                                    <TableCell className="text-right text-red-600">{formatCurrency(fee?.totalPending ?? 0)}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-1">
-                                            <Button variant="ghost" size="icon" onClick={() => openEdit(student)}>
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => openView(student)}>
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => deleteStudent(student.id)}>
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </div>
-            <TablePaginationControls
-                className="mt-3"
-                page={page}
-                pageSize={PAGE_SIZE}
-                totalItems={visibleStudents.length}
-                onPageChange={setPage}
-            />
+    const assignmentColumns = useMemo<Column<StudentAssignment>[]>(() => [
+        {
+            header: "Course",
+            accessor: "courseName",
+        },
+        {
+            header: "Batch",
+            cell: (assignment) => assignment.batchName ?? "-",
+        },
+        {
+            header: "Start Date",
+            cell: (assignment) => assignment.batchStartDate ? new Date(assignment.batchStartDate).toLocaleDateString() : "-",
+        },
+        {
+            header: "Status",
+            accessor: "status",
+        },
+    ], []);
+
+    return (
+        <>
+            <ListWidget
+                title="Students"
+                description={`${visibleStudents.length} shown • ${students.length} total students`}
+                search={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchPlaceholder="Search student, phone, course, batch"
+                loading={loading}
+                isEmpty={!loading && visibleStudents.length === 0}
+                emptyMessage="No matching students found."
+                actions={
+                    <>
+                        <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+                            <Upload className="mr-2 h-4 w-4" /> Upload CSV
+                        </Button>
+                        <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Student</Button>
+                    </>
+                }
+                footer={
+                    <TablePaginationControls
+                        page={page}
+                        pageSize={PAGE_SIZE}
+                        totalItems={visibleStudents.length}
+                        onPageChange={setPage}
+                    />
+                }
+            >
+                <TableWidget columns={columns} data={paginatedStudents} rowKey={(student) => student.id} />
+            </ListWidget>
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
@@ -600,34 +582,17 @@ export default function StudentsPage() {
                                 </div>
 
                                 <div className="rounded border overflow-x-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Course</TableHead>
-                                                <TableHead>Batch</TableHead>
-                                                <TableHead>Start Date</TableHead>
-                                                <TableHead>Status</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {loadingAssignments ? (
-                                                <TableRow>
-                                                    <TableCell colSpan={4} className="text-center text-muted-foreground">Loading assignments...</TableCell>
-                                                </TableRow>
-                                            ) : studentAssignments.length === 0 ? (
-                                                <TableRow>
-                                                    <TableCell colSpan={4} className="text-center text-muted-foreground">No assignments found.</TableCell>
-                                                </TableRow>
-                                            ) : studentAssignments.map((assignment) => (
-                                                <TableRow key={assignment.id}>
-                                                    <TableCell>{assignment.courseName}</TableCell>
-                                                    <TableCell>{assignment.batchName ?? "-"}</TableCell>
-                                                    <TableCell>{assignment.batchStartDate ? new Date(assignment.batchStartDate).toLocaleDateString() : "-"}</TableCell>
-                                                    <TableCell>{assignment.status}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                    {loadingAssignments ? (
+                                        <p className="p-4 text-center text-muted-foreground">Loading assignments...</p>
+                                    ) : studentAssignments.length === 0 ? (
+                                        <p className="p-4 text-center text-muted-foreground">No assignments found.</p>
+                                    ) : (
+                                        <TableWidget
+                                            columns={assignmentColumns}
+                                            data={studentAssignments}
+                                            rowKey={(assignment) => assignment.id}
+                                        />
+                                    )}
                                 </div>
                             </div>
 
@@ -665,6 +630,6 @@ export default function StudentsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </main>
+        </>
     );
 }

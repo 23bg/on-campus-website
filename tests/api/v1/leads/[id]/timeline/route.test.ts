@@ -13,7 +13,7 @@ vi.mock("@/lib/auth/auth", () => ({
     readSessionFromCookie: mockReadSessionFromCookie,
 }));
 
-vi.mock("@/features/lead/services/lead.service", () => ({
+vi.mock("@/server/services/leads.service", () => ({
     leadService: mockLeadService,
 }));
 
@@ -65,3 +65,4 @@ describe("GET /api/v1/leads/[id]/timeline", () => {
         expect(body.error.code).toBe("LEAD_NOT_FOUND");
     });
 });
+

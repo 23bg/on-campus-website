@@ -1,26 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
-
-type FooterData = {
-    student?: {
-        institute?: {
-            name?: string | null;
-        } | null;
-    };
-};
+import { useGetStudentPortalQuery } from "@/services/appUi.api";
 
 export default function StudentPortalFooter() {
-    const [instituteName, setInstituteName] = useState("Institute Name");
-
-    useEffect(() => {
-        api.get(API.INTERNAL.STUDENT_PORTAL.ME).then((response) => {
-            const name = response.data?.data?.student?.institute?.name?.trim();
-            if (name) setInstituteName(name);
-        });
-    }, []);
+    const { data } = useGetStudentPortalQuery();
+    const instituteName = data?.student?.institute?.name?.trim() || "Institute Name";
 
     return (
         <footer className="border-t bg-background">

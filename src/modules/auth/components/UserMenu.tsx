@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Building2, CreditCard, LogOut, Palette, User } from "lucide-react";
+import { Building2, CreditCard, LogOut, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
     DropdownMenu,
@@ -10,16 +10,16 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import ROUTES from "@/constants/routes";
+import { useUserLogoutMutation } from "@/services/appUi.api";
 
 export default function UserMenu() {
     const router = useRouter();
+    const [userLogout] = useUserLogoutMutation();
 
     const logout = async () => {
         try {
-            await api.post(API.AUTH.LOG_OUT);
+            await userLogout().unwrap();
         } catch {
         } finally {
             router.push("/login");
@@ -49,10 +49,6 @@ export default function UserMenu() {
                     <CreditCard className="mr-2 h-4 w-4" />
                     Billing
                 </DropdownMenuItem>
-                {/* <DropdownMenuItem onClick={() => router.push(`${ROUTES.DASHBOARD.SETTINGS}?tab=appearance`)}>
-                    <Palette className="mr-2 h-4 w-4" />
-                    Theme / Appearance
-                </DropdownMenuItem> */}
 
                 <DropdownMenuSeparator />
 

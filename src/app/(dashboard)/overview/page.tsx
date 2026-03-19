@@ -1,117 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
 import { Loader2, IndianRupee, AlertTriangle, GraduationCap, UserPlus, Users } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import MetricCard from "@/components/layout/dashboard/MetricCard";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { DashboardOverviewResponse, useGetOverviewQuery, usePostAnnouncementMutation } from "@/services/adminDashboard.api";
 
-type Metrics = {
-    leadsThisMonth: number;
-    admissionsThisMonth: number;
-    totalStudents: number;
-    conversionPercentage: number;
-    totalFeesCollectedThisMonth: number;
-    totalOutstandingFees: number;
-    todayOverview?: {
-        newLeads: number;
-        feesCollected: number;
-        feesDueToday: number;
-        newStudents: number;
-    };
-    recentLeads?: Array<{
-        id: string;
-        name: string;
-        phone: string;
-        status: string;
-        createdAt: string;
-    }>;
-    recentPayments?: Array<{
-        id: string;
-        amount: number;
-        method?: string | null;
-        paidOn: string;
-        student: {
-            name: string;
-            phone: string;
-        };
-    }>;
-    followUpOverview?: {
-        todayCount: number;
-        overdueCount: number;
-        todaysFollowUps: Array<{
-            id: string;
-            name: string;
-            phone: string;
-            followUpAt?: string | null;
-            status: string;
-        }>;
-        overdueFollowUps: Array<{
-            id: string;
-            name: string;
-            phone: string;
-            followUpAt?: string | null;
-            status: string;
-        }>;
-    };
-};
-
-type Defaulter = {
-    studentId: string;
-    studentName: string;
-    phone: string;
-    courseName: string;
-    totalFees: number;
-    totalPaid: number;
-    pending: number;
-    dueDate?: string | null;
-};
+type Metrics = NonNullable<DashboardOverviewResponse>["metrics"];
+type Defaulter = NonNullable<DashboardOverviewResponse>["defaulters"][number];
 
 const PAGE_SIZE = 5;
 
-type DashboardOverviewResponse = {
-    metrics: Metrics;
-    defaulters: Defaulter[];
-};
+type FollowUpLead = NonNullable<Metrics["followUpOverview"]>["todaysFollowUps"][number];
+type RecentLead = NonNullable<Metrics["recentLeads"]>[number];
+type RecentPayment = NonNullable<Metrics["recentPayments"]>[number];
 
 export default function DashboardPage() {
-    const [metrics, setMetrics] = useState<Metrics | null>(null);
-    const [defaulters, setDefaulters] = useState<Defaulter[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: overview, isLoading: loading } = useGetOverviewQuery();
+    const [postAnnouncement, { isLoading: postingAnnouncement }] = usePostAnnouncementMutation();
+    const metrics = overview?.metrics ?? null;
+    const defaulters = overview?.defaulters ?? [];
     const [announcementTitle, setAnnouncementTitle] = useState("");
     const [announcementBody, setAnnouncementBody] = useState("");
-    const [postingAnnouncement, setPostingAnnouncement] = useState(false);
     const [todayFollowUpsPage, setTodayFollowUpsPage] = useState(1);
     const [overdueFollowUpsPage, setOverdueFollowUpsPage] = useState(1);
     const [recentLeadsPage, setRecentLeadsPage] = useState(1);
     const [recentPaymentsPage, setRecentPaymentsPage] = useState(1);
     const [defaultersPage, setDefaultersPage] = useState(1);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-                const overviewRes = await api.get<{ success: boolean; data: DashboardOverviewResponse }>(
-                    API.INTERNAL.DASHBOARD.OVERVIEW
-                );
-                const payload = overviewRes.data?.data;
-                setMetrics(payload?.metrics ?? null);
-                setDefaulters(payload?.defaulters ?? []);
-            } catch {
-                // silently fail — show zeros
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, []);
 
     const formatCurrency = (v: number) => `₹${v.toLocaleString("en-IN")}`;
 
@@ -134,29 +56,52 @@ export default function DashboardPage() {
     const paginatedRecentPayments = recentPayments.slice((recentPaymentsPage - 1) * PAGE_SIZE, recentPaymentsPage * PAGE_SIZE);
     const paginatedDefaulters = defaulters.slice((defaultersPage - 1) * PAGE_SIZE, defaultersPage * PAGE_SIZE);
 
-    const postAnnouncement = async () => {
+    const followUpColumns = useMemo<Column<FollowUpLead>[]>(() => [
+        { header: "Name", className: "font-medium max-w-[180px] truncate", cell: (lead) => <span title={lead.name}>{lead.name}</span> },
+        { header: "Phone", accessor: "phone" },
+        { header: "Date", cell: (lead) => lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-" },
+    ], []);
+
+    const overdueColumns = useMemo<Column<FollowUpLead>[]>(() => [
+        { header: "Name", className: "font-medium max-w-[180px] truncate", cell: (lead) => <span title={lead.name}>{lead.name}</span> },
+        { header: "Phone", accessor: "phone" },
+        { header: "Due", className: "text-red-600", cell: (lead) => lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-" },
+    ], []);
+
+    const recentLeadsColumns = useMemo<Column<RecentLead>[]>(() => [
+        { header: "Name", className: "font-medium max-w-[180px] truncate", cell: (lead) => <span title={lead.name}>{lead.name}</span> },
+        { header: "Phone", accessor: "phone" },
+        { header: "Status", accessor: "status" },
+    ], []);
+
+    const recentPaymentsColumns = useMemo<Column<RecentPayment>[]>(() => [
+        { header: "Student", className: "font-medium max-w-[180px] truncate", cell: (payment) => <span title={payment.student.name}>{payment.student.name}</span> },
+        { header: "Amount", className: "text-right", cell: (payment) => formatCurrency(payment.amount) },
+        { header: "Method", className: "max-w-[140px] truncate", cell: (payment) => <span title={payment.method || "-"}>{payment.method || "-"}</span> },
+    ], []);
+
+    const defaultersColumns = useMemo<Column<Defaulter>[]>(() => [
+        { header: "Student", className: "font-medium max-w-[180px] truncate", cell: (item) => <span title={item.studentName}>{item.studentName}</span> },
+        { header: "Course", className: "max-w-[180px] truncate", cell: (item) => <span title={item.courseName}>{item.courseName}</span> },
+        { header: "Pending", className: "text-right font-medium text-red-600", cell: (item) => formatCurrency(item.pending) },
+    ], []);
+
+    const handlePostAnnouncement = async () => {
         if (!announcementTitle.trim() || !announcementBody.trim()) {
             toast.error("Title and message are required");
             return;
         }
 
-        setPostingAnnouncement(true);
         try {
-            await api.post("/announcements", {
-                title: announcementTitle,
-                body: announcementBody,
-            });
+            await postAnnouncement({ title: announcementTitle, body: announcementBody }).unwrap();
             setAnnouncementTitle("");
             setAnnouncementBody("");
             toast.success("Announcement posted");
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Failed to post announcement");
-        } finally {
-            setPostingAnnouncement(false);
+            toast.error(error?.data?.error?.message ?? "Failed to post announcement");
         }
     };
 
-    // Reordered: Fees first (money), then admissions, leads, students
     const cards = [
         { label: "Fees Collected", value: formatCurrency(metrics?.totalFeesCollectedThisMonth ?? 0), icon: IndianRupee, color: "text-emerald-600" },
         { label: "Outstanding Fees", value: formatCurrency(metrics?.totalOutstandingFees ?? 0), icon: AlertTriangle, color: "text-red-600" },
@@ -233,7 +178,7 @@ export default function DashboardPage() {
                                             maxLength={1000}
                                         />
                                         <div className="flex justify-end">
-                                            <Button onClick={postAnnouncement} disabled={postingAnnouncement}>
+                                            <Button onClick={handlePostAnnouncement} disabled={postingAnnouncement}>
                                                 {postingAnnouncement ? "Posting..." : "Post Announcement"}
                                             </Button>
                                         </div>
@@ -281,24 +226,7 @@ export default function DashboardPage() {
                                         <p className="text-sm text-muted-foreground">No follow-ups scheduled for today.</p>
                                     ) : (
                                         <>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Name</TableHead>
-                                                        <TableHead>Phone</TableHead>
-                                                        <TableHead>Date</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {paginatedTodayFollowUps.map((lead) => (
-                                                        <TableRow key={lead.id}>
-                                                            <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                            <TableCell>{lead.phone}</TableCell>
-                                                            <TableCell>{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
+                                            <TableWidget columns={followUpColumns} data={paginatedTodayFollowUps} rowKey={(lead) => lead.id} />
                                             <TablePaginationControls
                                                 className="mt-3"
                                                 page={todayFollowUpsPage}
@@ -320,24 +248,7 @@ export default function DashboardPage() {
                                         <p className="text-sm text-muted-foreground">No overdue follow-ups.</p>
                                     ) : (
                                         <>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Name</TableHead>
-                                                        <TableHead>Phone</TableHead>
-                                                        <TableHead>Due</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {paginatedOverdueFollowUps.map((lead) => (
-                                                        <TableRow key={lead.id}>
-                                                            <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                            <TableCell>{lead.phone}</TableCell>
-                                                            <TableCell className="text-red-600">{lead.followUpAt ? new Date(lead.followUpAt).toLocaleDateString() : "-"}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
+                                            <TableWidget columns={overdueColumns} data={paginatedOverdueFollowUps} rowKey={(lead) => lead.id} />
                                             <TablePaginationControls
                                                 className="mt-3"
                                                 page={overdueFollowUpsPage}
@@ -364,24 +275,7 @@ export default function DashboardPage() {
                                         <p className="text-sm text-muted-foreground">No recent leads yet. Share your institute link to start receiving enquiries.</p>
                                     ) : (
                                         <>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Name</TableHead>
-                                                        <TableHead>Phone</TableHead>
-                                                        <TableHead>Status</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {paginatedRecentLeads.map((lead) => (
-                                                        <TableRow key={lead.id}>
-                                                            <TableCell className="font-medium max-w-[180px] truncate" title={lead.name}>{lead.name}</TableCell>
-                                                            <TableCell>{lead.phone}</TableCell>
-                                                            <TableCell>{lead.status}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
+                                            <TableWidget columns={recentLeadsColumns} data={paginatedRecentLeads} rowKey={(lead) => lead.id} />
                                             <TablePaginationControls
                                                 className="mt-3"
                                                 page={recentLeadsPage}
@@ -403,24 +297,7 @@ export default function DashboardPage() {
                                         <p className="text-sm text-muted-foreground">No recent payments found.</p>
                                     ) : (
                                         <>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Student</TableHead>
-                                                        <TableHead className="text-right">Amount</TableHead>
-                                                        <TableHead>Method</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {paginatedRecentPayments.map((payment) => (
-                                                        <TableRow key={payment.id}>
-                                                            <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
-                                                            <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
-                                                            <TableCell className="max-w-[140px] truncate" title={payment.method || "-"}>{payment.method || "-"}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
+                                            <TableWidget columns={recentPaymentsColumns} data={paginatedRecentPayments} rowKey={(payment) => payment.id} />
                                             <TablePaginationControls
                                                 className="mt-3"
                                                 page={recentPaymentsPage}
@@ -445,24 +322,7 @@ export default function DashboardPage() {
                                         <p className="text-sm text-muted-foreground">No fee defaulters right now.</p>
                                     ) : (
                                         <>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Student</TableHead>
-                                                        <TableHead>Course</TableHead>
-                                                        <TableHead className="text-right">Pending</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {paginatedDefaulters.map((d) => (
-                                                        <TableRow key={d.studentId}>
-                                                            <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
-                                                            <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
-                                                            <TableCell className="text-right font-medium text-red-600">{formatCurrency(d.pending)}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
+                                            <TableWidget columns={defaultersColumns} data={paginatedDefaulters} rowKey={(item) => item.studentId} />
                                             <TablePaginationControls
                                                 className="mt-3"
                                                 page={defaultersPage}

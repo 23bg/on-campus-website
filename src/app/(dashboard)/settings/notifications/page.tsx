@@ -1,19 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-
-type NotificationPreferences = {
-    newEnquiryAlert: boolean;
-    followUpReminder: boolean;
-    leadAssigned: boolean;
-    paymentReceived: boolean;
-    admissionConfirmed: boolean;
-};
+import { NotificationPreferences, useGetNotificationSettingsQuery, useUpdateNotificationSettingMutation } from "@/services/adminDashboard.api";
 
 const DEFAULT_PREFS: NotificationPreferences = {
     newEnquiryAlert: true,
@@ -24,33 +14,14 @@ const DEFAULT_PREFS: NotificationPreferences = {
 };
 
 export default function NotificationSettingsPage() {
-    const [prefs, setPrefs] = useState<NotificationPreferences>(DEFAULT_PREFS);
-    const [loading, setLoading] = useState(true);
-
-    const load = async () => {
-        try {
-            const response = await api.get<{ success: boolean; data: NotificationPreferences }>(API.INTERNAL.INSTITUTE.NOTIFICATIONS);
-            setPrefs({ ...DEFAULT_PREFS, ...(response.data.data ?? {}) });
-        } catch {
-            toast.error("Failed to load notification settings");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        void load();
-    }, []);
+    const { data: prefs = DEFAULT_PREFS, isLoading: loading } = useGetNotificationSettingsQuery();
+    const [updateNotificationSetting] = useUpdateNotificationSettingMutation();
 
     const update = async (key: keyof NotificationPreferences, value: boolean) => {
-        const next = { ...prefs, [key]: value };
-        setPrefs(next);
-
         try {
-            await api.put(API.INTERNAL.INSTITUTE.NOTIFICATIONS, { [key]: value });
+            await updateNotificationSetting({ key, value }).unwrap();
             toast.success("Notification settings updated", { description: "Your preferences have been saved." });
         } catch {
-            setPrefs(prefs);
             toast.error("Failed to update notification settings");
         }
     };

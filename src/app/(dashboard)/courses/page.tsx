@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
-import { Loader2, Pencil, Trash2, Plus, BookOpen, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Eye, Loader2, MoreHorizontal, Plus } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
+import ListWidget from "@/components/custom/ListWidget";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { useDeleteCourseMutation, useGetCoursesQuery, useSaveCourseMutation } from "@/services/dashboardTables.api";
 
 type Course = {
     id: string;
@@ -25,14 +26,15 @@ type Course = {
 };
 
 type CourseForm = { name: string; banner: string; duration: string; defaultFees: string; description: string };
+
 const emptyForm: CourseForm = { name: "", banner: "", duration: "", defaultFees: "", description: "" };
 const PAGE_SIZE = 10;
 
 export default function CoursesPage() {
     const searchParams = useSearchParams();
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const { data: courses = [], isLoading: loading, refetch } = useGetCoursesQuery(undefined, { refetchOnMountOrArgChange: true });
+    const [saveCourseMutation, { isLoading: saving }] = useSaveCourseMutation();
+    const [deleteCourseMutation] = useDeleteCourseMutation();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [viewDialogOpen, setViewDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -47,20 +49,6 @@ export default function CoursesPage() {
             setSearchQuery(query);
         }
     }, [searchParams, searchQuery]);
-
-    const load = useCallback(async () => {
-        setLoading(true);
-        try {
-            const response = await api.get(API.INTERNAL.COURSES.ROOT);
-            setCourses(response.data?.data ?? []);
-        } catch {
-            toast.error("Failed to load courses");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { load(); }, [load]);
 
     useEffect(() => {
         setPage(1);
@@ -89,32 +77,28 @@ export default function CoursesPage() {
             toast.error("Course name is required");
             return;
         }
-        setSaving(true);
+
         try {
-            const url = editingId ? API.INTERNAL.COURSES.BY_ID(editingId) : API.INTERNAL.COURSES.ROOT;
-            const method = editingId ? "PATCH" : "POST";
             const body: Record<string, unknown> = { name: form.name };
             if (form.banner) body.banner = form.banner;
             if (form.duration) body.duration = form.duration;
             if (form.defaultFees) body.defaultFees = parseFloat(form.defaultFees);
             if (form.description) body.description = form.description;
 
-            await api.request({ method, url, data: body });
+            await saveCourseMutation({ editingId, body }).unwrap();
             toast.success(editingId ? "Course updated" : "Course added");
             setDialogOpen(false);
-            await load();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
-        } finally {
-            setSaving(false);
         }
     };
 
     const deleteCourse = async (id: string) => {
         try {
-            await api.delete(API.INTERNAL.COURSES.BY_ID(id));
+            await deleteCourseMutation(id).unwrap();
             toast.success("Course deleted");
-            await load();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -147,85 +131,99 @@ export default function CoursesPage() {
         [visibleCourses, page]
     );
 
-    return (
-        <main className="p-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className=" text-2xl font-semibold flex items-center gap-2">
-                        <BookOpen className="h-6 w-6" /> Courses
-                    </h1>
-                    <p className="text-muted-foreground text-sm mt-1">{visibleCourses.length} shown • {courses.length} total courses</p>
+    const columns = useMemo<Column<Course>[]>(() => [
+        {
+            header: "Sr. No.",
+            cell: (_course, index) => (page - 1) * PAGE_SIZE + index + 1,
+        },
+        {
+            header: "Name",
+            accessor: "name",
+            className: "font-medium max-w-[220px] truncate",
+            hoverCard: true,
+            hoverCardContent: (course) => (
+                <div className="space-y-1 text-sm">
+                    <p className="font-medium">{course.name}</p>
+                    <p className="text-muted-foreground">Duration: {course.duration || "-"}</p>
+                    <p className="text-muted-foreground">Fees: {formatCurrency(course.defaultFees)}</p>
+                    <p className="text-muted-foreground">{course.description || "No description"}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Input
-                        value={searchQuery}
-                        onChange={(event) => setSearchQuery(event.target.value)}
-                        placeholder="Search course or duration"
-                        className="w-72"
-                    />
-                    <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Add Course</Button>
-                </div>
-            </div>
+            ),
+            sortable: true,
+        },
+        {
+            header: "Banner",
+            cell: (course) => (course.banner ? "Added" : "-"),
+        },
+        {
+            header: "Duration",
+            accessor: "duration",
+            className: "max-w-[140px] truncate",
+            tooltip: true,
+            cell: (course) => course.duration || "-",
+            tooltipContent: (course) => course.duration || "-",
+        },
+        {
+            header: "Default Fees",
+            accessor: "defaultFees",
+            cell: (course) => formatCurrency(course.defaultFees),
+            sortable: true,
+        },
+        {
+            header: "Description",
+            className: "max-w-[220px] truncate",
+            tooltip: true,
+            cell: (course) => course.description || "-",
+            tooltipContent: (course) => course.description || "-",
+        },
+        {
+            header: "Actions",
+            type: "actions",
+            className: "w-[120px]",
+            cell: (course) => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openView(course)}>View</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEdit(course)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onClick={() => deleteCourse(course.id)}>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ),
+        },
+    ], [page, deleteCourse]);
 
-            <div className="mt-4 rounded border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Sr. No.</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Banner</TableHead>
-                            <TableHead>Duration</TableHead>
-                            <TableHead>Default Fees</TableHead>
-                            <TableHead className="max-w-[200px]">Description</TableHead>
-                            <TableHead className="w-[120px]">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8">
-                                    <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
-                                </TableCell>
-                            </TableRow>
-                        ) : visibleCourses.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                                    No matching courses found.
-                                </TableCell>
-                            </TableRow>
-                        ) : paginatedCourses.map((course, index) => (
-                            <TableRow key={course.id}>
-                                <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
-                                <TableCell className="font-medium max-w-[220px] truncate" title={course.name}>{course.name}</TableCell>
-                                <TableCell>{course.banner ? "Added" : "-"}</TableCell>
-                                <TableCell className="max-w-[140px] truncate" title={course.duration || "-"}>{course.duration || "-"}</TableCell>
-                                <TableCell>{formatCurrency(course.defaultFees)}</TableCell>
-                                <TableCell className="max-w-[220px] truncate" title={course.description || "-"}>{course.description || "-"}</TableCell>
-                                <TableCell>
-                                    <div className="flex gap-1">
-                                        <Button variant="ghost" size="icon" onClick={() => openEdit(course)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => openView(course)}>
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => deleteCourse(course.id)}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
-            <TablePaginationControls
-                className="mt-3"
-                page={page}
-                pageSize={PAGE_SIZE}
-                totalItems={visibleCourses.length}
-                onPageChange={setPage}
-            />
+    return (
+        <>
+            <ListWidget
+                title="Courses"
+                description={`${visibleCourses.length} shown • ${courses.length} total courses`}
+                search={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchPlaceholder="Search course or duration"
+                loading={loading}
+                isEmpty={!loading && visibleCourses.length === 0}
+                emptyMessage="No matching courses found."
+                actions={
+                    <Button onClick={openCreate}>
+                        <Plus className="mr-2 h-4 w-4" /> Add Course
+                    </Button>
+                }
+                footer={
+                    <TablePaginationControls
+                        page={page}
+                        pageSize={PAGE_SIZE}
+                        totalItems={visibleCourses.length}
+                        onPageChange={setPage}
+                    />
+                }
+            >
+                <TableWidget columns={columns} data={paginatedCourses} rowKey={(course) => course.id} />
+            </ListWidget>
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
@@ -300,6 +298,6 @@ export default function CoursesPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </main>
+        </>
     );
 }

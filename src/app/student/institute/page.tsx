@@ -1,62 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import Image from "next/image";
-
-type Teacher = {
-    photo?: string | null;
-    name?: string | null;
-    subject?: string | null;
-    experience?: string | null;
-    bio?: string | null;
-};
-
-type InstituteData = {
-    student?: {
-        institute?: {
-            name?: string | null;
-            description?: string | null;
-            address?: string | null;
-            phone?: string | null;
-            email?: string | null;
-            website?: string | null;
-            whatsapp?: string | null;
-            supportPhone?: string | null;
-            supportEmail?: string | null;
-            officeAddress?: string | null;
-            services?: string[] | null;
-            teachers?: Teacher[] | null;
-        } | null;
-    };
-    teachers?: Teacher[];
-};
+import { useGetStudentPortalQuery } from "@/services/appUi.api";
 
 export default function StudentInstitutePage() {
-    const [data, setData] = useState<InstituteData | null>(null);
-
-    useEffect(() => {
-        api.get(API.INTERNAL.STUDENT_PORTAL.ME).then((response) => {
-            setData(response.data?.data ?? null);
-        });
-    }, []);
+    const { data } = useGetStudentPortalQuery();
 
     const institute = data?.student?.institute;
     const teachers = useMemo(() => {
-        const rows = (data?.teachers ?? institute?.teachers ?? []) as Teacher[];
+        const rows = data?.teachers ?? institute?.teachers ?? [];
         return rows;
     }, [data?.teachers, institute?.teachers]);
 
-    const services = (institute?.services ?? [
+    const services = institute?.services ?? [
         "Doubt Solving",
         "Test Series",
         "Mentorship",
         "Recorded Lectures",
         "Study Materials",
-    ]) as string[];
+    ];
 
     const whatsappContact = institute?.whatsapp || institute?.phone || "";
     const supportPhone = institute?.supportPhone || institute?.phone || "";

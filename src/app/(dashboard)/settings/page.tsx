@@ -11,8 +11,15 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
+import {
+    DomainSettings,
+    useActivateDomainSettingsMutation,
+    useExportSettingsDataMutation,
+    useGetDomainSettingsQuery,
+    useGetSettingsCountsQuery,
+    useSaveDomainSettingsMutation,
+    useVerifyDomainSettingsMutation,
+} from "@/services/appUi.api";
 
 type DashboardSettings = {
     compactTables: boolean;
@@ -29,21 +36,6 @@ type NotificationSettings = {
 type AppSettings = {
     dashboard: DashboardSettings;
     notifications: NotificationSettings;
-};
-
-type DomainStatus = "PENDING" | "VERIFIED" | "ACTIVE" | "FAILED";
-
-type DomainSettings = {
-    slug: string;
-    customDomain: string;
-    domainVerified: boolean;
-    domainStatus: DomainStatus;
-    defaultDomain: string;
-    dnsInstruction: {
-        type: string;
-        name: string;
-        target: string;
-    };
 };
 
 const SETTINGS_STORAGE_KEY = "oncampus:settings";
@@ -65,13 +57,13 @@ export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [settings, setSettings] = useState<AppSettings>(defaultSettings);
-    const [dataCounts, setDataCounts] = useState({ students: 0, leads: 0, courses: 0, payments: 0 });
-    const [exporting, setExporting] = useState(false);
-    const [domainSettings, setDomainSettings] = useState<DomainSettings | null>(null);
+    const { data: dataCounts = { students: 0, leads: 0, courses: 0, payments: 0 } } = useGetSettingsCountsQuery();
+    const [exportSettingsData, { isLoading: exporting }] = useExportSettingsDataMutation();
+    const { data: domainSettings } = useGetDomainSettingsQuery();
+    const [saveDomainSettings, { isLoading: savingDomain }] = useSaveDomainSettingsMutation();
+    const [verifyDomainSettings, { isLoading: verifyingDomain }] = useVerifyDomainSettingsMutation();
+    const [activateDomainSettings, { isLoading: activatingDomain }] = useActivateDomainSettingsMutation();
     const [domainInput, setDomainInput] = useState("");
-    const [domainSaving, setDomainSaving] = useState(false);
-    const [domainVerifying, setDomainVerifying] = useState(false);
-    const [domainActivating, setDomainActivating] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -86,42 +78,15 @@ export default function SettingsPage() {
         } catch {
             setSettings(defaultSettings);
         }
-
-        const loadCounts = async () => {
-            try {
-                const [studentsRes, leadsRes, coursesRes, paymentsRes] = await Promise.all([
-                    api.get(API.INTERNAL.STUDENTS.ROOT),
-                    api.get(API.INTERNAL.LEADS.ROOT),
-                    api.get(API.INTERNAL.COURSES.ROOT),
-                    api.get(API.INTERNAL.PAYMENTS.ROOT),
-                ]);
-
-                setDataCounts({
-                    students: (studentsRes.data?.data ?? []).length,
-                    leads: (leadsRes.data?.data ?? []).length,
-                    courses: (coursesRes.data?.data ?? []).length,
-                    payments: (paymentsRes.data?.data ?? []).length,
-                });
-            } catch {
-                // Keep defaults silently
-            }
-        };
-
-        const loadDomainSettings = async () => {
-            try {
-                const response = await api.get<{ success: boolean; data: DomainSettings }>(API.INTERNAL.INSTITUTE.DOMAIN);
-                setDomainSettings(response.data.data);
-                setDomainInput(response.data.data.customDomain ?? "");
-            } catch {
-                // Keep domain section available for manual input
-            }
-        };
-
-        loadCounts();
-        loadDomainSettings();
     }, []);
 
-    const getStatusVariant = (status: DomainStatus): "default" | "secondary" | "destructive" => {
+    useEffect(() => {
+        setDomainInput(domainSettings?.customDomain ?? "");
+    }, [domainSettings]);
+
+    const domainBusy = savingDomain || verifyingDomain || activatingDomain;
+
+    const getStatusVariant = (status: DomainSettings["domainStatus"]): "default" | "secondary" | "destructive" => {
         if (status === "ACTIVE") return "default";
         if (status === "FAILED") return "destructive";
         return "secondary";
@@ -133,60 +98,29 @@ export default function SettingsPage() {
             return;
         }
 
-        setDomainSaving(true);
         try {
-            const response = await api.put<{ success: boolean; data: DomainSettings }>(API.INTERNAL.INSTITUTE.DOMAIN, {
-                customDomain: domainInput,
-                surface: "portal",
-            });
-            setDomainSettings(response.data.data);
-            setDomainInput(response.data.data.customDomain ?? "");
+            await saveDomainSettings({ customDomain: domainInput }).unwrap();
             toast.success("Domain saved. Add DNS record and verify.");
-        } catch (error: unknown) {
-            const message = (error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-            toast.error(message ?? "Unable to save custom domain");
-        } finally {
-            setDomainSaving(false);
+        } catch (error: any) {
+            toast.error(error?.data?.error?.message ?? "Unable to save custom domain");
         }
     };
 
     const verifyDomain = async () => {
-        setDomainVerifying(true);
         try {
-            const response = await api.post<{
-                success: boolean;
-                data: { verified: boolean; host: string; nextStep: string };
-            }>(API.INTERNAL.INSTITUTE.DOMAIN, {
-                action: "verify",
-                customDomain: domainInput,
-            });
-
-            toast.success(response.data.data.verified ? "Domain verified" : "Domain not verified yet");
-
-            const latest = await api.get<{ success: boolean; data: DomainSettings }>(API.INTERNAL.INSTITUTE.DOMAIN);
-            setDomainSettings(latest.data.data);
-        } catch (error: unknown) {
-            const message = (error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-            toast.error(message ?? "Unable to verify domain");
-        } finally {
-            setDomainVerifying(false);
+            const latest = await verifyDomainSettings({ customDomain: domainInput }).unwrap();
+            toast.success(latest?.domainVerified ? "Domain verified" : "Domain not verified yet");
+        } catch (error: any) {
+            toast.error(error?.data?.error?.message ?? "Unable to verify domain");
         }
     };
 
     const activateDomain = async () => {
-        setDomainActivating(true);
         try {
-            const response = await api.post<{ success: boolean; data: DomainSettings }>(API.INTERNAL.INSTITUTE.DOMAIN, {
-                action: "activate",
-                customDomain: domainInput,
-            });
-            setDomainSettings(response.data.data);
+            await activateDomainSettings({ customDomain: domainInput }).unwrap();
             toast.success("Domain activated");
-        } catch (error: unknown) {
-            const message = (error as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-            toast.error(message ?? "Unable to activate domain");
-        } finally {
-            setDomainActivating(false);
+        } catch (error: any) {
+            toast.error(error?.data?.error?.message ?? "Unable to activate domain");
         }
     };
 
@@ -196,26 +130,8 @@ export default function SettingsPage() {
     };
 
     const exportData = async () => {
-        setExporting(true);
         try {
-            const [studentsRes, leadsRes, coursesRes, feesRes, paymentsRes] = await Promise.all([
-                api.get(API.INTERNAL.STUDENTS.ROOT),
-                api.get(API.INTERNAL.LEADS.ROOT),
-                api.get(API.INTERNAL.COURSES.ROOT),
-                api.get(API.INTERNAL.FEES.ROOT),
-                api.get(API.INTERNAL.PAYMENTS.ROOT),
-            ]);
-
-            const payload = {
-                exportedAt: new Date().toISOString(),
-                data: {
-                    students: studentsRes.data?.data ?? [],
-                    leads: leadsRes.data?.data ?? [],
-                    courses: coursesRes.data?.data ?? [],
-                    fees: feesRes.data?.data ?? [],
-                    payments: paymentsRes.data?.data ?? [],
-                },
-            };
+            const payload = await exportSettingsData().unwrap();
 
             const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
@@ -228,8 +144,6 @@ export default function SettingsPage() {
             toast.success("Data export downloaded");
         } catch {
             toast.error("Failed to export data");
-        } finally {
-            setExporting(false);
         }
     };
 
@@ -453,18 +367,18 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        <Button onClick={saveDomain} disabled={domainSaving}>
-                            {domainSaving ? "Saving..." : "Save Domain"}
+                        <Button onClick={saveDomain} disabled={domainBusy}>
+                            {savingDomain ? "Saving..." : "Save Domain"}
                         </Button>
-                        <Button variant="outline" onClick={verifyDomain} disabled={domainVerifying || !domainInput.trim()}>
-                            {domainVerifying ? "Verifying..." : "Verify DNS"}
+                        <Button variant="outline" onClick={verifyDomain} disabled={domainBusy || !domainInput.trim()}>
+                            {verifyingDomain ? "Verifying..." : "Verify DNS"}
                         </Button>
                         <Button
                             variant="outline"
                             onClick={activateDomain}
-                            disabled={domainActivating || !domainSettings?.domainVerified}
+                            disabled={domainBusy || !domainSettings?.domainVerified}
                         >
-                            {domainActivating ? "Activating..." : "Activate Domain"}
+                            {activatingDomain ? "Activating..." : "Activate Domain"}
                         </Button>
                     </div>
                 </CardContent>

@@ -14,7 +14,7 @@ vi.mock("@/lib/auth/auth", () => ({
     readSessionFromCookie: mockReadSessionFromCookie,
 }));
 
-vi.mock("@/features/student/services/student.service", () => ({
+vi.mock("@/server/services/students.service", () => ({
     studentService: mockStudentService,
 }));
 
@@ -85,4 +85,5 @@ describe("/api/v1/students", () => {
         expect(body.error.code).toBe("DUPLICATE_STUDENT");
     });
 });
+
 

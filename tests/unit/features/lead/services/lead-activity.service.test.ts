@@ -19,7 +19,7 @@ vi.mock("@/lib/utils/logger", () => ({
     },
 }));
 
-import { leadActivityService } from "@/features/lead/services/lead-activity.service";
+import { leadActivityService } from "@/server/services/leads.service";
 
 describe("leadActivityService", () => {
     beforeEach(() => {

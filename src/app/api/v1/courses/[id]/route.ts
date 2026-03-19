@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { courseService } from "@/features/course/services/course.service";
+import { courseService } from "@/server/services/courses.service";
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = { params: Promise<{ id: string }> };

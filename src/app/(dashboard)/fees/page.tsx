@@ -1,19 +1,24 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Plus, IndianRupee, CheckCircle2, Clock } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
+import {
+    useAddFeePlanPaymentMutation,
+    useDeleteFeePlanMutation,
+    useGetFeePlanPaymentsQuery,
+    useGetFeesDashboardQuery,
+    useSaveFeePlanMutation,
+} from "@/services/dashboardTables.api";
 
 type Student = { id: string; name: string; phone: string };
 type FeePlan = {
@@ -35,44 +40,27 @@ type Payment = {
 const PAGE_SIZE = 10;
 
 export default function FeesPage() {
-    const [students, setStudents] = useState<Student[]>([]);
-    const [plans, setPlans] = useState<FeePlan[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: feesState, isLoading: loading, refetch } = useGetFeesDashboardQuery(undefined, { refetchOnMountOrArgChange: true });
+    const students = feesState?.students ?? [];
+    const plans = feesState?.plans ?? [];
 
     // Plan dialog
     const [planDialogOpen, setPlanDialogOpen] = useState(false);
     const [planForm, setPlanForm] = useState({ studentId: "", totalAmount: "", dueDate: "" });
-    const [savingPlan, setSavingPlan] = useState(false);
+    const [saveFeePlanMutation, { isLoading: savingPlan }] = useSaveFeePlanMutation();
 
     // Payment view
     const [selectedPlan, setSelectedPlan] = useState<FeePlan | null>(null);
-    const [payments, setPayments] = useState<Payment[]>([]);
+    const { data: payments = [] } = useGetFeePlanPaymentsQuery(selectedPlan?.id ?? "", { skip: !selectedPlan, refetchOnMountOrArgChange: true });
     const [paymentPage, setPaymentPage] = useState(1);
 
     // Add Payment dialog
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
     const [paymentForm, setPaymentForm] = useState({ amount: "", date: "", note: "", method: "CASH", reference: "" });
-    const [savingPayment, setSavingPayment] = useState(false);
+    const [addFeePlanPaymentMutation, { isLoading: savingPayment }] = useAddFeePlanPaymentMutation();
+    const [deleteFeePlanMutation] = useDeleteFeePlanMutation();
 
     const studentMap = Object.fromEntries(students.map((s) => [s.id, s]));
-
-    const loadData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [planRes, studentRes] = await Promise.all([
-                api.get(API.INTERNAL.FEES.ROOT),
-                api.get(API.INTERNAL.STUDENTS.ROOT),
-            ]);
-            setPlans(planRes.data?.data ?? []);
-            setStudents(studentRes.data?.data ?? []);
-        } catch {
-            toast.error("Failed to load fee data");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { loadData(); }, [loadData]);
 
     // Create fee plan
     const savePlan = async () => {
@@ -80,7 +68,6 @@ export default function FeesPage() {
             toast.error("Student and total amount are required");
             return;
         }
-        setSavingPlan(true);
         try {
             const body: Record<string, unknown> = {
                 studentId: planForm.studentId,
@@ -88,28 +75,25 @@ export default function FeesPage() {
             };
             if (planForm.dueDate) body.dueDate = planForm.dueDate;
 
-            await api.post(API.INTERNAL.FEES.ROOT, body);
+            await saveFeePlanMutation(body).unwrap();
             toast.success("Fee plan created");
             setPlanDialogOpen(false);
             setPlanForm({ studentId: "", totalAmount: "", dueDate: "" });
-            await loadData();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
-        } finally {
-            setSavingPlan(false);
         }
     };
 
     // Delete fee plan
     const deletePlan = async (planId: string) => {
         try {
-            await api.delete(API.INTERNAL.FEES.BY_ID(planId));
+            await deleteFeePlanMutation(planId).unwrap();
             toast.success("Fee plan deleted");
             if (selectedPlan?.id === planId) {
                 setSelectedPlan(null);
-                setPayments([]);
             }
-            await loadData();
+            await refetch();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -118,12 +102,6 @@ export default function FeesPage() {
     // Load payments for a plan
     const viewPayments = async (plan: FeePlan) => {
         setSelectedPlan(plan);
-        try {
-            const response = await api.get(API.INTERNAL.FEES.INSTALLMENTS(plan.id));
-            setPayments(response.data?.data ?? []);
-        } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Failed to load payments");
-        }
     };
 
     // Add Payment (simple: amount, date, note — always PAID)
@@ -132,7 +110,6 @@ export default function FeesPage() {
             toast.error("Amount is required");
             return;
         }
-        setSavingPayment(true);
         try {
             const body: Record<string, unknown> = {
                 amount: parseFloat(paymentForm.amount),
@@ -142,15 +119,13 @@ export default function FeesPage() {
             if (paymentForm.note.trim()) body.note = paymentForm.note.trim();
             if (paymentForm.reference.trim()) body.reference = paymentForm.reference.trim();
 
-            await api.post(API.INTERNAL.FEES.INSTALLMENTS(selectedPlan.id), body);
+            await addFeePlanPaymentMutation({ planId: selectedPlan.id, body }).unwrap();
             toast.success(`Payment saved: ₹${parseFloat(paymentForm.amount).toLocaleString("en-IN")}`);
             setPaymentDialogOpen(false);
             setPaymentForm({ amount: "", date: "", note: "", method: "CASH", reference: "" });
-            await viewPayments(selectedPlan);
+            setSelectedPlan({ ...selectedPlan });
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
-        } finally {
-            setSavingPayment(false);
         }
     };
 
@@ -159,6 +134,27 @@ export default function FeesPage() {
     const paidTotal = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + p.amount, 0);
     const pendingTotal = selectedPlan ? Math.max(0, selectedPlan.totalAmount - paidTotal) : 0;
     const paginatedPayments = payments.slice((paymentPage - 1) * PAGE_SIZE, paymentPage * PAGE_SIZE);
+
+    const paymentColumns = useMemo<Column<Payment>[]>(() => [
+        {
+            header: "Sr. No.",
+            cell: (_payment, index) => (paymentPage - 1) * PAGE_SIZE + index + 1,
+        },
+        {
+            header: "Amount",
+            className: "font-medium",
+            cell: (payment) => formatCurrency(payment.amount),
+        },
+        {
+            header: "Date",
+            cell: (payment) => payment.paidOn ? new Date(payment.paidOn).toLocaleDateString() : "-",
+        },
+        {
+            header: "Note",
+            className: "max-w-60 truncate text-muted-foreground text-sm",
+            cell: (payment) => <span title={payment.note || "-"}>{payment.note || "-"}</span>,
+        },
+    ], [paymentPage]);
 
     useEffect(() => {
         setPaymentPage(1);
@@ -259,26 +255,7 @@ export default function FeesPage() {
                                     </div>
                                 </div>
 
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Sr. No.</TableHead>
-                                            <TableHead>Amount</TableHead>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Note</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {paginatedPayments.map((payment, index) => (
-                                            <TableRow key={payment.id}>
-                                                <TableCell>{(paymentPage - 1) * PAGE_SIZE + index + 1}</TableCell>
-                                                <TableCell className="font-medium">{formatCurrency(payment.amount)}</TableCell>
-                                                <TableCell>{payment.paidOn ? new Date(payment.paidOn).toLocaleDateString() : "-"}</TableCell>
-                                                <TableCell className="max-w-60 truncate text-muted-foreground text-sm" title={payment.note || "-"}>{payment.note || "-"}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                <TableWidget columns={paymentColumns} data={paginatedPayments} rowKey={(payment) => payment.id} />
                                 <TablePaginationControls
                                     className="mt-3"
                                     page={paymentPage}

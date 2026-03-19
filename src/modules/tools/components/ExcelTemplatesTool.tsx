@@ -3,7 +3,7 @@
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
 
 type TemplateDef = {
     key: string;
@@ -94,22 +94,14 @@ export default function ExcelTemplatesTool() {
                         <CardDescription>Download CSV or Excel and use it directly in your institute workflow</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    {template.columns.map((column) => (
-                                        <TableHead key={column}>{column}</TableHead>
-                                    ))}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    {template.columns.map((column) => (
-                                        <TableCell key={column}>{template.sampleRow[column] ?? ""}</TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <TableWidget
+                            columns={template.columns.map((column) => ({
+                                header: column,
+                                cell: () => template.sampleRow[column] ?? "",
+                            } satisfies Column<Record<string, string>>))}
+                            data={[template.sampleRow]}
+                            rowKey={() => template.key}
+                        />
 
                         <div className="flex gap-2">
                             <Button variant="outline" onClick={() => downloadCsv(template)}>Download CSV</Button>

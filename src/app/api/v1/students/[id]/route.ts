@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { studentService } from "@/features/student/services/student.service";
+import { studentService } from "@/server/services/students.service";
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = {

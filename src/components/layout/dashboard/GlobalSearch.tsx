@@ -12,17 +12,9 @@ import {
     CommandItem,
     CommandList,
     CommandSeparator,
-    CommandShortcut,
 } from "@/components/ui/command";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import ROUTES from "@/constants/routes";
-
-type SearchResults = {
-    leads: Array<{ id: string; name: string; phone: string; course?: string | null; status: string }>;
-    students: Array<{ id: string; name: string; phone: string; email?: string | null }>;
-    courses: Array<{ id: string; name: string; duration?: string | null }>;
-};
+import { SearchResults, useLazyGetGlobalSearchQuery } from "@/services/appUi.api";
 
 const EMPTY_RESULTS: SearchResults = {
     leads: [],
@@ -34,9 +26,8 @@ export default function GlobalSearch() {
     const router = useRouter();
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS);
     const [mounted, setMounted] = useState(false);
+    const [triggerSearch, { data: results = EMPTY_RESULTS, isFetching: loading }] = useLazyGetGlobalSearchQuery();
 
     const hasAnyResult = useMemo(
         () => results.leads.length > 0 || results.students.length > 0 || results.courses.length > 0,
@@ -59,25 +50,17 @@ export default function GlobalSearch() {
 
     useEffect(() => {
         if (!open || query.trim().length < 2) {
-            setResults(EMPTY_RESULTS);
-            setLoading(false);
             return;
         }
 
-        const timer = setTimeout(async () => {
-            try {
-                setLoading(true);
-                const response = await api.get(`${API.INTERNAL.SEARCH}?q=${encodeURIComponent(query.trim())}`);
-                setResults(response.data?.data ?? EMPTY_RESULTS);
-            } catch {
-                setResults(EMPTY_RESULTS);
-            } finally {
-                setLoading(false);
-            }
+        const timer = setTimeout(() => {
+            triggerSearch(query);
         }, 250);
 
         return () => clearTimeout(timer);
-    }, [open, query]);
+    }, [open, query, triggerSearch]);
+
+    const visibleResults = query.trim().length >= 2 ? results : EMPTY_RESULTS;
 
     const navigateTo = (href: string) => {
         setOpen(false);
@@ -96,19 +79,16 @@ export default function GlobalSearch() {
                     <Search className="h-4 w-4" />
                     <span>Search...</span>
                 </div>
-
             </Button>
-
-            {/* <Button asChild variant="ghost" size="icon" aria-label="Notifications" onClick={() => setOpen(true)}>
-                <Search className="h-4 w-4" />
-            </Button> */}
 
             {mounted && (
                 <CommandDialog
                     open={open}
                     onOpenChange={(nextOpen) => {
                         setOpen(nextOpen);
-                        if (!nextOpen) setQuery("");
+                        if (!nextOpen) {
+                            setQuery("");
+                        }
                     }}
                     title="Global Search"
                     description="Search across pages, leads, students, courses, and quick actions"
@@ -160,7 +140,7 @@ export default function GlobalSearch() {
                             <>
                                 <CommandSeparator />
                                 <CommandGroup heading="Leads">
-                                    {results.leads.map((lead) => (
+                                    {visibleResults.leads.map((lead) => (
                                         <CommandItem
                                             key={`lead-${lead.id}`}
                                             onSelect={() => navigateTo(`${ROUTES.DASHBOARD.LEADS}?query=${encodeURIComponent(lead.phone || lead.name)}`)}
@@ -174,7 +154,7 @@ export default function GlobalSearch() {
                                 </CommandGroup>
 
                                 <CommandGroup heading="Students">
-                                    {results.students.map((student) => (
+                                    {visibleResults.students.map((student) => (
                                         <CommandItem
                                             key={`student-${student.id}`}
                                             onSelect={() => navigateTo(`${ROUTES.DASHBOARD.STUDENTS}?query=${encodeURIComponent(student.phone || student.name)}`)}
@@ -188,7 +168,7 @@ export default function GlobalSearch() {
                                 </CommandGroup>
 
                                 <CommandGroup heading="Courses">
-                                    {results.courses.map((course) => (
+                                    {visibleResults.courses.map((course) => (
                                         <CommandItem
                                             key={`course-${course.id}`}
                                             onSelect={() => navigateTo(`${ROUTES.DASHBOARD.COURSES}?query=${encodeURIComponent(course.name)}`)}

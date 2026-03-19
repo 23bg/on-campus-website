@@ -45,6 +45,7 @@ export const NOTIFICATION_EVENTS = [
 
     "COURSE_CREATED",
     "COURSE_UPDATED",
+    "COURSE_NOTE_PUBLISHED",
     "BATCH_CREATED",
     "BATCH_UPDATED",
     "TEACHER_ASSIGNED_TO_BATCH",
@@ -181,6 +182,14 @@ export const NOTIFICATION_EVENT_RULES: Record<NotificationEvent, NotificationEve
         defaultAudiences: ["INSTITUTE_USERS"],
     },
     COURSE_UPDATED: {
+        channels: ["IN_APP_ADMIN", "IN_APP_STUDENT_PORTAL"],
+        defaultAudiences: ["INSTITUTE_USERS", "STUDENT"],
+        audiencesByChannel: {
+            IN_APP_ADMIN: ["INSTITUTE_USERS"],
+            IN_APP_STUDENT_PORTAL: ["STUDENT"],
+        },
+    },
+    COURSE_NOTE_PUBLISHED: {
         channels: ["IN_APP_ADMIN", "IN_APP_STUDENT_PORTAL"],
         defaultAudiences: ["INSTITUTE_USERS", "STUDENT"],
         audiencesByChannel: {
@@ -369,3 +378,7 @@ export const getEventAudiences = (
     if (!channel) return rule.defaultAudiences;
     return rule.audiencesByChannel?.[channel] ?? rule.defaultAudiences;
 };
+
+
+
+

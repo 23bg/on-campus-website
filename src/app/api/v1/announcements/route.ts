@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { studentPortalService } from "@/features/student/services/student-portal.service";
+import { studentService } from "@/server/services/students.service";
 import { toAppError } from "@/lib/utils/error";
 
 export async function POST(req: NextRequest) {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = (await req.json()) as { title?: string; body?: string; batchId?: string | null };
-        const data = await studentPortalService.createAnnouncement(session.instituteId, {
+        const data = await studentService.createAnnouncement(session.instituteId, {
             title: body.title ?? "",
             body: body.body ?? "",
             batchId: body.batchId,

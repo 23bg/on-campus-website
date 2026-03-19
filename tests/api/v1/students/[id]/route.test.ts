@@ -14,7 +14,7 @@ vi.mock("@/lib/auth/auth", () => ({
     readSessionFromCookie: mockReadSessionFromCookie,
 }));
 
-vi.mock("@/features/student/services/student.service", () => ({
+vi.mock("@/server/services/students.service", () => ({
     studentService: mockStudentService,
 }));
 
@@ -89,3 +89,4 @@ describe("/api/v1/students/[id]", () => {
         expect(body.error.code).toBe("STUDENT_NOT_FOUND");
     });
 });
+

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { MoreHorizontal } from "lucide-react";
 
 export type TeamRow = {
     id: string;
@@ -42,55 +44,77 @@ export default function TeamTable({ rows, canManage, onEdit, onDelete }: TeamTab
         return role;
     };
 
+    const columns: Column<TeamRow>[] = [
+        {
+            header: "Sr. No.",
+            cell: (_member, index) => (page - 1) * PAGE_SIZE + index + 1,
+        },
+        {
+            header: "Name",
+            className: "font-medium",
+            accessor: "name",
+            hoverCard: true,
+            hoverCardContent: (member) => (
+                <div className="space-y-1 text-sm">
+                    <p className="font-medium">{member.name}</p>
+                    <p className="text-muted-foreground">Email: {member.email || "-"}</p>
+                    <p className="text-muted-foreground">Role: {displayRole(member.role)}</p>
+                    <p className="text-muted-foreground">Subjects: {member.subjects || "-"}</p>
+                </div>
+            ),
+            sortable: true,
+        },
+        {
+            header: "Phone",
+            accessor: "phone",
+            cell: (member) => member.phone || "-",
+        },
+        {
+            header: "Email",
+            tooltip: true,
+            cell: (member) => member.email || "-",
+            tooltipContent: (member) => member.email || "-",
+        },
+        {
+            header: "Role",
+            cell: (member) => displayRole(member.role),
+        },
+        {
+            header: "Active",
+            cell: (member) => (member.active ? "Yes" : "No"),
+        },
+        {
+            header: "Subjects",
+            cell: (member) => member.subjects || "-",
+        },
+        {
+            header: "Experience",
+            cell: (member) => member.experience || "-",
+        },
+        {
+            header: "Actions",
+            type: "actions",
+            className: "w-[140px]",
+            cell: (member) => canManage ? (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEdit(member)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onClick={() => onDelete(member)}>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ) : "-",
+        },
+    ];
+
     return (
-        <div className="mt-4 rounded border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Sr. No.</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Active</TableHead>
-                        <TableHead>Subjects</TableHead>
-                        <TableHead>Experience</TableHead>
-                        <TableHead className="w-[140px]">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {rows.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No team members found.</TableCell>
-                        </TableRow>
-                    ) : (
-                        paginatedRows.map((member, index) => (
-                            <TableRow key={`${member.source}-${member.id}`}>
-                                <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
-                                <TableCell className="font-medium">{member.name}</TableCell>
-                                <TableCell>{member.phone || "-"}</TableCell>
-                                <TableCell>{member.email || "-"}</TableCell>
-                                <TableCell>{displayRole(member.role)}</TableCell>
-                                <TableCell>{member.active ? "Yes" : "No"}</TableCell>
-                                <TableCell>{member.subjects || "-"}</TableCell>
-                                <TableCell>{member.experience || "-"}</TableCell>
-                                <TableCell>
-                                    {canManage ? (
-                                        <div className="flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => onEdit(member)}>Edit</Button>
-                                            <Button variant="destructive" size="sm" onClick={() => onDelete(member)}>Delete</Button>
-                                        </div>
-                                    ) : (
-                                        "-"
-                                    )}
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
+        <div className="space-y-3">
+            <TableWidget columns={columns} data={paginatedRows} rowKey={(member) => `${member.source}-${member.id}`} />
             <TablePaginationControls
-                className="mt-3"
                 page={page}
                 pageSize={PAGE_SIZE}
                 totalItems={rows.length}

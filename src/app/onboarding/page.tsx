@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
+import { useGetOnboardingInstituteQuery, useSubmitOnboardingMutation } from "@/services/appUi.api";
 
 type OnboardingForm = {
     name: string;
@@ -36,8 +34,8 @@ type FieldError = Partial<Record<keyof OnboardingForm, string>>;
 
 export default function OnboardingIndexPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const { data: onboardingData, isLoading: loading } = useGetOnboardingInstituteQuery();
+    const [submitOnboarding, { isLoading: saving }] = useSubmitOnboardingMutation();
     const [errors, setErrors] = useState<FieldError>({});
     const [form, setForm] = useState<OnboardingForm>({
         name: "",
@@ -60,42 +58,34 @@ export default function OnboardingIndexPage() {
     });
 
     useEffect(() => {
-        const load = async () => {
-            try {
-                const response = await api.get(API.INTERNAL.INSTITUTE.ROOT);
-                const data = response.data?.data ?? {};
+        const data = onboardingData as any;
+        if (!data) return;
 
-                if (data.isOnboarded) {
-                    router.push("/overview");
-                    return;
-                }
+        if (data.isOnboarded) {
+            router.push("/overview");
+            return;
+        }
 
-                setForm({
-                    name: data.name ?? "",
-                    phone: data.phone ?? "",
-                    addressLine1: data.address?.addressLine1 ?? "",
-                    addressLine2: data.address?.addressLine2 ?? "",
-                    city: data.address?.city ?? "",
-                    state: data.address?.state ?? "",
-                    region: data.address?.region ?? "",
-                    postalCode: data.address?.postalCode ?? "",
-                    country: data.address?.country ?? "India",
-                    countryCode: data.address?.countryCode ?? "",
-                    whatsapp: data.whatsapp ?? "",
-                    description: data.description ?? "",
-                    website: data.socialLinks?.website ?? "",
-                    facebook: data.socialLinks?.facebook ?? "",
-                    instagram: data.socialLinks?.instagram ?? "",
-                    youtube: data.socialLinks?.youtube ?? "",
-                    linkedin: data.socialLinks?.linkedin ?? "",
-                });
-                setLoading(false);
-            } catch {
-                router.push("/login");
-            }
-        };
-        load();
-    }, [router]);
+        setForm({
+            name: data.name ?? "",
+            phone: data.phone ?? "",
+            addressLine1: data.address?.addressLine1 ?? "",
+            addressLine2: data.address?.addressLine2 ?? "",
+            city: data.address?.city ?? "",
+            state: data.address?.state ?? "",
+            region: data.address?.region ?? "",
+            postalCode: data.address?.postalCode ?? "",
+            country: data.address?.country ?? "India",
+            countryCode: data.address?.countryCode ?? "",
+            whatsapp: data.whatsapp ?? "",
+            description: data.description ?? "",
+            website: data.socialLinks?.website ?? "",
+            facebook: data.socialLinks?.facebook ?? "",
+            instagram: data.socialLinks?.instagram ?? "",
+            youtube: data.socialLinks?.youtube ?? "",
+            linkedin: data.socialLinks?.linkedin ?? "",
+        });
+    }, [onboardingData, router]);
 
     const setValue = (key: keyof OnboardingForm, value: string) => {
         setForm((prev) => ({ ...prev, [key]: value }));
@@ -117,9 +107,8 @@ export default function OnboardingIndexPage() {
 
     const submit = async () => {
         if (!validate()) return;
-        setSaving(true);
         try {
-            await api.post(API.INTERNAL.INSTITUTE.ONBOARDING, {
+            await submitOnboarding({
                 ...form,
                 address: {
                     addressLine1: form.addressLine1,
@@ -131,14 +120,12 @@ export default function OnboardingIndexPage() {
                     country: form.country,
                     countryCode: form.countryCode,
                 },
-            });
+            }).unwrap();
 
             toast.success("Institute setup complete!");
             router.push("/overview");
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Network error. Please try again.");
-        } finally {
-            setSaving(false);
+            toast.error(error?.data?.error?.message ?? "Network error. Please try again.");
         }
     };
 
@@ -154,7 +141,7 @@ export default function OnboardingIndexPage() {
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
             <div className="w-full max-w-3xl space-y-6">
                 <div className="text-center space-y-2">
-                    <p className="text-sm font-medium text-primary">Step 1 of 1 — Institute Setup</p>
+                    <p className="text-sm font-medium text-primary">Step 1 of 1 - Institute Setup</p>
                     <h1 className="text-3xl font-bold tracking-tight">Setup Your Institute</h1>
                     <p className="text-muted-foreground">Fill in the details below to start managing admissions.</p>
                 </div>
@@ -236,7 +223,7 @@ export default function OnboardingIndexPage() {
                         </div>
 
                         <Button onClick={submit} disabled={saving} className="w-full" size="lg">
-                            {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save & Continue →"}
+                            {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save & Continue ->"}
                         </Button>
                     </CardContent>
                 </Card>

@@ -8,10 +8,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@/components/ui/input-group";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
+import { useSaveInstituteProfileMutation } from "@/services/adminDashboard.api";
 
 export const instituteProfileSchema = z.object({
     name: z.string().trim().min(2, "Institute name must be at least 2 characters.").max(80, "Institute name cannot exceed 80 characters."),
@@ -46,6 +45,7 @@ type InstituteProfileFormProps = {
 };
 
 export default function InstituteProfileForm({ initialValues, onCancel, onSaved }: InstituteProfileFormProps) {
+    const [saveInstituteProfile] = useSaveInstituteProfileMutation();
     const form = useForm<InstituteFormValues>({
         resolver: zodResolver(instituteProfileSchema),
         mode: "onBlur",
@@ -58,30 +58,11 @@ export default function InstituteProfileForm({ initialValues, onCancel, onSaved 
 
     const onSubmit = async (values: InstituteFormValues) => {
         try {
-            await api.put(API.INTERNAL.INSTITUTE.ROOT, {
-                ...values,
-                address: {
-                    addressLine1: values.addressLine1,
-                    addressLine2: values.addressLine2,
-                    city: values.city,
-                    state: values.state,
-                    region: values.region,
-                    postalCode: values.postalCode,
-                    country: values.country,
-                    countryCode: values.countryCode,
-                },
-                socialLinks: {
-                    website: values.website,
-                    instagram: values.instagram,
-                    facebook: values.facebook,
-                    youtube: values.youtube,
-                    linkedin: values.linkedin,
-                },
-            });
+            await saveInstituteProfile(values).unwrap();
             toast.success("Profile updated successfully");
             await onSaved();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Failed to save profile");
+            toast.error(error?.data?.error?.message ?? "Failed to save profile");
         }
     };
 

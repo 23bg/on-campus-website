@@ -12,7 +12,7 @@ vi.mock("@/lib/auth/auth", () => ({
     readSessionFromCookie: mockReadSessionFromCookie,
 }));
 
-vi.mock("@/features/lead/services/lead.service", () => ({
+vi.mock("@/server/services/leads.service", () => ({
     leadService: mockLeadService,
 }));
 
@@ -94,4 +94,5 @@ describe("PATCH /api/v1/leads/[id]", () => {
         });
     });
 });
+
 

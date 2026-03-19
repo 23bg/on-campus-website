@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { courseRepository } from "@/features/course/repositories/course.repo";
+import { prisma } from "@/lib/db/prisma";
 import { AppError } from "@/lib/utils/error";
 import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
@@ -12,10 +12,50 @@ const courseInputSchema = z.object({
     description: z.string().trim().max(1024).optional(),
 });
 
+type UpdateCourseInput = {
+    name?: string;
+    banner?: string | null;
+    duration?: string | null;
+    defaultFees?: number | null;
+    description?: string | null;
+};
+
+const createCourseRecord = async (payload: {
+    instituteId: string;
+    name: string;
+    banner?: string;
+    duration?: string;
+    defaultFees?: number;
+    description?: string;
+}) =>
+    prisma.course.create({ data: payload });
+
+const listCoursesByInstitute = async (instituteId: string) =>
+    prisma.course.findMany({
+        where: { instituteId },
+        orderBy: { createdAt: "desc" },
+    });
+
+const findCourseById = async (instituteId: string, courseId: string) =>
+    prisma.course.findFirst({
+        where: { id: courseId, instituteId },
+    });
+
+const updateCourseRecord = async (instituteId: string, courseId: string, data: UpdateCourseInput) =>
+    prisma.course.updateMany({
+        where: { id: courseId, instituteId },
+        data,
+    });
+
+const deleteCourseRecord = async (instituteId: string, courseId: string) =>
+    prisma.course.deleteMany({
+        where: { id: courseId, instituteId },
+    });
+
 export const courseService = {
     async createCourse(payload: unknown) {
         const input = courseInputSchema.parse(payload);
-        const course = await courseRepository.create(input);
+        const course = await createCourseRecord(input);
 
         await eventDispatcherService.dispatch({
             event: "COURSE_CREATED",
@@ -28,11 +68,7 @@ export const courseService = {
         return course;
     },
 
-    async updateCourse(
-        instituteId: string,
-        courseId: string,
-        payload: { name?: string; banner?: string | null; duration?: string | null; defaultFees?: number | null; description?: string | null }
-    ) {
+    async updateCourse(instituteId: string, courseId: string, payload: UpdateCourseInput) {
         if (payload.name !== undefined) {
             z.string().trim().min(2).max(120).parse(payload.name);
         }
@@ -45,7 +81,8 @@ export const courseService = {
         if (payload.description !== undefined && payload.description !== null) {
             z.string().trim().max(1024).parse(payload.description);
         }
-        const result = await courseRepository.update(instituteId, courseId, {
+
+        const result = await updateCourseRecord(instituteId, courseId, {
             ...payload,
             banner: payload.banner === "" ? null : payload.banner,
         });
@@ -62,16 +99,16 @@ export const courseService = {
     },
 
     async deleteCourse(instituteId: string, courseId: string) {
-        await courseRepository.remove(instituteId, courseId);
+        await deleteCourseRecord(instituteId, courseId);
         return { success: true };
     },
 
     async getCourses(instituteId: string) {
-        return courseRepository.listByInstitute(instituteId);
+        return listCoursesByInstitute(instituteId);
     },
 
     async getCourseById(instituteId: string, courseId: string) {
-        const course = await courseRepository.findById(instituteId, courseId);
+        const course = await findCourseById(instituteId, courseId);
         if (!course) {
             throw new AppError("Course not found", 404, "COURSE_NOT_FOUND");
         }

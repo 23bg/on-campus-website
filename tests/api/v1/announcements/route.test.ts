@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/utils/error";
 import { POST } from "@/app/api/v1/announcements/route";
 
-const { mockReadSessionFromCookie, mockStudentPortalService } = vi.hoisted(() => ({
+const { mockReadSessionFromCookie, mockStudentService } = vi.hoisted(() => ({
     mockReadSessionFromCookie: vi.fn(),
-    mockStudentPortalService: {
+    mockStudentService: {
         createAnnouncement: vi.fn(),
     },
 }));
@@ -13,8 +13,8 @@ vi.mock("@/lib/auth/auth", () => ({
     readSessionFromCookie: mockReadSessionFromCookie,
 }));
 
-vi.mock("@/features/student/services/student-portal.service", () => ({
-    studentPortalService: mockStudentPortalService,
+vi.mock("@/server/services/students.service", () => ({
+    studentService: mockStudentService,
 }));
 
 describe("POST /api/v1/announcements", () => {
@@ -41,7 +41,7 @@ describe("POST /api/v1/announcements", () => {
 
     it("creates announcement for writer role", async () => {
         mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "EDITOR" });
-        mockStudentPortalService.createAnnouncement.mockResolvedValue({ success: true });
+        mockStudentService.createAnnouncement.mockResolvedValue({ success: true });
 
         const request = new Request("http://localhost/api/v1/announcements", {
             method: "POST",
@@ -52,7 +52,7 @@ describe("POST /api/v1/announcements", () => {
         const body = await response.json();
         expect(response.status).toBe(200);
         expect(body.success).toBe(true);
-        expect(mockStudentPortalService.createAnnouncement).toHaveBeenCalledWith("inst1", {
+        expect(mockStudentService.createAnnouncement).toHaveBeenCalledWith("inst1", {
             title: "Holiday",
             body: "Closed",
             batchId: null,
@@ -61,7 +61,7 @@ describe("POST /api/v1/announcements", () => {
 
     it("returns service errors", async () => {
         mockReadSessionFromCookie.mockResolvedValue({ instituteId: "inst1", role: "EDITOR" });
-        mockStudentPortalService.createAnnouncement.mockRejectedValue(new AppError("Invalid", 400, "INVALID_ANNOUNCEMENT"));
+        mockStudentService.createAnnouncement.mockRejectedValue(new AppError("Invalid", 400, "INVALID_ANNOUNCEMENT"));
         const request = new Request("http://localhost/api/v1/announcements", {
             method: "POST",
             headers: { "content-type": "application/json" },
