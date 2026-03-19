@@ -5,12 +5,18 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
 import { Loader2, CreditCard } from "lucide-react";
 import { getPlanPricing, PLAN_CONFIG, PlanType, PricingVersion } from "@/config/plans";
 import type { BillingInterval } from "@/features/subscription/services/subscription.service";
 import Script from "next/script";
+import {
+    BillingDashboardPayload,
+    useConfirmBillingSubscriptionMutation,
+    useCreateBillingSubscriptionMutation,
+    useGenerateBillingInvoiceMutation,
+    useGetBillingDashboardQuery,
+    useRetryBillingInvoiceMutation,
+} from "@/services/adminDashboard.api";
 
 type RazorpayCheckoutResponse = {
     razorpay_payment_id: string;
@@ -35,70 +41,7 @@ type RazorpayInstance = {
 
 type RazorpayConstructor = new (options: RazorpayCheckoutOptions) => RazorpayInstance;
 
-type BillingSummary = {
-    planType: PlanType;
-    planName?: string;
-    planAmount: number;
-    planAmountYearly?: number;
-    pricingVersion?: PricingVersion;
-    currency: string;
-    userLimit: number | null;
-    usersUsed: number;
-    status: string;
-    billingInterval?: BillingInterval;
-    autopayEnabled?: boolean;
-    paymentMethodAddedAt?: string | null;
-    trialDaysRemaining?: number | null;
-    trialPaymentReminder?: boolean;
-    nextBillingDate?: string | null;
-    razorpaySubId?: string | null;
-    lastPaymentAmount?: number | null;
-    lastPaymentDate?: string | null;
-};
-
-type UsageSummary = {
-    planType: PlanType;
-    alertsUsed: number;
-    alertsIncluded: number;
-    extraAlerts: number;
-    extraAlertRate: number;
-    estimatedUsageCost: number;
-};
-
-type InvoiceHistoryItem = {
-    id: string;
-    month: number;
-    year: number;
-    periodStart: string;
-    periodEnd: string;
-    planCharge: number;
-    usageCharge: number;
-    totalAmount: number;
-    status: "PENDING" | "ISSUED" | "PAID" | "OVERDUE" | "VOID";
-    dueDate?: string | null;
-    issuedAt?: string | null;
-    paidAt?: string | null;
-    paymentLinkUrl?: string | null;
-    downloadUrl?: string | null;
-};
-
-type BillingDashboardPayload = {
-    summary: BillingSummary;
-    usage: UsageSummary;
-    policy: {
-        hasOverdue: boolean;
-        alertsEnabled: boolean;
-        accessRestricted: boolean;
-        hasExhaustedPendingInvoice?: boolean;
-        notifyPaymentMethodUpdate?: boolean;
-    };
-    sender?: {
-        mode: "ONCAMPUS_SHARED" | "INSTITUTE_CUSTOM";
-        connectedNumber?: string | null;
-        status?: string;
-    };
-    invoices: InvoiceHistoryItem[];
-};
+type InvoiceHistoryItem = NonNullable<BillingDashboardPayload>["invoices"][number];
 
 const STATUS_COLORS: Record<string, string> = {
     TRIAL: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -108,63 +51,40 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function BillingPage() {
-    const [summary, setSummary] = useState<BillingSummary | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [creating, setCreating] = useState(false);
-    const [generatingInvoice, setGeneratingInvoice] = useState(false);
+    const { data: billingData, isLoading: loading, refetch } = useGetBillingDashboardQuery();
+    const [createBillingSubscription, { isLoading: creating }] = useCreateBillingSubscriptionMutation();
+    const [confirmBillingSubscription] = useConfirmBillingSubscriptionMutation();
+    const [generateBillingInvoice, { isLoading: generatingInvoice }] = useGenerateBillingInvoiceMutation();
+    const [retryBillingInvoice, { isLoading: retryingInvoice }] = useRetryBillingInvoiceMutation();
+    const summary = billingData?.summary ?? null;
+    const usage = billingData?.usage ?? null;
+    const invoices = billingData?.invoices ?? [];
+    const policy = billingData?.policy ?? null;
+    const sender = billingData?.sender ?? null;
     const [selectedPlan, setSelectedPlan] = useState<PlanType>("STARTER");
     const [selectedInterval, setSelectedInterval] = useState<BillingInterval>("MONTHLY");
-    const [usage, setUsage] = useState<UsageSummary | null>(null);
-    const [invoices, setInvoices] = useState<InvoiceHistoryItem[]>([]);
-    const [policy, setPolicy] = useState<BillingDashboardPayload["policy"] | null>(null);
-    const [sender, setSender] = useState<BillingDashboardPayload["sender"] | null>(null);
     const [retryingInvoiceId, setRetryingInvoiceId] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (summary?.planType) {
+            setSelectedPlan(summary.planType as PlanType);
+        }
+        if (summary?.billingInterval) {
+            setSelectedInterval(summary.billingInterval as BillingInterval);
+        }
+    }, [summary?.billingInterval, summary?.planType]);
 
     const usageWarningThreshold = usage ? Math.floor(usage.alertsIncluded * 0.8) : null;
     const isUsageWarning = usage && usage.alertsIncluded > 0 && usage.alertsUsed >= (usageWarningThreshold ?? 0);
-    const selectedPricingVersion: PricingVersion = summary?.pricingVersion ?? "CURRENT";
+    const selectedPricingVersion: PricingVersion = (summary?.pricingVersion as PricingVersion | undefined) ?? "CURRENT";
     const getDisplayPlanPrice = (planType: PlanType) => getPlanPricing(planType, { version: selectedPricingVersion }).monthly;
 
-    const loadSummary = async () => {
-        try {
-            const response = await api.get<{ success: boolean; data: BillingDashboardPayload }>(API.INTERNAL.BILLING.ROOT);
-            const payload = response.data?.data;
-            if (!payload) return;
-
-            setSummary(payload.summary);
-            setUsage(payload.usage);
-            setInvoices(payload.invoices ?? []);
-            setPolicy(payload.policy);
-            setSender(payload.sender ?? null);
-
-            if (payload.summary?.planType) {
-                setSelectedPlan(payload.summary.planType);
-            }
-            if (payload.summary?.billingInterval) {
-                setSelectedInterval(payload.summary.billingInterval);
-            }
-        } catch {
-            toast.error("Failed to load billing info");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => { loadSummary(); }, []);
-
     const createSubscription = async (planType: PlanType) => {
-        setCreating(true);
         try {
-            const response = await api.post(API.INTERNAL.BILLING.ROOT, {
-                action: "create-subscription",
+            const payload = await createBillingSubscription({
                 planType,
                 interval: selectedInterval,
-            });
-
-            const payload = response.data?.data as {
-                subscriptionId?: string;
-                key?: string;
-            };
+            }).unwrap();
 
             if (!payload?.subscriptionId || !payload?.key) {
                 throw new Error("Missing checkout payload");
@@ -181,9 +101,9 @@ export default function BillingPage() {
                 name: "OnCampus",
                 description: "Admission and Student Management Platform Subscription",
                 handler: async (checkoutResponse) => {
-                    await api.post(API.INTERNAL.BILLING.CONFIRM, checkoutResponse);
+                    await confirmBillingSubscription(checkoutResponse as unknown as Record<string, unknown>).unwrap();
                     toast.success(`${planType} plan activated`);
-                    await loadSummary();
+                    await refetch();
                 },
                 modal: {
                     ondismiss: () => {
@@ -194,38 +114,28 @@ export default function BillingPage() {
 
             rzp.open();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Network error");
-        } finally {
-            setCreating(false);
+            toast.error(error?.data?.error?.message ?? error?.message ?? "Network error");
         }
     };
 
     const generateInvoice = async () => {
-        setGeneratingInvoice(true);
         try {
-            await api.post(API.INTERNAL.BILLING.ROOT, {
-                action: "generate-invoice",
-            });
+            await generateBillingInvoice().unwrap();
             toast.success("Invoice generated for last closed month");
-            await loadSummary();
+            await refetch();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Unable to generate invoice");
-        } finally {
-            setGeneratingInvoice(false);
+            toast.error(error?.data?.error?.message ?? "Unable to generate invoice");
         }
     };
 
     const retryInvoice = async (invoiceId: string) => {
-        setRetryingInvoiceId(invoiceId);
         try {
-            await api.post(API.INTERNAL.BILLING.ROOT, {
-                action: "retry-invoice",
-                invoiceId,
-            });
+            setRetryingInvoiceId(invoiceId);
+            await retryBillingInvoice(invoiceId).unwrap();
             toast.success("Invoice retry scheduled");
-            await loadSummary();
+            await refetch();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Unable to retry invoice");
+            toast.error(error?.data?.error?.message ?? "Unable to retry invoice");
         } finally {
             setRetryingInvoiceId(null);
         }
@@ -439,7 +349,7 @@ export default function BillingPage() {
                     {invoices.length === 0 ? (
                         <p className="text-sm text-muted-foreground">No invoices generated yet.</p>
                     ) : (
-                        invoices.map((invoice) => (
+                        invoices.map((invoice: InvoiceHistoryItem) => (
                             <div key={invoice.id} className="rounded border p-3">
                                 <div className="flex items-center justify-between gap-3">
                                     <p className="text-sm font-medium">
@@ -464,10 +374,10 @@ export default function BillingPage() {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={retryingInvoiceId === invoice.id}
+                                            disabled={retryingInvoice && retryingInvoiceId === invoice.id}
                                             onClick={() => void retryInvoice(invoice.id)}
                                         >
-                                            {retryingInvoiceId === invoice.id ? "Retrying..." : "Retry Payment"}
+                                            {retryingInvoice && retryingInvoiceId === invoice.id ? "Retrying..." : "Retry Payment"}
                                         </Button>
                                     ) : null}
                                     {invoice.downloadUrl ? (

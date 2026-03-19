@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
+import ListWidget from "@/components/custom/ListWidget";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { useGetDefaultersQuery } from "@/services/dashboardTables.api";
 
 type Defaulter = {
     studentId: string;
@@ -23,98 +20,100 @@ type Defaulter = {
 const PAGE_SIZE = 10;
 
 export default function DefaultersPage() {
-    const [defaulters, setDefaulters] = useState<Defaulter[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: defaulters = [], isLoading: loading } = useGetDefaultersQuery(undefined, { refetchOnMountOrArgChange: true });
     const [page, setPage] = useState(1);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-                const response = await api.get(API.INTERNAL.DASHBOARD.DEFAULTERS);
-                setDefaulters(response.data?.data ?? []);
-            } catch {
-                toast.error("Failed to load defaulters");
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, []);
-
-    const formatCurrency = (v: number) => `₹${v.toLocaleString("en-IN")}`;
-
-    const totalPending = defaulters.reduce((s, d) => s + d.pending, 0);
-    const paginatedDefaulters = defaulters.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     useEffect(() => {
         setPage(1);
     }, [defaulters.length]);
 
-    return (
-        <main className="p-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className=" text-2xl font-semibold flex items-center gap-2">
-                        <AlertTriangle className="h-6 w-6 text-red-600" /> Fee Defaulters
-                    </h1>
-                    <p className="text-muted-foreground text-sm mt-1">
-                        {defaulters.length} students with pending fees • Total outstanding: {formatCurrency(totalPending)}
-                    </p>
-                </div>
-            </div>
+    const formatCurrency = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+    const totalPending = defaulters.reduce((sum, item) => sum + item.pending, 0);
+    const paginatedDefaulters = defaulters.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-            <Card className="mt-6">
-                <CardHeader>
-                    <CardTitle className="text-base">Students with Pending Fees</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {loading ? (
-                        <div className="flex justify-center py-8">
-                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        </div>
-                    ) : defaulters.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">No fee defaulters. All fees are up to date!</p>
-                    ) : (
-                        <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Sr. No.</TableHead>
-                                        <TableHead>Student</TableHead>
-                                        <TableHead>Phone</TableHead>
-                                        <TableHead>Course</TableHead>
-                                        <TableHead className="text-right">Total Fees</TableHead>
-                                        <TableHead className="text-right">Paid</TableHead>
-                                        <TableHead className="text-right">Pending</TableHead>
-                                        <TableHead>Due Date</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paginatedDefaulters.map((d, index) => (
-                                        <TableRow key={d.studentId}>
-                                            <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
-                                            <TableCell className="font-medium max-w-[180px] truncate" title={d.studentName}>{d.studentName}</TableCell>
-                                            <TableCell>{d.phone}</TableCell>
-                                            <TableCell className="max-w-[180px] truncate" title={d.courseName}>{d.courseName}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(d.totalFees)}</TableCell>
-                                            <TableCell className="text-right text-green-600">{formatCurrency(d.totalPaid)}</TableCell>
-                                            <TableCell className="text-right font-medium text-red-600">{formatCurrency(d.pending)}</TableCell>
-                                            <TableCell>{d.dueDate ? new Date(d.dueDate).toLocaleDateString() : "-"}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            <TablePaginationControls
-                                className="mt-3"
-                                page={page}
-                                pageSize={PAGE_SIZE}
-                                totalItems={defaulters.length}
-                                onPageChange={setPage}
-                            />
-                        </>
-                    )}
-                </CardContent>
-            </Card>
-        </main>
+    const columns = useMemo<Column<Defaulter>[]>(() => [
+        {
+            header: "Sr. No.",
+            cell: (_item, index) => (page - 1) * PAGE_SIZE + index + 1,
+        },
+        {
+            header: "Student",
+            type: "text",
+            className: "font-medium max-w-[180px] truncate",
+            hoverCard: true,
+            cell: (item) => item.studentName,
+            hoverCardContent: (item) => (
+                <div className="space-y-1 text-sm">
+                    <p className="font-medium">{item.studentName}</p>
+                    <p className="text-muted-foreground">Phone: {item.phone}</p>
+                    <p className="text-muted-foreground">Course: {item.courseName}</p>
+                    <p className="text-muted-foreground">Pending: {formatCurrency(item.pending)}</p>
+                </div>
+            ),
+            sortValue: (item) => item.studentName,
+        },
+        {
+            header: "Phone",
+            accessor: "phone",
+        },
+        {
+            header: "Course",
+            type: "text",
+            className: "max-w-[180px] truncate",
+            tooltip: true,
+            cell: (item) => item.courseName,
+            tooltipContent: (item) => item.courseName,
+            sortValue: (item) => item.courseName,
+        },
+        {
+            header: "Total Fees",
+            type: "text",
+            className: "text-right",
+            cell: (item) => formatCurrency(item.totalFees),
+            sortValue: (item) => item.totalFees,
+        },
+        {
+            header: "Paid",
+            type: "text",
+            className: "text-right text-green-600",
+            cell: (item) => formatCurrency(item.totalPaid),
+            sortValue: (item) => item.totalPaid,
+        },
+        {
+            header: "Pending",
+            type: "text",
+            className: "text-right font-medium text-red-600",
+            cell: (item) => formatCurrency(item.pending),
+            sortValue: (item) => item.pending,
+        },
+        {
+            header: "Due Date",
+            type: "date",
+            cell: (item) => (item.dueDate ? new Date(item.dueDate).toLocaleDateString() : "-"),
+            sortValue: (item) => item.dueDate || "",
+        },
+    ], [page]);
+
+    return (
+        <ListWidget
+            title="Fee Defaulters"
+            description={`${defaulters.length} students with pending fees • Total outstanding: ${formatCurrency(totalPending)}`}
+            loading={loading}
+            isEmpty={!loading && defaulters.length === 0}
+            emptyMessage="No fee defaulters. All fees are up to date!"
+            footer={
+                <TablePaginationControls
+                    page={page}
+                    pageSize={PAGE_SIZE}
+                    totalItems={defaulters.length}
+                    onPageChange={setPage}
+                />
+            }
+        >
+            <div className="px-6 py-4">
+                <p className="mb-4 text-base font-medium">Students with Pending Fees</p>
+                <TableWidget columns={columns} data={paginatedDefaulters} rowKey={(item) => item.studentId} />
+            </div>
+        </ListWidget>
     );
 }

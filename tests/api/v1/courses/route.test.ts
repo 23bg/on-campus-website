@@ -14,7 +14,7 @@ vi.mock("@/lib/auth/auth", () => ({
     readSessionFromCookie: mockReadSessionFromCookie,
 }));
 
-vi.mock("@/features/course/services/course.service", () => ({
+vi.mock("@/server/services/courses.service", () => ({
     courseService: mockCourseService,
 }));
 

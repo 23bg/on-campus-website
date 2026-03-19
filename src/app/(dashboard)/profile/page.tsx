@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,36 +8,10 @@ import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@/components/ui/input-group";
-
-type InstituteProfile = {
-    name: string;
-    slug: string;
-    description: string;
-    phone: string;
-    whatsapp: string;
-    addressLine1: string;
-    addressLine2: string;
-    city: string;
-    state: string;
-    region: string;
-    postalCode: string;
-    country: string;
-    countryCode: string;
-    timings: string;
-    logo: string;
-    heroImage: string;
-    googleMapLink: string;
-    website: string;
-    instagram: string;
-    facebook: string;
-    youtube: string;
-    linkedin: string;
-};
+import { InstituteProfile, useGetInstituteProfileQuery, useSaveInstituteProfileMutation } from "@/services/adminDashboard.api";
 
 const isValidUrl = (value: string) => {
     try {
@@ -99,85 +73,41 @@ const instituteProfileSchema = z.object({
     linkedin: optionalUrlSchema,
 });
 
+type ProfileFormValues = z.infer<typeof instituteProfileSchema>;
+
 export default function DashboardProfilePage() {
-    const defaultValues: InstituteProfile = {
+    const defaultValues: ProfileFormValues = {
         name: "", slug: "", description: "", phone: "", whatsapp: "",
         addressLine1: "", addressLine2: "", city: "", state: "", region: "", postalCode: "", country: "India", countryCode: "", timings: "", logo: "", heroImage: "", googleMapLink: "",
         website: "", instagram: "", facebook: "", youtube: "", linkedin: "",
     };
 
-    const [loading, setLoading] = useState(true);
+    const { data: profile, isLoading: loading } = useGetInstituteProfileQuery();
+    const [saveInstituteProfile] = useSaveInstituteProfileMutation();
 
     const {
         control,
         handleSubmit,
         reset,
-        formState: { errors, isSubmitting },
-    } = useForm<InstituteProfile>({
+        formState: { isSubmitting },
+    } = useForm<ProfileFormValues>({
         resolver: zodResolver(instituteProfileSchema),
         mode: "onBlur",
         defaultValues,
     });
 
     useEffect(() => {
-        const load = async () => {
-            const response = await api.get(API.INTERNAL.INSTITUTE.ROOT);
-            const d = response.data?.data ?? {};
-            reset({
-                name: d.name ?? "",
-                slug: d.slug ?? "",
-                description: d.description ?? "",
-                phone: d.phone ?? "",
-                whatsapp: d.whatsapp ?? "",
-                addressLine1: d.address?.addressLine1 ?? "",
-                addressLine2: d.address?.addressLine2 ?? "",
-                city: d.address?.city ?? "",
-                state: d.address?.state ?? "",
-                region: d.address?.region ?? "",
-                postalCode: d.address?.postalCode ?? "",
-                country: d.address?.country ?? "India",
-                countryCode: d.address?.countryCode ?? "",
-                timings: d.timings ?? "",
-                logo: d.logo ?? "",
-                heroImage: d.heroImage ?? d.banner ?? "",
-                googleMapLink: d.googleMapLink ?? "",
-                website: d.socialLinks?.website ?? "",
-                instagram: d.socialLinks?.instagram ?? "",
-                facebook: d.socialLinks?.facebook ?? "",
-                youtube: d.socialLinks?.youtube ?? "",
-                linkedin: d.socialLinks?.linkedin ?? "",
-            });
-            setLoading(false);
-        };
-        load();
-    }, [reset]);
+        if (profile) {
+            reset(profile);
+        }
+    }, [profile, reset]);
 
-    const save = async (form: InstituteProfile) => {
+    const save = async (form: ProfileFormValues) => {
         try {
-            await api.put(API.INTERNAL.INSTITUTE.ROOT, {
-                ...form,
-                address: {
-                    addressLine1: form.addressLine1,
-                    addressLine2: form.addressLine2,
-                    city: form.city,
-                    state: form.state,
-                    region: form.region,
-                    postalCode: form.postalCode,
-                    country: form.country,
-                    countryCode: form.countryCode,
-                },
-                banner: form.heroImage,
-                socialLinks: {
-                    website: form.website,
-                    instagram: form.instagram,
-                    facebook: form.facebook,
-                    youtube: form.youtube,
-                    linkedin: form.linkedin,
-                },
-            });
+            await saveInstituteProfile(form as InstituteProfile).unwrap();
             toast.success("Profile updated successfully");
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Network error. Please try again.");
+            toast.error(error?.data?.error?.message ?? "Network error. Please try again.");
         }
     };
 

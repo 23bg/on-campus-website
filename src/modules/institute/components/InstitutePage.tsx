@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
+import { useState } from "react";
 import InstituteProfileView from "@/modules/institute/components/InstituteProfileView";
 import InstituteProfileForm, { InstituteFormValues as InstituteFormState } from "@/modules/institute/forms/InstituteProfileForm";
+import { useGetInstituteSummaryQuery } from "@/services/appUi.api";
 
 const emptyForm: InstituteFormState = {
     name: "",
@@ -31,50 +30,11 @@ const emptyForm: InstituteFormState = {
 };
 
 export default function InstitutePage() {
+    const { data: summary, refetch } = useGetInstituteSummaryQuery();
     const [mode, setMode] = useState<"view" | "edit">("view");
-    const [form, setForm] = useState<InstituteFormState>(emptyForm);
-    const [studentsCount, setStudentsCount] = useState(0);
-    const [coursesCount, setCoursesCount] = useState(0);
-
-    const load = async () => {
-        const [instituteRes, studentsRes, coursesRes] = await Promise.all([
-            api.get(API.INTERNAL.INSTITUTE.ROOT),
-            api.get(API.INTERNAL.STUDENTS.ROOT),
-            api.get(API.INTERNAL.COURSES.ROOT),
-        ]);
-
-        const institute = instituteRes.data?.data ?? {};
-        setStudentsCount((studentsRes.data?.data ?? []).length);
-        setCoursesCount((coursesRes.data?.data ?? []).length);
-
-        setForm({
-            name: institute.name ?? "",
-            slug: institute.slug ?? "",
-            description: institute.description ?? "",
-            phone: institute.phone ?? "",
-            whatsapp: institute.whatsapp ?? "",
-            addressLine1: institute.address?.addressLine1 ?? "",
-            addressLine2: institute.address?.addressLine2 ?? "",
-            city: institute.address?.city ?? "",
-            state: institute.address?.state ?? "",
-            region: institute.address?.region ?? "",
-            postalCode: institute.address?.postalCode ?? "",
-            country: institute.address?.country ?? "India",
-            countryCode: institute.address?.countryCode ?? "",
-            timings: institute.timings ?? "",
-            logo: institute.logo ?? "",
-            banner: institute.banner ?? "",
-            website: institute.socialLinks?.website ?? "",
-            instagram: institute.socialLinks?.instagram ?? "",
-            facebook: institute.socialLinks?.facebook ?? "",
-            youtube: institute.socialLinks?.youtube ?? "",
-            linkedin: institute.socialLinks?.linkedin ?? "",
-        });
-    };
-
-    useEffect(() => {
-        load();
-    }, []);
+    const form = summary?.form ?? emptyForm;
+    const studentsCount = summary?.studentsCount ?? 0;
+    const coursesCount = summary?.coursesCount ?? 0;
 
     if (mode === "edit") {
         return (
@@ -83,7 +43,7 @@ export default function InstitutePage() {
                     initialValues={form}
                     onCancel={() => setMode("view")}
                     onSaved={async () => {
-                        await load();
+                        await refetch();
                         setMode("view");
                     }}
                 />

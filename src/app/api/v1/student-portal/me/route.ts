@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readStudentSessionFromCookie } from "@/lib/auth/student-auth";
-import { studentPortalService } from "@/features/student/services/student-portal.service";
+import { studentService } from "@/server/services/students.service";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET() {
@@ -13,7 +13,7 @@ export async function GET() {
             );
         }
 
-        const data = await studentPortalService.getPortalData(session.studentId, session.instituteId);
+        const data = await studentService.getPortalData(session.studentId, session.instituteId);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

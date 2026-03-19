@@ -1,56 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
-
-type PortalData = {
-    student: {
-        name: string;
-        admissionDate: string;
-        course?: { name: string; duration?: string | null; description?: string | null } | null;
-        batch?: {
-            name: string;
-            startDate?: string | null;
-            time?: string | null;
-            timing?: string | null;
-            teacherName?: string | null;
-            liveClassLink?: string | null;
-        } | null;
-        totalFees?: number | null;
-        paidAmount?: number | null;
-        pendingAmount?: number | null;
-        nextDueDate?: string | null;
-        liveClassLink?: string | null;
-        recordedLecturesLink?: string | null;
-        studyMaterialLink?: string | null;
-    };
-    announcements: Array<{ title: string; body: string; createdAt: string }>;
-};
+import { useGetStudentPortalQuery } from "@/services/appUi.api";
 
 const asCurrency = (value: number | null | undefined) => `₹${(value ?? 0).toLocaleString("en-IN")}`;
 
 export default function StudentDashboardPage() {
-    const [data, setData] = useState<PortalData | null>(null);
+    const { data } = useGetStudentPortalQuery();
 
-    useEffect(() => {
-        api.get(API.INTERNAL.STUDENT_PORTAL.ME).then((response) => {
-            setData(response.data?.data ?? null);
-        });
-    }, []);
+    const scheduleTime = data?.student?.batch?.time || data?.student?.batch?.timing;
+    const teacherName = data?.student?.batch?.teacherName;
+    const liveClassLink = data?.student?.liveClassLink || data?.student?.batch?.liveClassLink;
+    const recordedLecturesLink = data?.student?.recordedLecturesLink;
+    const studyMaterialLink = data?.student?.studyMaterialLink;
 
-    const scheduleTime = data?.student.batch?.time || data?.student.batch?.timing;
-    const teacherName = data?.student.batch?.teacherName;
-    const liveClassLink = data?.student.liveClassLink || data?.student.batch?.liveClassLink;
-    const recordedLecturesLink = data?.student.recordedLecturesLink;
-    const studyMaterialLink = data?.student.studyMaterialLink;
-
-    const totalFees = data?.student.totalFees ?? 0;
-    const paidAmount = data?.student.paidAmount ?? 0;
-    const pendingAmount = data?.student.pendingAmount ?? Math.max(0, totalFees - paidAmount);
+    const totalFees = data?.student?.totalFees ?? 0;
+    const paidAmount = data?.student?.paidAmount ?? 0;
+    const pendingAmount = data?.student?.pendingAmount ?? Math.max(0, totalFees - paidAmount);
 
     const latestAnnouncements = (data?.announcements ?? []).slice(0, 3);
 
@@ -67,10 +35,10 @@ export default function StudentDashboardPage() {
                         <CardTitle className="text-lg">My Course</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                        <p><span className="text-muted-foreground">Course:</span> {data?.student.course?.name ?? "-"}</p>
-                        <p><span className="text-muted-foreground">Batch:</span> {data?.student.batch?.name ?? "-"}</p>
-                        <p><span className="text-muted-foreground">Duration:</span> {data?.student.course?.duration ?? "-"}</p>
-                        <p><span className="text-muted-foreground">Start Date:</span> {data?.student.batch?.startDate ? new Date(data.student.batch.startDate).toLocaleDateString() : "-"}</p>
+                        <p><span className="text-muted-foreground">Course:</span> {data?.student?.course?.name ?? "-"}</p>
+                        <p><span className="text-muted-foreground">Batch:</span> {data?.student?.batch?.name ?? "-"}</p>
+                        <p><span className="text-muted-foreground">Duration:</span> {data?.student?.course?.duration ?? "-"}</p>
+                        <p><span className="text-muted-foreground">Start Date:</span> {data?.student?.batch?.startDate ? new Date(data.student.batch.startDate).toLocaleDateString() : "-"}</p>
                     </CardContent>
                 </Card>
 
@@ -175,7 +143,7 @@ export default function StudentDashboardPage() {
                         </div>
                         <div className="rounded-lg border p-3">
                             <p className="text-xs text-muted-foreground">Next Due Date</p>
-                            <p className="mt-1 text-base font-semibold">{data?.student.nextDueDate ? new Date(data.student.nextDueDate).toLocaleDateString() : "-"}</p>
+                            <p className="mt-1 text-base font-semibold">{data?.student?.nextDueDate ? new Date(data.student.nextDueDate).toLocaleDateString() : "-"}</p>
                         </div>
                     </div>
                 </CardContent>

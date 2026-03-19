@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { studentPortalService } from "@/features/student/services/student-portal.service";
+import { studentService } from "@/server/services/students.service";
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = {
@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
         const { id } = await context.params;
         const body = (await req.json()) as { username?: string; email?: string; password?: string };
-        const data = await studentPortalService.setCredentials(session.instituteId, id, {
+        const data = await studentService.setPortalCredentials(session.instituteId, id, {
             username: body.username,
             email: body.email,
             password: body.password ?? "",

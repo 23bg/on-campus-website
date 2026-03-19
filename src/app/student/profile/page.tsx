@@ -2,39 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
-type PortalData = {
-    student: {
-        name: string;
-        phone?: string | null;
-        email?: string | null;
-        admissionDate: string;
-        course?: { name: string } | null;
-        batch?: { name: string } | null;
-        institute?: { name?: string | null } | null;
-    };
-};
+import { useGetStudentPortalQuery } from "@/services/appUi.api";
 
 export default function StudentProfilePage() {
-    const [data, setData] = useState<PortalData | null>(null);
+    const { data } = useGetStudentPortalQuery();
     const [isEditing, setIsEditing] = useState(false);
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
     const [savedHint, setSavedHint] = useState("");
 
     useEffect(() => {
-        api.get(API.INTERNAL.STUDENT_PORTAL.ME).then((response) => {
-            const payload = response.data?.data ?? null;
-            setData(payload);
-            setPhone(payload?.student?.phone ?? "");
-            setEmail(payload?.student?.email ?? "");
-        });
-    }, []);
+        setPhone(data?.student?.phone ?? "");
+        setEmail(data?.student?.email ?? "");
+    }, [data]);
 
     const saveLocalEdits = () => {
         setIsEditing(false);
@@ -56,19 +39,19 @@ export default function StudentProfilePage() {
                     <div className="grid gap-3 md:grid-cols-2">
                         <div>
                             <p className="text-xs text-muted-foreground">Student Name</p>
-                            <p className="font-medium">{data?.student.name ?? "-"}</p>
+                            <p className="font-medium">{data?.student?.name ?? "-"}</p>
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground">Enrollment Date</p>
-                            <p className="font-medium">{data?.student.admissionDate ? new Date(data.student.admissionDate).toLocaleDateString() : "-"}</p>
+                            <p className="font-medium">{data?.student?.admissionDate ? new Date(data.student.admissionDate).toLocaleDateString() : "-"}</p>
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground">Course</p>
-                            <p className="font-medium">{data?.student.course?.name ?? "-"}</p>
+                            <p className="font-medium">{data?.student?.course?.name ?? "-"}</p>
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground">Batch</p>
-                            <p className="font-medium">{data?.student.batch?.name ?? "-"}</p>
+                            <p className="font-medium">{data?.student?.batch?.name ?? "-"}</p>
                         </div>
                     </div>
 

@@ -9,8 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@/components/ui/input-group";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
+import { useSubmitPublicEnquiryMutation } from "@/services/appUi.api";
 
 const publicEnquirySchema = z.object({
     name: z.string().trim().min(2, "Name must be at least 2 characters.").max(80, "Name cannot exceed 80 characters."),
@@ -30,6 +29,7 @@ type PublicEnquiryFormProps = {
 };
 
 export default function PublicEnquiryForm({ slug }: PublicEnquiryFormProps) {
+    const [submitPublicEnquiry] = useSubmitPublicEnquiryMutation();
     const form = useForm<PublicEnquiryValues>({
         resolver: zodResolver(publicEnquirySchema),
         mode: "onBlur",
@@ -46,23 +46,26 @@ export default function PublicEnquiryForm({ slug }: PublicEnquiryFormProps) {
         const phoneDigits = values.phone.replace(/\D/g, "");
 
         try {
-            await api.post(API.INTERNAL.PUBLIC.LEAD(slug), {
-                name: values.name.trim(),
-                phone: phoneDigits.length === 12 && phoneDigits.startsWith("91") ? phoneDigits.slice(2) : phoneDigits,
-                email: values.email || undefined,
-                course: values.course || undefined,
-                message: values.message || undefined,
-            });
+            await submitPublicEnquiry({
+                slug,
+                values: {
+                    name: values.name.trim(),
+                    phone: phoneDigits.length === 12 && phoneDigits.startsWith("91") ? phoneDigits.slice(2) : phoneDigits,
+                    email: values.email || undefined,
+                    course: values.course || undefined,
+                    message: values.message || undefined,
+                },
+            }).unwrap();
             toast.success("Enquiry submitted successfully");
             form.reset();
         } catch (error: any) {
-            const code = error?.response?.data?.error?.code;
+            const code = error?.data?.error?.code;
             if (code === "DUPLICATE_LEAD") {
                 toast.warning("Lead already exists. Open the existing record from dashboard search using this mobile number.");
                 return;
             }
 
-            toast.error(error?.response?.data?.error?.message ?? "Failed to submit enquiry");
+            toast.error(error?.data?.error?.message ?? "Failed to submit enquiry");
         }
     };
 

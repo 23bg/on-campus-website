@@ -12,6 +12,8 @@ import {
     MessageCircle,
     Twitter,
     Linkedin,
+    Users2,
+    UsersIcon,
 } from "lucide-react"
 
 import {
@@ -70,7 +72,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                 {
                     title: "Students",
                     url: ROUTES.DASHBOARD.STUDENTS,
-                    icon: UserRound,
+                    icon: UsersIcon,
                 },
 
                 {
@@ -95,13 +97,9 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                 {
                     title: "Team",
                     url: ROUTES.DASHBOARD.TEAM,
-                    icon: Users,
+                    icon: Users2,
                 },
-                {
-                    title: "Integrations",
-                    url: ROUTES.DASHBOARD.INTEGRATIONS,
-                    icon: Layers,
-                },
+
                 {
                     title: "Billing",
                     // url: ROUTES.DASHBOARD.BILLING,

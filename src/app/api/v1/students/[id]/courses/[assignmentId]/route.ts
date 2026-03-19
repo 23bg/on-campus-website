@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { toAppError } from "@/lib/utils/error";
-import { studentCourseService } from "@/features/student/services/student-course.service";
+import { studentService } from "@/server/services/students.service";
 
 type RouteContext = {
     params: Promise<{ id: string; assignmentId: string }>;
@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         const body = (await req.json()) as { status: "ACTIVE" | "COMPLETED" | "DROPPED" };
         const { assignmentId } = await context.params;
 
-        const data = await studentCourseService.updateAssignmentStatus(session.instituteId, assignmentId, body.status);
+        const data = await studentService.updateAssignmentStatus(session.instituteId, assignmentId, body.status);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

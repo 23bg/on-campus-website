@@ -7,13 +7,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import api from "@/lib/axios";
+import { useStudentPortalLoginMutation } from "@/services/appUi.api";
 
 export default function StudentLoginPage() {
     const router = useRouter();
+    const [studentPortalLogin, { isLoading: submitting }] = useStudentPortalLoginMutation();
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
-    const [submitting, setSubmitting] = useState(false);
 
     const login = async () => {
         if (!identifier.trim() || !password.trim()) {
@@ -21,15 +21,12 @@ export default function StudentLoginPage() {
             return;
         }
 
-        setSubmitting(true);
         try {
-            await api.post("/student-auth/login", { identifier, password });
+            await studentPortalLogin({ identifier, password }).unwrap();
             router.push("/student");
             router.refresh();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Login failed");
-        } finally {
-            setSubmitting(false);
+            toast.error(error?.data?.error?.message ?? "Login failed");
         }
     };
 

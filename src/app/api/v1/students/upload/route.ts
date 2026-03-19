@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { studentService } from "@/features/student/services/student.service";
-import { courseRepository } from "@/features/course/repositories/course.repo";
-import { batchRepository } from "@/features/batch/repositories/batch.repo";
+import { studentService } from "@/server/services/students.service";
 import { toAppError } from "@/lib/utils/error";
 
 export async function POST(req: NextRequest) {
@@ -41,22 +39,7 @@ export async function POST(req: NextRequest) {
             csvText = await file.text();
         }
 
-        // Build course/batch name-to-id maps for CSV resolution
-        const [courses, batches] = await Promise.all([
-            courseRepository.listByInstitute(session.instituteId),
-            batchRepository.listByInstitute(session.instituteId),
-        ]);
-        const courseMap = new Map(courses.map((c) => [c.name.toLowerCase(), c.id]));
-        const batchMap = new Map(batches.map((b) => [b.name.toLowerCase(), b.id]));
-        // Map courseId → defaultFees for auto fee plan creation
-        const courseFeesMap = new Map<string, number>();
-        for (const c of courses) {
-            if (c.defaultFees && c.defaultFees > 0) {
-                courseFeesMap.set(c.id, c.defaultFees);
-            }
-        }
-
-        const data = await studentService.uploadCsv(session.instituteId, csvText, courseMap, batchMap, courseFeesMap);
+        const data = await studentService.uploadCsv(session.instituteId, csvText);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

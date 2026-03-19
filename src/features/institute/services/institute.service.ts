@@ -2,7 +2,6 @@ import { z } from "zod";
 import dns from "node:dns/promises";
 import { instituteRepository } from "@/features/institute/repositories/institute.repo";
 import { userRepository } from "@/features/auth/repositories/user.repo";
-import { courseRepository } from "@/features/course/repositories/course.repo";
 import { AppError } from "@/lib/utils/error";
 import { prisma } from "@/lib/db/prisma";
 import { normalizePhone } from "@/lib/utils/phone";

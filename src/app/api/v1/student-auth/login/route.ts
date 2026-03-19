@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { studentPortalService } from "@/features/student/services/student-portal.service";
+import { studentService } from "@/server/services/students.service";
 import { createStudentSessionToken, setStudentSessionCookie } from "@/lib/auth/student-auth";
 import { toAppError } from "@/lib/utils/error";
 import { createRouteLogger } from "@/lib/api/route-logger";
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     try {
         const body = (await req.json()) as { identifier?: string; password?: string };
         routeLog.info("student_login_started", { identifier: body.identifier ?? null });
-        const session = await studentPortalService.login(body.identifier ?? "", body.password ?? "");
+        const session = await studentService.loginToPortal(body.identifier ?? "", body.password ?? "");
         const token = createStudentSessionToken(session);
         await setStudentSessionCookie(token);
         routeLog.info("student_login_succeeded", {

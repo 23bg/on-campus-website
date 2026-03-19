@@ -1,16 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { API } from "@/constants/api";
-import api from "@/lib/axios";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
+import ListWidget from "@/components/custom/ListWidget";
+import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { useGetPaymentsQuery } from "@/services/dashboardTables.api";
 
 type PaymentRow = {
     id: string;
@@ -29,139 +27,137 @@ const PAYMENT_METHODS = ["ALL", "CASH", "UPI", "CARD", "BANK_TRANSFER", "OTHER"]
 const PAGE_SIZE = 10;
 
 export default function PaymentsPage() {
-    const [rows, setRows] = useState<PaymentRow[]>([]);
-    const [loading, setLoading] = useState(true);
     const [from, setFrom] = useState("");
     const [to, setTo] = useState("");
     const [studentQuery, setStudentQuery] = useState("");
     const [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>("ALL");
     const [page, setPage] = useState(1);
+    const queryString = useMemo(() => {
+        const params = new URLSearchParams();
+        if (from) params.set("from", from);
+        if (to) params.set("to", to);
+        if (method !== "ALL") params.set("method", method);
+        return params.toString();
+    }, [from, method, to]);
+    const { data: rows = [], isLoading: loading, refetch } = useGetPaymentsQuery(queryString, { refetchOnMountOrArgChange: true });
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams();
-            if (from) params.set("from", from);
-            if (to) params.set("to", to);
-            if (method !== "ALL") params.set("method", method);
-
-            const response = await api.get(`${API.INTERNAL.PAYMENTS.ROOT}${params.toString() ? `?${params.toString()}` : ""}`);
-            setRows(response.data?.data ?? []);
-        } catch {
-            toast.error("Failed to load payments");
-        } finally {
-            setLoading(false);
-        }
-    }, [from, to, method]);
-
-    useEffect(() => {
-        load();
-    }, [load]);
-
-    const filteredRows = studentQuery.trim()
-        ? rows.filter((row) => {
-            const query = studentQuery.trim().toLowerCase();
-            return row.student.name.toLowerCase().includes(query) || row.student.phone.includes(query);
-        })
-        : rows;
+    const filteredRows = useMemo(() => {
+        if (!studentQuery.trim()) return rows;
+        const query = studentQuery.trim().toLowerCase();
+        return rows.filter((row) => row.student.name.toLowerCase().includes(query) || row.student.phone.includes(query));
+    }, [rows, studentQuery]);
 
     useEffect(() => {
         setPage(1);
     }, [studentQuery, method, from, to, rows.length]);
 
     const paginatedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
     const totalAmount = filteredRows.reduce((sum, row) => sum + row.amount, 0);
 
+    const columns = useMemo<Column<PaymentRow>[]>(() => [
+        {
+            header: "Sr. No.",
+            cell: (_row, index) => (page - 1) * PAGE_SIZE + index + 1,
+        },
+        {
+            header: "Student",
+            type: "text",
+            className: "font-medium max-w-[180px] truncate",
+            hoverCard: true,
+            cell: (row) => row.student.name,
+            hoverCardContent: (row) => (
+                <div className="space-y-1 text-sm">
+                    <p className="font-medium">{row.student.name}</p>
+                    <p className="text-muted-foreground">Phone: {row.student.phone}</p>
+                    <p className="text-muted-foreground">Method: {row.method || "-"}</p>
+                    <p className="text-muted-foreground">Amount: ₹{row.amount.toLocaleString("en-IN")}</p>
+                </div>
+            ),
+            sortValue: (row) => row.student.name,
+        },
+        {
+            header: "Phone",
+            cell: (row) => row.student.phone,
+            sortValue: (row) => row.student.phone,
+        },
+        {
+            header: "Amount",
+            type: "text",
+            className: "text-right",
+            cell: (row) => `₹${row.amount.toLocaleString("en-IN")}`,
+            sortValue: (row) => row.amount,
+        },
+        {
+            header: "Date",
+            type: "date",
+            cell: (row) => new Date(row.paidOn).toLocaleDateString(),
+            sortValue: (row) => row.paidOn,
+        },
+        {
+            header: "Method",
+            type: "text",
+            className: "max-w-[140px] truncate",
+            tooltip: true,
+            cell: (row) => row.method || "-",
+            tooltipContent: (row) => row.method || "-",
+            sortValue: (row) => row.method || "",
+        },
+        {
+            header: "Reference",
+            type: "text",
+            className: "max-w-[180px] truncate",
+            tooltip: true,
+            cell: (row) => row.reference || "-",
+            tooltipContent: (row) => row.reference || "-",
+            sortValue: (row) => row.reference || "",
+        },
+    ], [page]);
+
     return (
-        <main className="p-6 space-y-4">
-            <div>
-                <h1 className=" text-2xl font-semibold">Payments</h1>
-                <p className="text-sm text-muted-foreground mt-1">Track all fee collections with filters.</p>
+        <ListWidget
+            title="Payments"
+            description={`Showing ${filteredRows.length} payments • Total ₹${totalAmount.toLocaleString("en-IN")}`}
+            search={studentQuery}
+            onSearchChange={setStudentQuery}
+            searchPlaceholder="Search student name or phone"
+                loading={loading}
+                isEmpty={!loading && filteredRows.length === 0}
+                emptyMessage="No payments found for selected filters."
+                actions={
+                <Button variant="outline" onClick={() => refetch()}>Refresh</Button>
+                }
+            footer={
+                <TablePaginationControls
+                    page={page}
+                    pageSize={PAGE_SIZE}
+                    totalItems={filteredRows.length}
+                    onPageChange={setPage}
+                />
+            }
+        >
+            <div className="space-y-4 px-6 py-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Filters</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-3 md:grid-cols-3">
+                            <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+                            <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+                            <Select value={method} onValueChange={(value) => setMethod(value as (typeof PAYMENT_METHODS)[number])}>
+                                <SelectTrigger><SelectValue placeholder="Method" /></SelectTrigger>
+                                <SelectContent>
+                                    {PAYMENT_METHODS.map((item) => (
+                                        <SelectItem key={item} value={item}>{item === "ALL" ? "All Methods" : item}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <TableWidget columns={columns} data={paginatedRows} rowKey={(row) => row.id} />
             </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base">Filters</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-3 md:grid-cols-5">
-                        <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
-                        <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
-                        <Input
-                            placeholder="Search student name or phone"
-                            value={studentQuery}
-                            onChange={(event) => setStudentQuery(event.target.value)}
-                        />
-                        <Select value={method} onValueChange={(value) => setMethod(value as (typeof PAYMENT_METHODS)[number])}>
-                            <SelectTrigger><SelectValue placeholder="Method" /></SelectTrigger>
-                            <SelectContent>
-                                {PAYMENT_METHODS.map((item) => (
-                                    <SelectItem key={item} value={item}>{item === "ALL" ? "All Methods" : item}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Button variant="outline" onClick={load}>Refresh</Button>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground mb-3">
-                        Showing {filteredRows.length} payments • Total {`₹${totalAmount.toLocaleString("en-IN")}`}
-                    </p>
-                    <div className="rounded border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Sr. No.</TableHead>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead>Phone</TableHead>
-                                    <TableHead className="text-right">Amount</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Method</TableHead>
-                                    <TableHead>Reference</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-8">
-                                            <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
-                                        </TableCell>
-                                    </TableRow>
-                                ) : filteredRows.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                                            No payments found for selected filters.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    paginatedRows.map((payment, index) => (
-                                        <TableRow key={payment.id}>
-                                            <TableCell>{(page - 1) * PAGE_SIZE + index + 1}</TableCell>
-                                            <TableCell className="font-medium max-w-[180px] truncate" title={payment.student.name}>{payment.student.name}</TableCell>
-                                            <TableCell>{payment.student.phone}</TableCell>
-                                            <TableCell className="text-right">{`₹${payment.amount.toLocaleString("en-IN")}`}</TableCell>
-                                            <TableCell>{new Date(payment.paidOn).toLocaleDateString()}</TableCell>
-                                            <TableCell className="max-w-[140px] truncate" title={payment.method || "-"}>{payment.method || "-"}</TableCell>
-                                            <TableCell className="max-w-[180px] truncate" title={payment.reference || "-"}>{payment.reference || "-"}</TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                    <TablePaginationControls
-                        className="mt-3"
-                        page={page}
-                        pageSize={PAGE_SIZE}
-                        totalItems={filteredRows.length}
-                        onPageChange={setPage}
-                    />
-                </CardContent>
-            </Card>
-        </main>
+        </ListWidget>
     );
 }

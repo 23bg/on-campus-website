@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { instituteRepository } from "@/features/institute/repositories/institute.repo";
-import { leadService } from "@/features/lead/services/lead.service";
+import { leadService } from "@/server/services/leads.service";
 import { enforceRateLimit } from "@/lib/utils/rateLimit";
 import { env } from "@/lib/config/env";
 import { toAppError } from "@/lib/utils/error";
@@ -25,15 +24,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
     try {
         const { slug } = await context.params;
         routeLog.info("public_lead_submit_started", { slug });
-        const institute = await instituteRepository.findBySlug(slug);
-
-        if (!institute) {
-            routeLog.warn("public_lead_submit_institute_not_found", { slug });
-            return NextResponse.json(
-                { success: false, error: { code: "INSTITUTE_NOT_FOUND", message: "Institute not found" } },
-                { status: 404 }
-            );
-        }
 
         const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
         const rate = enforceRateLimit(`lead:${ip}:${slug}`, env.LEAD_RATE_LIMIT_PER_MIN, 60_000);
@@ -69,13 +59,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
         }
 
         const input = leadSchema.parse(payload);
+        const lead = await leadService.createLeadBySlug(slug, input);
 
-        const lead = await leadService.createLead({
-            instituteId: institute.id,
-            ...input,
-        });
-
-        routeLog.info("public_lead_submit_succeeded", { slug, instituteId: institute.id, leadId: lead.id });
+        routeLog.info("public_lead_submit_succeeded", { slug, instituteId: lead.instituteId, leadId: lead.id });
 
         if (contentType.includes("application/json")) {
             return NextResponse.json({ success: true, data: lead });

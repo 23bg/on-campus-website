@@ -1,11 +1,187 @@
 import { z } from "zod";
-import { leadRepository } from "@/features/lead/repositories/lead.repo";
-import { studentRepository } from "@/features/student/repositories/student.repo";
+import { prisma } from "@/lib/db/prisma";
+import { withTenantScope } from "@/lib/db/tenant-scope";
+import { studentService } from "@/server/services/students.service";
 import { instituteRepository } from "@/features/institute/repositories/institute.repo";
 import { AppError } from "@/lib/utils/error";
-import { leadActivityService } from "@/features/lead/services/lead-activity.service";
 import { billingService } from "@/features/billing/services/billing.service";
 import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
+import { logger } from "@/lib/utils/logger";
+
+export type LeadActivityType =
+    | "LEAD_CREATED"
+    | "STATUS_CHANGED"
+    | "NOTE_ADDED"
+    | "FOLLOWUP_SCHEDULED"
+    | "FOLLOWUP_COMPLETED"
+    | "ASSIGNED_USER_CHANGED"
+    | "CONVERTED_TO_STUDENT";
+
+type CreateLeadInput = {
+    instituteId: string;
+    name: string;
+    phone: string;
+    email?: string;
+    source?: string;
+    course?: string;
+    message?: string;
+    followUpAt?: Date;
+    status?: string;
+};
+
+type ListLeadInput = {
+    instituteId: string;
+    status?: string;
+    query?: string;
+    from?: Date;
+    to?: Date;
+};
+
+type LeadActivityEntry = {
+    leadId: string;
+    instituteId: string;
+    activityType: LeadActivityType;
+    title: string;
+    description?: string;
+    actorUserId?: string;
+    createdAt: Date;
+};
+
+const createLeadRecord = async (payload: CreateLeadInput) =>
+    prisma.lead.create({
+        data: {
+            instituteId: payload.instituteId,
+            name: payload.name,
+            phone: payload.phone,
+            email: payload.email,
+            source: payload.source,
+            course: payload.course,
+            message: payload.message,
+            followUpAt: payload.followUpAt,
+            status: payload.status ?? "NEW",
+        },
+    });
+
+const bulkCreateLeadRecords = async (rows: CreateLeadInput[]) =>
+    prisma.lead.createMany({
+        data: rows.map((payload) => ({
+            instituteId: payload.instituteId,
+            name: payload.name,
+            phone: payload.phone,
+            email: payload.email,
+            source: payload.source,
+            course: payload.course,
+            message: payload.message,
+            followUpAt: payload.followUpAt,
+            status: payload.status ?? "NEW",
+        })),
+    });
+
+const findLeadByPhoneInInstitute = async (instituteId: string, phone: string) =>
+    prisma.lead.findFirst({
+        where: withTenantScope(instituteId, { phone }),
+    });
+
+const findLeadByIdInInstitute = async (instituteId: string, leadId: string) =>
+    prisma.lead.findFirst({
+        where: withTenantScope(instituteId, { id: leadId }),
+    });
+
+const updateLeadStatusRecord = async (instituteId: string, leadId: string, status: string) =>
+    prisma.lead.updateMany({
+        where: { id: leadId, instituteId },
+        data: { status },
+    });
+
+const updateLeadByIdInInstitute = async (
+    instituteId: string,
+    leadId: string,
+    payload: { message?: string | null; followUpAt?: Date | null; status?: string }
+) =>
+    prisma.lead.updateMany({
+        where: { id: leadId, instituteId },
+        data: {
+            ...(payload.message !== undefined ? { message: payload.message } : {}),
+            ...(payload.followUpAt !== undefined ? { followUpAt: payload.followUpAt } : {}),
+            ...(payload.status !== undefined ? { status: payload.status } : {}),
+        },
+    });
+
+const listLeadRecords = async (input: ListLeadInput) =>
+    prisma.lead.findMany({
+        where: {
+            ...withTenantScope(input.instituteId),
+            ...(input.status ? { status: input.status } : {}),
+            ...(input.query
+                ? {
+                    OR: [
+                        { name: { contains: input.query, mode: "insensitive" } },
+                        { phone: { contains: input.query, mode: "insensitive" } },
+                        { email: { contains: input.query, mode: "insensitive" } },
+                        { course: { contains: input.query, mode: "insensitive" } },
+                    ],
+                }
+                : {}),
+            ...(input.from || input.to
+                ? {
+                    createdAt: {
+                        ...(input.from ? { gte: input.from } : {}),
+                        ...(input.to ? { lte: input.to } : {}),
+                    },
+                }
+                : {}),
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
+const logLeadActivity = async (entry: Omit<LeadActivityEntry, "createdAt"> & { createdAt?: Date }) => {
+    const createdAt = entry.createdAt ?? new Date();
+    const updated = await prisma.lead.updateMany({
+        where: { id: entry.leadId, instituteId: entry.instituteId },
+        data: {
+            activities: {
+                push: {
+                    activityType: entry.activityType,
+                    title: entry.title,
+                    description: entry.description,
+                    actorUserId: entry.actorUserId,
+                    createdAt,
+                },
+            },
+        },
+    });
+
+    if (updated.count === 0) {
+        logger.warn("lead activity logging skipped: lead not found for embedded activity push");
+    }
+};
+
+const listLeadActivities = async (instituteId: string, leadId: string) => {
+    const lead = await prisma.lead.findFirst({
+        where: { id: leadId, instituteId },
+        select: {
+            id: true,
+            instituteId: true,
+            activities: true,
+        },
+    });
+
+    if (!lead) return [];
+
+    return (lead.activities ?? [])
+        .slice()
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, 100)
+        .map((row) => ({
+            leadId: lead.id,
+            instituteId: lead.instituteId,
+            activityType: row.activityType as LeadActivityType,
+            title: row.title,
+            description: row.description,
+            actorUserId: row.actorUserId,
+            createdAt: row.createdAt.toISOString(),
+        }));
+};
 
 const leadImportRowSchema = z.object({
     name: z.string().trim().min(2).max(80),
@@ -35,11 +211,16 @@ const listInputSchema = z.object({
     to: z.coerce.date().optional(),
 });
 
+export const leadActivityService = {
+    log: logLeadActivity,
+    listByLead: listLeadActivities,
+};
+
 export const leadService = {
     async createLead(payload: unknown) {
         const input = leadInputSchema.parse(payload);
         await billingService.assertCanCreateLeads(input.instituteId);
-        const duplicate = await leadRepository.findByPhoneInInstitute(input.instituteId, input.phone);
+        const duplicate = await findLeadByPhoneInInstitute(input.instituteId, input.phone);
         if (duplicate) {
             throw new AppError("Lead already exists with this mobile number", 409, "DUPLICATE_LEAD", {
                 existingLeadId: duplicate.id,
@@ -47,13 +228,13 @@ export const leadService = {
             });
         }
 
-        const created = await leadRepository.create({
+        const created = await createLeadRecord({
             ...input,
             followUpAt: input.followUpAt ? new Date(input.followUpAt) : undefined,
             status: "NEW",
         });
 
-        await leadActivityService.log({
+        await logLeadActivity({
             leadId: created.id,
             instituteId: created.instituteId,
             activityType: "LEAD_CREATED",
@@ -61,7 +242,7 @@ export const leadService = {
         });
 
         if (created.followUpAt) {
-            await leadActivityService.log({
+            await logLeadActivity({
                 leadId: created.id,
                 instituteId: created.instituteId,
                 activityType: "FOLLOWUP_SCHEDULED",
@@ -110,20 +291,20 @@ export const leadService = {
     },
 
     async updateStatus(instituteId: string, leadId: string, status: string) {
-        const beforeUpdate = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        const beforeUpdate = await findLeadByIdInInstitute(instituteId, leadId);
         if (!beforeUpdate) {
             throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
         }
 
-        await leadRepository.updateStatus({ instituteId, leadId, status });
-        const updated = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        await updateLeadStatusRecord(instituteId, leadId, status);
+        const updated = await findLeadByIdInInstitute(instituteId, leadId);
 
         if (!updated) {
             throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
         }
 
         if (beforeUpdate.status !== status) {
-            await leadActivityService.log({
+            await logLeadActivity({
                 leadId: updated.id,
                 instituteId,
                 activityType: "STATUS_CHANGED",
@@ -141,19 +322,19 @@ export const leadService = {
         }
 
         if (status === "ADMITTED") {
-            const duplicate = await studentRepository.findByPhoneInInstitute(instituteId, updated.phone);
+            const duplicate = await studentService.findStudentByPhoneInInstitute(instituteId, updated.phone);
             if (duplicate) {
                 throw new AppError("Student already exists with this phone", 409, "DUPLICATE_STUDENT");
             }
 
-            await studentRepository.create({
+            await studentService.createStudentRecord({
                 instituteId,
                 name: updated.name,
                 phone: updated.phone,
                 email: updated.email ?? undefined,
             });
 
-            await leadActivityService.log({
+            await logLeadActivity({
                 leadId: updated.id,
                 instituteId,
                 activityType: "CONVERTED_TO_STUDENT",
@@ -195,7 +376,7 @@ export const leadService = {
             return this.updateStatus(instituteId, leadId, payload.status);
         }
 
-        const existing = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        const existing = await findLeadByIdInInstitute(instituteId, leadId);
         if (!existing) {
             throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
         }
@@ -211,12 +392,12 @@ export const leadService = {
                     ? new Date(payload.followUpAt)
                     : null;
 
-        await leadRepository.updateByIdInInstitute(instituteId, leadId, {
+        await updateLeadByIdInInstitute(instituteId, leadId, {
             message: payload.message,
             followUpAt,
         });
 
-        const updated = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        const updated = await findLeadByIdInInstitute(instituteId, leadId);
         if (!updated) {
             throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
         }
@@ -227,7 +408,7 @@ export const leadService = {
             payload.message.trim().length > 0 &&
             payload.message !== (existing.message ?? "")
         ) {
-            await leadActivityService.log({
+            await logLeadActivity({
                 leadId: updated.id,
                 instituteId,
                 activityType: "NOTE_ADDED",
@@ -245,7 +426,7 @@ export const leadService = {
 
         if (existing.followUpAt?.toISOString() !== updated.followUpAt?.toISOString()) {
             if (updated.followUpAt) {
-                await leadActivityService.log({
+                await logLeadActivity({
                     leadId: updated.id,
                     instituteId,
                     activityType: "FOLLOWUP_SCHEDULED",
@@ -261,7 +442,7 @@ export const leadService = {
                     metadata: { leadId: updated.id, followUpAt: updated.followUpAt.toISOString() },
                 });
             } else if (existing.followUpAt && !updated.followUpAt) {
-                await leadActivityService.log({
+                await logLeadActivity({
                     leadId: updated.id,
                     instituteId,
                     activityType: "FOLLOWUP_COMPLETED",
@@ -282,12 +463,12 @@ export const leadService = {
     },
 
     async getLeadTimeline(instituteId: string, leadId: string) {
-        const lead = await leadRepository.findByIdInInstitute(instituteId, leadId);
+        const lead = await findLeadByIdInInstitute(instituteId, leadId);
         if (!lead) {
             throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
         }
 
-        return leadActivityService.listByLead(instituteId, leadId);
+        return listLeadActivities(instituteId, leadId);
     },
 
     async searchLeads(
@@ -297,7 +478,7 @@ export const leadService = {
         from?: Date,
         to?: Date
     ) {
-        return leadRepository.list({
+        return listLeadRecords({
             instituteId,
             query,
             status,
@@ -315,11 +496,11 @@ export const leadService = {
     },
 
     async filterLeads(instituteId: string, status: string) {
-        return leadRepository.list({ instituteId, status });
+        return listLeadRecords({ instituteId, status });
     },
 
     async exportLeads(instituteId: string) {
-        const leads = await leadRepository.list({ instituteId });
+        const leads = await listLeadRecords({ instituteId });
         return leads.map((lead) => ({
             id: lead.id,
             name: lead.name,
@@ -370,7 +551,7 @@ export const leadService = {
                 continue;
             }
 
-            const existing = await leadRepository.findByPhoneInInstitute(instituteId, parsed.data.phone);
+            const existing = await findLeadByPhoneInInstitute(instituteId, parsed.data.phone);
             if (existing) {
                 skippedDuplicates.push({ row: rowNumber, phone: parsed.data.phone });
                 continue;
@@ -381,7 +562,7 @@ export const leadService = {
         }
 
         if (!options?.dryRun && validRows.length > 0) {
-            await leadRepository.bulkCreate(
+            await bulkCreateLeadRecords(
                 validRows.map((row) => ({
                     instituteId,
                     name: row.name,
@@ -407,3 +588,5 @@ export const leadService = {
         };
     },
 };
+
+

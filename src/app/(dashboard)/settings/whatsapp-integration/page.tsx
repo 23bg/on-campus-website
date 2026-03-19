@@ -2,21 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-
-type WhatsAppIntegrationState = {
-    mode: "ONCAMPUS_SHARED" | "INSTITUTE_CUSTOM";
-    connectedNumber: string | null;
-    status: "PENDING" | "VERIFIED" | "ACTIVE" | "DISCONNECTED" | "FAILED";
-    phoneNumberId: string | null;
-    businessAccountId: string | null;
-    connectedAt: string | null;
-};
+import {
+    useActivateWhatsappMutation,
+    useConnectWhatsappMutation,
+    useGetWhatsappIntegrationQuery,
+    useVerifyWhatsappMutation,
+    WhatsAppIntegrationState,
+} from "@/services/adminDashboard.api";
 
 const DEFAULT_STATE: WhatsAppIntegrationState = {
     mode: "ONCAMPUS_SHARED",
@@ -28,80 +24,50 @@ const DEFAULT_STATE: WhatsAppIntegrationState = {
 };
 
 export default function WhatsAppIntegrationPage() {
-    const [state, setState] = useState<WhatsAppIntegrationState>(DEFAULT_STATE);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
+    const { data: state = DEFAULT_STATE, isLoading: loading, refetch } = useGetWhatsappIntegrationQuery();
+    const [connectWhatsapp, { isLoading: connecting }] = useConnectWhatsappMutation();
+    const [verifyWhatsapp, { isLoading: verifying }] = useVerifyWhatsappMutation();
+    const [activateWhatsapp, { isLoading: activating }] = useActivateWhatsappMutation();
 
     const [phoneNumber, setPhoneNumber] = useState("");
     const [otp, setOtp] = useState("");
     const [phoneNumberId, setPhoneNumberId] = useState("");
     const [businessAccountId, setBusinessAccountId] = useState("");
 
-    const load = async () => {
-        try {
-            const response = await api.get<{ success: boolean; data: WhatsAppIntegrationState }>(API.INTERNAL.INSTITUTE.WHATSAPP);
-            setState(response.data.data ?? DEFAULT_STATE);
-            setPhoneNumber(response.data.data?.connectedNumber ?? "");
-            setPhoneNumberId(response.data.data?.phoneNumberId ?? "");
-            setBusinessAccountId(response.data.data?.businessAccountId ?? "");
-        } catch {
-            toast.error("Failed to load WhatsApp integration");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        void load();
-    }, []);
+        setPhoneNumber(state.connectedNumber ?? "");
+        setPhoneNumberId(state.phoneNumberId ?? "");
+        setBusinessAccountId(state.businessAccountId ?? "");
+    }, [state.businessAccountId, state.connectedNumber, state.phoneNumberId]);
 
     const connect = async () => {
-        setSubmitting(true);
         try {
-            const response = await api.post(API.INTERNAL.INSTITUTE.WHATSAPP, {
-                action: "connect",
-                phoneNumber,
-            });
-            const otpHint = response.data?.data?.otpHint;
+            const response = await connectWhatsapp(phoneNumber).unwrap();
+            const otpHint = response.otpHint;
             toast.success(otpHint ? `OTP sent. Use ${otpHint} in this environment.` : "OTP sent");
-            await load();
+            await refetch();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Unable to initiate connection");
-        } finally {
-            setSubmitting(false);
+            toast.error(error?.data?.error?.message ?? "Unable to initiate connection");
         }
     };
 
     const verify = async () => {
-        setSubmitting(true);
         try {
-            await api.post(API.INTERNAL.INSTITUTE.WHATSAPP, {
-                action: "verify",
-                otp,
-            });
+            await verifyWhatsapp(otp).unwrap();
             toast.success("Number verified");
-            await load();
+            await refetch();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Unable to verify OTP");
-        } finally {
-            setSubmitting(false);
+            toast.error(error?.data?.error?.message ?? "Unable to verify OTP");
         }
     };
 
     const activate = async () => {
-        setSubmitting(true);
         try {
-            await api.post(API.INTERNAL.INSTITUTE.WHATSAPP, {
-                action: "activate",
-                phoneNumberId,
-                businessAccountId,
-            });
+            await activateWhatsapp({ phoneNumberId, businessAccountId }).unwrap();
             toast.success("Institute WhatsApp number activated");
-            await load();
+            await refetch();
         } catch (error: any) {
-            toast.error(error?.response?.data?.error?.message ?? "Unable to activate number");
-        } finally {
-            setSubmitting(false);
+            toast.error(error?.data?.error?.message ?? "Unable to activate number");
         }
     };
 
@@ -149,7 +115,7 @@ export default function WhatsAppIntegrationPage() {
                         <p className="text-sm font-medium">1. Enter phone number</p>
                         <div className="flex gap-2">
                             <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+91XXXXXXXXXX" />
-                            <Button disabled={submitting} onClick={() => void connect()}>Connect WhatsApp Number</Button>
+                            <Button disabled={connecting || verifying || activating} onClick={() => void connect()}>Connect WhatsApp Number</Button>
                         </div>
                     </div>
 
@@ -157,7 +123,7 @@ export default function WhatsAppIntegrationPage() {
                         <p className="text-sm font-medium">2. Verify OTP</p>
                         <div className="flex gap-2">
                             <Input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" />
-                            <Button variant="outline" disabled={submitting} onClick={() => void verify()}>Verify OTP</Button>
+                            <Button variant="outline" disabled={connecting || verifying || activating} onClick={() => void verify()}>Verify OTP</Button>
                         </div>
                     </div>
 
@@ -165,7 +131,7 @@ export default function WhatsAppIntegrationPage() {
                         <p className="text-sm font-medium">3. Activate number</p>
                         <Input value={phoneNumberId} onChange={(e) => setPhoneNumberId(e.target.value)} placeholder="Phone Number ID" />
                         <Input value={businessAccountId} onChange={(e) => setBusinessAccountId(e.target.value)} placeholder="Business Account ID" />
-                        <Button variant="outline" disabled={submitting} onClick={() => void activate()}>Activate Number</Button>
+                        <Button variant="outline" disabled={connecting || verifying || activating} onClick={() => void activate()}>Activate Number</Button>
                     </div>
                 </CardContent>
             </Card>

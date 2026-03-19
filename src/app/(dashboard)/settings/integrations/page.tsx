@@ -1,45 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { IntegrationItem, useGetIntegrationsQuery } from "@/services/adminDashboard.api";
 
-type IntegrationItem = {
-    id: string;
-    provider: "WHATSAPP" | "EMAIL" | "RAZORPAY";
-    status: "CONNECTED" | "DISCONNECTED" | "DEGRADED";
-    config?: Record<string, unknown> | null;
-    updatedAt: string;
-};
+type IntegrationStatus = IntegrationItem["status"];
 
-const statusVariant = (status: IntegrationItem["status"]) => {
+const statusVariant = (status: IntegrationStatus) => {
     if (status === "CONNECTED") return "default" as const;
     if (status === "DEGRADED") return "secondary" as const;
     return "outline" as const;
 };
 
 export default function IntegrationsSettingsPage() {
-    const [items, setItems] = useState<IntegrationItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: items = [], isLoading: loading, refetch } = useGetIntegrationsQuery();
 
-    const load = async () => {
+    const refresh = async () => {
         try {
-            const response = await api.get<{ success: boolean; data: IntegrationItem[] }>(API.INTERNAL.INTEGRATIONS.ROOT);
-            setItems(response.data.data ?? []);
+            await refetch();
         } catch {
             toast.error("Failed to load integrations");
-        } finally {
-            setLoading(false);
         }
     };
-
-    useEffect(() => {
-        void load();
-    }, []);
 
     if (loading) {
         return <main className="p-6">Loading...</main>;
@@ -52,7 +36,7 @@ export default function IntegrationsSettingsPage() {
                     <h1 className="text-2xl font-semibold">Integrations</h1>
                     <p className="text-sm text-muted-foreground mt-1">WhatsApp alerts notify your team instantly when enquiries arrive or follow-ups are due. You can optionally connect your WhatsApp Business number to automate student notifications.</p>
                 </div>
-                <Button variant="outline" onClick={() => void load()}>Refresh</Button>
+                <Button variant="outline" onClick={() => void refresh()}>Refresh</Button>
             </div>
 
             <div className="rounded-lg border bg-muted/20 p-4 text-sm text-muted-foreground">

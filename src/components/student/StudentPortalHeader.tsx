@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
@@ -10,19 +11,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
-
-type PortalHeaderData = {
-    student?: {
-        name?: string;
-        institute?: {
-            name?: string | null;
-            logo?: string | null;
-            logoUrl?: string | null;
-        } | null;
-    };
-};
+import { useGetStudentPortalQuery, useStudentPortalLogoutMutation } from "@/services/appUi.api";
 
 const navItems = [
     { label: "Dashboard", href: "/student" },
@@ -42,13 +31,8 @@ const getInitials = (value: string) =>
 
 export default function StudentPortalHeader() {
     const pathname = usePathname();
-    const [data, setData] = useState<PortalHeaderData | null>(null);
-
-    useEffect(() => {
-        api.get(API.INTERNAL.STUDENT_PORTAL.ME).then((response) => {
-            setData(response.data?.data ?? null);
-        });
-    }, []);
+    const { data } = useGetStudentPortalQuery();
+    const [studentPortalLogout, { isLoading: authLoading }] = useStudentPortalLogoutMutation();
 
     const instituteName = data?.student?.institute?.name?.trim() || "Institute";
     const instituteLogo = data?.student?.institute?.logo || data?.student?.institute?.logoUrl || "";
@@ -59,7 +43,7 @@ export default function StudentPortalHeader() {
 
     const logout = async () => {
         try {
-            await api.post(API.INTERNAL.STUDENT_AUTH.LOGOUT);
+            await studentPortalLogout().unwrap();
         } finally {
             window.location.href = "/student-login";
         }
@@ -71,9 +55,12 @@ export default function StudentPortalHeader() {
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                         {instituteLogo ? (
-                            <img
+                            <Image
                                 src={instituteLogo}
                                 alt={`${instituteName} logo`}
+                                width={160}
+                                height={36}
+                                unoptimized
                                 className="h-9 w-auto max-w-40 object-contain"
                             />
                         ) : (
@@ -94,7 +81,7 @@ export default function StudentPortalHeader() {
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                            <DropdownMenuItem onClick={logout}>{authLoading ? "Logging out..." : "Logout"}</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

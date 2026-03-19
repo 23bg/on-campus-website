@@ -1,28 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import api from "@/lib/axios";
-import { API } from "@/constants/api";
 import { Button } from "@/components/ui/button";
-
-type PortalData = {
-    announcements: Array<{ title: string; body: string; createdAt: string; attachmentUrl?: string | null }>;
-};
+import { useGetStudentPortalQuery } from "@/services/appUi.api";
 
 export default function StudentAnnouncementsPage() {
-    const [announcements, setAnnouncements] = useState<PortalData["announcements"]>([]);
-
-    useEffect(() => {
-        api.get(API.INTERNAL.STUDENT_PORTAL.ME).then((response) => {
-            const rows = (response.data?.data?.announcements ?? []) as PortalData["announcements"];
-            setAnnouncements(
-                [...rows].sort(
-                    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                )
-            );
-        });
-    }, []);
+    const { data } = useGetStudentPortalQuery();
+    const announcements = [...(data?.announcements ?? [])].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
     return (
         <div className="space-y-4">

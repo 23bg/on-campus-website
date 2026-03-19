@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockPrisma } = vi.hoisted(() => ({
+const { mockPrisma, mockEventDispatcherService } = vi.hoisted(() => ({
     mockPrisma: {
         student: {
             findFirst: vi.fn(),
@@ -10,6 +10,9 @@ const { mockPrisma } = vi.hoisted(() => ({
             findMany: vi.fn(),
             create: vi.fn(),
         },
+    },
+    mockEventDispatcherService: {
+        dispatch: vi.fn(),
     },
 }));
 
@@ -24,18 +27,23 @@ vi.mock("bcryptjs", () => ({
     },
 }));
 
-import { studentPortalService } from "@/features/student/services/student-portal.service";
+vi.mock("@/lib/notifications/event-dispatcher.service", () => ({
+    eventDispatcherService: mockEventDispatcherService,
+}));
 
-describe("studentPortalService portal field updates", () => {
+import { studentService } from "@/server/services/students.service";
+
+describe("studentService portal field updates", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockPrisma.student.updateMany.mockResolvedValue({ count: 1 });
+        mockEventDispatcherService.dispatch.mockResolvedValue(undefined);
     });
 
     it("stores credentials on student portal fields", async () => {
-        mockPrisma.student.findFirst.mockResolvedValue({ id: "s1", email: "s1@example.com" });
+        mockPrisma.student.findFirst.mockResolvedValue({ id: "s1", email: "s1@example.com", name: "Student A", phone: "9876543210" });
 
-        const result = await studentPortalService.setCredentials("inst1", "s1", {
+        const result = await studentService.setPortalCredentials("inst1", "s1", {
             username: "student1",
             email: "s1@example.com",
             password: "secret123",
@@ -58,7 +66,7 @@ describe("studentPortalService portal field updates", () => {
                 instituteId: "inst1",
             });
 
-        const result = await studentPortalService.login("student1", "secret123");
+        const result = await studentService.loginToPortal("student1", "secret123");
 
         expect(mockPrisma.student.findFirst).toHaveBeenCalled();
         expect(result).toEqual({ studentId: "s1", instituteId: "inst1", name: "Student A" });
