@@ -14,10 +14,10 @@ export const billingArticle: HelpArticle = {
             title: "Choose plan",
             description: "Select Starter, Team, Growth, or Scale based on user seats and collaboration needs.",
             bullets: [
-                "Starter: 1 user, INR 499/month",
-                "Team: up to 5 users, INR 999/month",
-                "Growth: up to 20 users, INR 1,999/month",
-                "Scale: unlimited users, INR 3,999/month",
+                "Starter: 1 user, INR 999/month",
+                "Team: up to 5 users, INR 1,999/month",
+                "Growth: up to 20 users, INR 3,499/month",
+                "Scale: unlimited users, INR 4,999/month",
             ],
         },
         {
@@ -36,7 +36,8 @@ export const billingArticle: HelpArticle = {
             bullets: [
                 "Annual billing gives 2 months saving",
                 "Plan changes apply immediately",
-                "WhatsApp Business integration is optional and Meta conversation charges are billed directly to institutes",
+                "WhatsApp team alerts are included in all plans; you can optionally automate student messages",
+                "WhatsApp Business integration uses your own number and Meta conversation charges are billed directly to institutes",
             ],
         },
     ],

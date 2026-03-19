@@ -24,46 +24,46 @@ export const PLAN_CONFIG: Record<PlanType, PlanConfig> = {
     STARTER: {
         key: "STARTER",
         name: "Starter",
-        priceMonthly: 499,
-        priceYearly: 4990,
+        priceMonthly: 999,
+        priceYearly: 9990,
         userLimit: 1,
         whatsappMonthlyLimit: 30,
         whatsappDailyLimit: 5,
         extraConversationCost: 0,
-        tagline: "For independent institute owners",
+        tagline: "For solo institute owners starting admissions management",
     },
     TEAM: {
         key: "TEAM",
         name: "Team",
-        priceMonthly: 999,
-        priceYearly: 9990,
+        priceMonthly: 1999,
+        priceYearly: 19990,
         userLimit: 5,
         whatsappMonthlyLimit: 150,
         whatsappDailyLimit: 20,
         extraConversationCost: 0,
-        tagline: "For small institutes with admission staff",
+        tagline: "For small admission teams collaborating daily",
     },
     GROWTH: {
         key: "GROWTH",
         name: "Growth",
-        priceMonthly: 1999,
-        priceYearly: 19990,
+        priceMonthly: 3499,
+        priceYearly: 34990,
         userLimit: 20,
         whatsappMonthlyLimit: 600,
         whatsappDailyLimit: 80,
         extraConversationCost: 0,
-        tagline: "For institutes with larger admission teams",
+        tagline: "For institutes scaling admissions volume",
     },
     SCALE: {
         key: "SCALE",
         name: "Scale",
-        priceMonthly: 3999,
-        priceYearly: 39990,
+        priceMonthly: 4999,
+        priceYearly: 49990,
         userLimit: null,
         whatsappMonthlyLimit: 2000,
         whatsappDailyLimit: 300,
         extraConversationCost: 0,
-        tagline: "For large institutes with many counselors",
+        tagline: "For large institutes with multiple counselors and high volume",
     },
 };
 
@@ -80,10 +80,10 @@ export const PLAN_PRICING_LEGACY: Record<PlanType, PlanPricing> = {
 };
 
 export const PLAN_PRICING_CURRENT: Record<PlanType, PlanPricing> = {
-    STARTER: { monthly: 499, yearly: 4990 },
-    TEAM: { monthly: 999, yearly: 9990 },
-    GROWTH: { monthly: 1999, yearly: 19990 },
-    SCALE: { monthly: 3999, yearly: 39990 },
+    STARTER: { monthly: 999, yearly: 9990 },
+    TEAM: { monthly: 1999, yearly: 19990 },
+    GROWTH: { monthly: 3499, yearly: 34990 },
+    SCALE: { monthly: 4999, yearly: 49990 },
 };
 
 export const AUTOMATION_PACK_PRICING: PlanPricing = {
