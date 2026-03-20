@@ -3,16 +3,15 @@
 import { getTranslations } from "next-intl/server";
 import JsonLd from "@/components/seo/JsonLd";
 import Hero from "@/components/landing/Hero";
-import Trust from "@/components/landing/Trust";
+import LogoStrip from "@/components/landing/LogoStrip";
 import Problem from "@/components/landing/Problem";
-import Solution from "@/components/landing/Solution";
 import Features from "@/components/landing/Features";
 import HowItWorks from "@/components/landing/HowItWorks";
-import Demo from "@/components/landing/Demo";
-import Pricing from "@/components/landing/Pricing";
-import FAQ from "@/components/landing/FAQ";
+import Testimonials from "@/components/landing/Testimonials";
+import PricingPreview from "@/components/landing/PricingPreview";
 import CTA from "@/components/landing/CTA";
 import UseCases from "@/components/landing/UseCases";
+import TrustBar from "@/components/landing/TrustBar";
 import LandingHeader from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 
@@ -101,15 +100,14 @@ export default function LandingPage() {
             <JsonLd id="schema-faq" data={faqSchema} />
             <LandingHeader />
             <Hero />
+            <LogoStrip />
             <Problem />
-            <Solution />
+            <HowItWorks />
             <Features />
             <UseCases />
-            <Trust />
-            <HowItWorks />
-            <Demo />
-            <Pricing />
-            <FAQ />
+            <Testimonials />
+            <PricingPreview />
+            <TrustBar />
             <CTA />
             <Footer />
         </main  >
