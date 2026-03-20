@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { ArrowRight } from "lucide-react";
 import ROUTES from "@/constants/routes";
 
 export async function generateMetadata(): Promise<Metadata> {
-    const t = await getTranslations("pages");
-    const title = t("featuresMetaTitle");
-    const description = t("featuresMetaDescription");
+    const title = "Features | OnCampus";
+    const description = "System architecture for coaching institute admission operations.";
 
     return {
         title,
@@ -29,81 +28,83 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FeaturesPage() {
-    const t = await getTranslations("featuresPage");
-
-    const featureSections = [
+    const architectureSections = [
         {
-            title: "section1Title",
-            items: ["section1Item1", "section1Item2", "section1Item3"],
+            title: "Admission Flow",
+            items: ["Capture enquiries", "Assign follow-ups", "Track conversion stages"],
         },
         {
-            title: "section2Title",
-            items: ["section2Item1", "section2Item2", "section2Item3"],
+            title: "Student Management",
+            items: ["Student records", "Batch and course mapping", "Fee and payment updates"],
         },
         {
-            title: "section3Title",
-            items: ["section3Item1", "section3Item2", "section3Item3"],
+            title: "Team Management",
+            items: ["Role-based access", "Lead ownership", "Cross-team visibility"],
         },
         {
-            title: "section4Title",
-            items: ["section4Item1", "section4Item2", "section4Item3"],
+            title: "Communication",
+            items: ["WhatsApp alerts", "Internal notifications", "Follow-up reminders"],
         },
         {
-            title: "section5Title",
-            items: ["section5Item1", "section5Item2", "section5Item3"],
-        },
-        {
-            title: "section6Title",
-            items: ["section6Item1", "section6Item2", "section6Item3"],
-        },
-        {
-            title: "section7Title",
-            items: ["section7Item1", "section7Item2", "section7Item3"],
+            title: "Integrations",
+            items: ["WhatsApp Business", "Razorpay", "Email"],
         },
     ];
 
     return (
-        <main className="mx-auto w-full max-w-6xl px-4 py-12 md:px-6 lg:py-16">
-            <div className="space-y-3">
-                <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t("label")}</p>
-                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t("title")}</h1>
-                <p className="max-w-3xl text-muted-foreground">
-                    {t("description")}
+        <main className="mx-auto w-full max-w-7xl px-4 py-14 md:px-6 md:py-20">
+            <div className="max-w-2xl space-y-3">
+                <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">System Architecture</p>
+                <h1 className="text-4xl font-bold tracking-tight">One architecture for admission operations</h1>
+                <p className="text-sm text-muted-foreground md:text-base">
+                    OnCampus connects admissions, students, teams, communication, and integrations into one structured
+                    workflow.
                 </p>
             </div>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {featureSections.map((section) => (
-                    <section key={section.title} className="rounded-xl border bg-muted/20 p-5">
-                        <h2 className="text-lg font-semibold">{t(section.title)}</h2>
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {architectureSections.map((section) => (
+                    <section
+                        key={section.title}
+                        className="rounded-xl border border-stone-200 bg-stone-50/70 p-6 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                    >
+                        <h2 className="text-lg font-semibold">{section.title}</h2>
                         <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                             {section.items.map((item) => (
-                                <li key={item}>• {t(item)}</li>
+                                <li key={item}>• {item}</li>
                             ))}
                         </ul>
                     </section>
                 ))}
             </div>
 
-            <div className="mt-10 grid gap-3 rounded-xl border p-5 md:grid-cols-2">
-                <Link href={ROUTES.FEATURE_DETAILS.LEAD_MANAGEMENT} className="text-sm text-muted-foreground hover:text-foreground">{t("linkLeadManagement")}</Link>
-                <Link href={ROUTES.FEATURE_DETAILS.STUDENT_RECORDS} className="text-sm text-muted-foreground hover:text-foreground">{t("linkStudentRecords")}</Link>
-                <Link href={ROUTES.FEATURE_DETAILS.PUBLIC_INSTITUTE_PAGE} className="text-sm text-muted-foreground hover:text-foreground">{t("linkPublicInstitutePage")}</Link>
-                <Link href={ROUTES.FEATURE_DETAILS.SUBSCRIPTION_BILLING} className="text-sm text-muted-foreground hover:text-foreground">{t("linkSubscriptionBilling")}</Link>
-            </div>
-
-            <div className="mt-6 rounded-xl border p-5">
-                <h2 className="text-lg font-semibold">{t("integrationsFlowTitle")}</h2>
-                <p className="mt-2 text-sm text-muted-foreground">{t("integrationsFlowPath")}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{t("integrationsFlowDescription")}</p>
-            </div>
-
-            <div className="mt-6 rounded-xl border p-5">
-                <h2 className="text-lg font-semibold">Popular City Solution Pages</h2>
-                <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                    <Link href="/solutions/admission-crm/pune" className="text-muted-foreground hover:text-foreground">Admission CRM in Pune</Link>
-                    <Link href="/solutions/admission-crm/delhi" className="text-muted-foreground hover:text-foreground">Admission CRM in Delhi</Link>
-                    <Link href="/solutions/admission-crm/mumbai" className="text-muted-foreground hover:text-foreground">Admission CRM in Mumbai</Link>
+            <div className="mt-10 rounded-xl border border-primary/25 bg-primary/5 p-6">
+                <h2 className="text-xl font-semibold">Explore core feature modules</h2>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <Link
+                        href={ROUTES.FEATURE_DETAILS.LEAD_MANAGEMENT}
+                        className="inline-flex items-center gap-2 rounded-lg border bg-background px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+                    >
+                        Lead Management <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
+                    <Link
+                        href={ROUTES.FEATURE_DETAILS.STUDENT_RECORDS}
+                        className="inline-flex items-center gap-2 rounded-lg border bg-background px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+                    >
+                        Student Records <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
+                    <Link
+                        href={ROUTES.FEATURE_DETAILS.PUBLIC_INSTITUTE_PAGE}
+                        className="inline-flex items-center gap-2 rounded-lg border bg-background px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+                    >
+                        Public Institute Page <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
+                    <Link
+                        href={ROUTES.FEATURE_DETAILS.SUBSCRIPTION_BILLING}
+                        className="inline-flex items-center gap-2 rounded-lg border bg-background px-4 py-3 text-sm font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
+                    >
+                        Subscription Billing <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
                 </div>
             </div>
         </main>

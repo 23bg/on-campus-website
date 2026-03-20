@@ -2,6 +2,8 @@
 import { getTranslations } from "next-intl/server";
 import Pricing from "../../../components/landing/Pricing";
 import CTA from "../../../components/landing/CTA";
+import LogoStrip from "@/components/landing/LogoStrip";
+import TrustBar from "@/components/landing/TrustBar";
 import JsonLd from "@/components/seo/JsonLd";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -47,7 +49,9 @@ export default function PricingPage() {
     return (
         <main>
             <JsonLd id="schema-pricing-software" data={pricingSchema} />
+            <LogoStrip compact />
             <Pricing />
+            <TrustBar compact />
             <CTA />
         </main>
     );
