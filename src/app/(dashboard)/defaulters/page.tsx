@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import ListWidget from "@/components/custom/ListWidget";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
-import { useGetDefaultersQuery } from "@/services/dashboardTables.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchDefaulters } from "@/features/dashboard/dashboardSlice";
 
 type Defaulter = {
     studentId: string;
@@ -20,8 +21,14 @@ type Defaulter = {
 const PAGE_SIZE = 10;
 
 export default function DefaultersPage() {
-    const { data: defaulters = [], isLoading: loading } = useGetDefaultersQuery(undefined, { refetchOnMountOrArgChange: true });
+    const dispatch = useAppDispatch();
+    const defaulters = useAppSelector((state) => state.dashboard.defaulters.data);
+    const loading = useAppSelector((state) => state.dashboard.defaulters.loading);
     const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        void dispatch(fetchDefaulters());
+    }, [dispatch]);
 
     useEffect(() => {
         setPage(1);

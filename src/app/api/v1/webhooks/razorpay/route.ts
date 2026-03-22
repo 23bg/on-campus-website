@@ -1,6 +1,6 @@
-﻿import { NextRequest, NextResponse } from "next/server";
-import { subscriptionService } from "@/features/subscription/services/subscription.service";
-import { billingService } from "@/features/billing/services/billing.service";
+import { NextRequest, NextResponse } from "next/server";
+import { subscriptionService } from "@/features/subscription/subscriptionApi";
+import { billingService } from "@/features/billing/billingApi";
 import { toAppError } from "@/lib/utils/error";
 import { verifyRazorpayWebhookSignature } from "@/lib/billing/razorpay";
 
@@ -114,4 +114,5 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
 

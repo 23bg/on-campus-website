@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readStudentSessionFromCookie } from "@/lib/auth/student-auth";
-import { studentService } from "@/server/services/students.service";
+import { studentService } from "@/server/studentsApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET() {
@@ -23,3 +23,4 @@ export async function GET() {
         );
     }
 }
+

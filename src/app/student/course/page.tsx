@@ -1,11 +1,18 @@
 "use client";
 
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useGetStudentPortalQuery } from "@/services/appUi.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchStudentPortal } from "@/features/studentPortal/studentPortalSlice";
 
 export default function StudentCoursePage() {
-    const { data } = useGetStudentPortalQuery();
+    const dispatch = useAppDispatch();
+    const data = useAppSelector((state) => state.studentPortal.data);
+
+    useEffect(() => {
+        void dispatch(fetchStudentPortal());
+    }, [dispatch]);
 
     const schedule = data?.student?.batch?.time || data?.student?.batch?.timing;
     const faculty = data?.student?.batch?.teacherName || data?.student?.batch?.faculty;

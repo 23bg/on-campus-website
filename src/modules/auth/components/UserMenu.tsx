@@ -11,15 +11,16 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ROUTES from "@/constants/routes";
-import { useUserLogoutMutation } from "@/services/appUi.api";
+import { useAppDispatch } from "@/hooks/reduxHooks";
+import { userLogout } from "@/features/studentPortal/studentPortalSlice";
 
 export default function UserMenu() {
     const router = useRouter();
-    const [userLogout] = useUserLogoutMutation();
+    const dispatch = useAppDispatch();
 
     const logout = async () => {
         try {
-            await userLogout().unwrap();
+            await dispatch(userLogout()).unwrap();
         } catch {
         } finally {
             router.push("/login");

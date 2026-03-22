@@ -3,7 +3,17 @@
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { NotificationPreferences, useGetNotificationSettingsQuery, useUpdateNotificationSettingMutation } from "@/services/adminDashboard.api";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchNotificationSettings, updateNotificationSetting } from "@/features/dashboard/dashboardSlice";
+
+type NotificationPreferences = {
+    newEnquiryAlert: boolean;
+    followUpReminder: boolean;
+    leadAssigned: boolean;
+    paymentReceived: boolean;
+    admissionConfirmed: boolean;
+};
 
 const DEFAULT_PREFS: NotificationPreferences = {
     newEnquiryAlert: true,
@@ -14,12 +24,17 @@ const DEFAULT_PREFS: NotificationPreferences = {
 };
 
 export default function NotificationSettingsPage() {
-    const { data: prefs = DEFAULT_PREFS, isLoading: loading } = useGetNotificationSettingsQuery();
-    const [updateNotificationSetting] = useUpdateNotificationSettingMutation();
+    const dispatch = useAppDispatch();
+    const prefs = useAppSelector((state) => state.dashboard.notifications.data);
+    const loading = useAppSelector((state) => state.dashboard.notifications.loading);
+
+    useEffect(() => {
+        void dispatch(fetchNotificationSettings());
+    }, [dispatch]);
 
     const update = async (key: keyof NotificationPreferences, value: boolean) => {
         try {
-            await updateNotificationSetting({ key, value }).unwrap();
+            await dispatch(updateNotificationSetting({ key, value })).unwrap();
             toast.success("Notification settings updated", { description: "Your preferences have been saved." });
         } catch {
             toast.error("Failed to update notification settings");
@@ -45,27 +60,27 @@ export default function NotificationSettingsPage() {
                 <CardContent className="space-y-4">
                     <ToggleRow
                         label="New enquiry alert"
-                        checked={prefs.newEnquiryAlert}
+                        checked={(prefs ?? DEFAULT_PREFS).newEnquiryAlert}
                         onCheckedChange={(checked) => void update("newEnquiryAlert", checked)}
                     />
                     <ToggleRow
                         label="Follow-up reminder"
-                        checked={prefs.followUpReminder}
+                        checked={(prefs ?? DEFAULT_PREFS).followUpReminder}
                         onCheckedChange={(checked) => void update("followUpReminder", checked)}
                     />
                     <ToggleRow
                         label="Payment received"
-                        checked={prefs.paymentReceived}
+                        checked={(prefs ?? DEFAULT_PREFS).paymentReceived}
                         onCheckedChange={(checked) => void update("paymentReceived", checked)}
                     />
                     <ToggleRow
                         label="Lead assigned"
-                        checked={prefs.leadAssigned}
+                        checked={(prefs ?? DEFAULT_PREFS).leadAssigned}
                         onCheckedChange={(checked) => void update("leadAssigned", checked)}
                     />
                     <ToggleRow
                         label="Admission confirmed"
-                        checked={prefs.admissionConfirmed}
+                        checked={(prefs ?? DEFAULT_PREFS).admissionConfirmed}
                         onCheckedChange={(checked) => void update("admissionConfirmed", checked)}
                     />
                 </CardContent>

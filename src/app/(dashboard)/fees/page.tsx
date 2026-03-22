@@ -12,13 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Loader2, Plus, IndianRupee, CheckCircle2, Clock } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import {
-    useAddFeePlanPaymentMutation,
-    useDeleteFeePlanMutation,
-    useGetFeePlanPaymentsQuery,
-    useGetFeesDashboardQuery,
-    useSaveFeePlanMutation,
-} from "@/services/dashboardTables.api";
+    addFeePlanPayment,
+    deleteFeePlan,
+    fetchFeePlanPayments,
+    fetchFeesDashboard,
+    saveFeePlan,
+} from "@/features/dashboard/dashboardSlice";
 
 type Student = { id: string; name: string; phone: string };
 type FeePlan = {
@@ -40,25 +41,35 @@ type Payment = {
 const PAGE_SIZE = 10;
 
 export default function FeesPage() {
-    const { data: feesState, isLoading: loading, refetch } = useGetFeesDashboardQuery(undefined, { refetchOnMountOrArgChange: true });
+    const dispatch = useAppDispatch();
+    const feesState = useAppSelector((state) => state.dashboard.fees.data);
+    const loading = useAppSelector((state) => state.dashboard.fees.loading);
+    const savingPlan = useAppSelector((state) => state.dashboard.fees.planMutation.loading);
+    const savingPayment = useAppSelector((state) => state.dashboard.fees.paymentMutation.loading);
     const students = feesState?.students ?? [];
     const plans = feesState?.plans ?? [];
 
     // Plan dialog
     const [planDialogOpen, setPlanDialogOpen] = useState(false);
     const [planForm, setPlanForm] = useState({ studentId: "", totalAmount: "", dueDate: "" });
-    const [saveFeePlanMutation, { isLoading: savingPlan }] = useSaveFeePlanMutation();
 
     // Payment view
     const [selectedPlan, setSelectedPlan] = useState<FeePlan | null>(null);
-    const { data: payments = [] } = useGetFeePlanPaymentsQuery(selectedPlan?.id ?? "", { skip: !selectedPlan, refetchOnMountOrArgChange: true });
+    const payments = useAppSelector((state) => state.dashboard.fees.payments.data);
     const [paymentPage, setPaymentPage] = useState(1);
 
     // Add Payment dialog
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
     const [paymentForm, setPaymentForm] = useState({ amount: "", date: "", note: "", method: "CASH", reference: "" });
-    const [addFeePlanPaymentMutation, { isLoading: savingPayment }] = useAddFeePlanPaymentMutation();
-    const [deleteFeePlanMutation] = useDeleteFeePlanMutation();
+
+    useEffect(() => {
+        void dispatch(fetchFeesDashboard());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (!selectedPlan?.id) return;
+        void dispatch(fetchFeePlanPayments(selectedPlan.id));
+    }, [dispatch, selectedPlan?.id]);
 
     const studentMap = Object.fromEntries(students.map((s) => [s.id, s]));
 
@@ -75,11 +86,11 @@ export default function FeesPage() {
             };
             if (planForm.dueDate) body.dueDate = planForm.dueDate;
 
-            await saveFeePlanMutation(body).unwrap();
+            await dispatch(saveFeePlan(body)).unwrap();
             toast.success("Fee plan created");
             setPlanDialogOpen(false);
             setPlanForm({ studentId: "", totalAmount: "", dueDate: "" });
-            await refetch();
+            await dispatch(fetchFeesDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -88,12 +99,12 @@ export default function FeesPage() {
     // Delete fee plan
     const deletePlan = async (planId: string) => {
         try {
-            await deleteFeePlanMutation(planId).unwrap();
+            await dispatch(deleteFeePlan(planId)).unwrap();
             toast.success("Fee plan deleted");
             if (selectedPlan?.id === planId) {
                 setSelectedPlan(null);
             }
-            await refetch();
+            await dispatch(fetchFeesDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -119,7 +130,7 @@ export default function FeesPage() {
             if (paymentForm.note.trim()) body.note = paymentForm.note.trim();
             if (paymentForm.reference.trim()) body.reference = paymentForm.reference.trim();
 
-            await addFeePlanPaymentMutation({ planId: selectedPlan.id, body }).unwrap();
+            await dispatch(addFeePlanPayment({ planId: selectedPlan.id, body })).unwrap();
             toast.success(`Payment saved: ₹${parseFloat(paymentForm.amount).toLocaleString("en-IN")}`);
             setPaymentDialogOpen(false);
             setPaymentForm({ amount: "", date: "", note: "", method: "CASH", reference: "" });

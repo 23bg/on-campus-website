@@ -20,7 +20,7 @@ const testimonials = [
 
 export default function Testimonials() {
     return (
-        <section className="w-full border-b bg-stone-50/70 py-14 md:py-20">
+        <section className="w-full border-b bg-muted/50 py-14 md:py-20">
             <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
                 <div className="max-w-2xl space-y-3">
                     <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Results from real institutes</h2>
@@ -33,7 +33,7 @@ export default function Testimonials() {
                     {testimonials.map((item) => (
                         <article
                             key={item.institute}
-                            className="rounded-xl border border-stone-200 bg-background p-5 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                            className="rounded-xl border border-border bg-background p-5 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                         >
                             <Quote className="h-5 w-5 text-primary" aria-hidden />
                             <p className="mt-4 text-sm leading-6 text-foreground">"{item.quote}"</p>

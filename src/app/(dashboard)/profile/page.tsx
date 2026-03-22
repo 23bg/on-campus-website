@@ -11,7 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2 } from "lucide-react";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@/components/ui/input-group";
-import { InstituteProfile, useGetInstituteProfileQuery, useSaveInstituteProfileMutation } from "@/services/adminDashboard.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchInstituteProfile, saveInstituteProfile } from "@/features/dashboard/dashboardSlice";
 
 const isValidUrl = (value: string) => {
     try {
@@ -76,14 +77,19 @@ const instituteProfileSchema = z.object({
 type ProfileFormValues = z.infer<typeof instituteProfileSchema>;
 
 export default function DashboardProfilePage() {
+    const dispatch = useAppDispatch();
     const defaultValues: ProfileFormValues = {
         name: "", slug: "", description: "", phone: "", whatsapp: "",
         addressLine1: "", addressLine2: "", city: "", state: "", region: "", postalCode: "", country: "India", countryCode: "", timings: "", logo: "", heroImage: "", googleMapLink: "",
         website: "", instagram: "", facebook: "", youtube: "", linkedin: "",
     };
 
-    const { data: profile, isLoading: loading } = useGetInstituteProfileQuery();
-    const [saveInstituteProfile] = useSaveInstituteProfileMutation();
+    const profile = useAppSelector((state) => state.dashboard.profile.data);
+    const loading = useAppSelector((state) => state.dashboard.profile.loading);
+
+    useEffect(() => {
+        void dispatch(fetchInstituteProfile());
+    }, [dispatch]);
 
     const {
         control,
@@ -104,7 +110,7 @@ export default function DashboardProfilePage() {
 
     const save = async (form: ProfileFormValues) => {
         try {
-            await saveInstituteProfile(form as InstituteProfile).unwrap();
+            await dispatch(saveInstituteProfile(form)).unwrap();
             toast.success("Profile updated successfully");
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Network error. Please try again.");

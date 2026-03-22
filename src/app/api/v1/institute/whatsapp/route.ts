@@ -3,7 +3,7 @@ import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { createRouteLogger } from "@/lib/api/route-logger";
 import { toAppError } from "@/lib/utils/error";
-import { whatsappIntegrationService } from "@/features/whatsapp/services/whatsapp-integration.service";
+import { whatsappIntegrationService } from "@/features/whatsapp/whatsappApi";
 
 export async function GET(req: NextRequest) {
     const routeLog = createRouteLogger("/api/v1/institute/whatsapp#GET", req);
@@ -87,3 +87,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+

@@ -7,16 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CreditCard } from "lucide-react";
 import { getPlanPricing, PLAN_CONFIG, PlanType, PricingVersion } from "@/config/plans";
-import type { BillingInterval } from "@/features/subscription/services/subscription.service";
+import type { BillingInterval } from "@/features/subscription/subscriptionApi";
 import Script from "next/script";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import {
-    BillingDashboardPayload,
-    useConfirmBillingSubscriptionMutation,
-    useCreateBillingSubscriptionMutation,
-    useGenerateBillingInvoiceMutation,
-    useGetBillingDashboardQuery,
-    useRetryBillingInvoiceMutation,
-} from "@/services/adminDashboard.api";
+    confirmBillingSubscription,
+    createBillingSubscription,
+    fetchBillingDashboard,
+    generateBillingInvoice,
+    retryBillingInvoice,
+} from "@/features/dashboard/dashboardSlice";
 
 type RazorpayCheckoutResponse = {
     razorpay_payment_id: string;
@@ -41,7 +41,22 @@ type RazorpayInstance = {
 
 type RazorpayConstructor = new (options: RazorpayCheckoutOptions) => RazorpayInstance;
 
-type InvoiceHistoryItem = NonNullable<BillingDashboardPayload>["invoices"][number];
+type InvoiceHistoryItem = {
+    id: string;
+    month: number;
+    year: number;
+    periodStart: string;
+    periodEnd: string;
+    planCharge: number;
+    usageCharge: number;
+    totalAmount: number;
+    status: "PENDING" | "ISSUED" | "PAID" | "OVERDUE" | "VOID";
+    dueDate?: string | null;
+    issuedAt?: string | null;
+    paidAt?: string | null;
+    paymentLinkUrl?: string | null;
+    downloadUrl?: string | null;
+};
 
 const STATUS_COLORS: Record<string, string> = {
     TRIAL: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -51,11 +66,12 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function BillingPage() {
-    const { data: billingData, isLoading: loading, refetch } = useGetBillingDashboardQuery();
-    const [createBillingSubscription, { isLoading: creating }] = useCreateBillingSubscriptionMutation();
-    const [confirmBillingSubscription] = useConfirmBillingSubscriptionMutation();
-    const [generateBillingInvoice, { isLoading: generatingInvoice }] = useGenerateBillingInvoiceMutation();
-    const [retryBillingInvoice, { isLoading: retryingInvoice }] = useRetryBillingInvoiceMutation();
+    const dispatch = useAppDispatch();
+    const billingData = useAppSelector((state) => state.dashboard.billing.data);
+    const loading = useAppSelector((state) => state.dashboard.billing.loading);
+    const creating = useAppSelector((state) => state.dashboard.billing.subscription.loading);
+    const generatingInvoice = useAppSelector((state) => state.dashboard.billing.invoice.loading);
+    const retryingInvoice = useAppSelector((state) => state.dashboard.billing.retry.loading);
     const summary = billingData?.summary ?? null;
     const usage = billingData?.usage ?? null;
     const invoices = billingData?.invoices ?? [];
@@ -64,6 +80,10 @@ export default function BillingPage() {
     const [selectedPlan, setSelectedPlan] = useState<PlanType>("STARTER");
     const [selectedInterval, setSelectedInterval] = useState<BillingInterval>("MONTHLY");
     const [retryingInvoiceId, setRetryingInvoiceId] = useState<string | null>(null);
+
+    useEffect(() => {
+        void dispatch(fetchBillingDashboard());
+    }, [dispatch]);
 
     useEffect(() => {
         if (summary?.planType) {
@@ -81,10 +101,10 @@ export default function BillingPage() {
 
     const createSubscription = async (planType: PlanType) => {
         try {
-            const payload = await createBillingSubscription({
+            const payload = await dispatch(createBillingSubscription({
                 planType,
                 interval: selectedInterval,
-            }).unwrap();
+            })).unwrap();
 
             if (!payload?.subscriptionId || !payload?.key) {
                 throw new Error("Missing checkout payload");
@@ -101,9 +121,9 @@ export default function BillingPage() {
                 name: "OnCampus",
                 description: "Admission and Student Management Platform Subscription",
                 handler: async (checkoutResponse) => {
-                    await confirmBillingSubscription(checkoutResponse as unknown as Record<string, unknown>).unwrap();
+                    await dispatch(confirmBillingSubscription(checkoutResponse as unknown as Record<string, unknown>)).unwrap();
                     toast.success(`${planType} plan activated`);
-                    await refetch();
+                    await dispatch(fetchBillingDashboard()).unwrap();
                 },
                 modal: {
                     ondismiss: () => {
@@ -120,9 +140,9 @@ export default function BillingPage() {
 
     const generateInvoice = async () => {
         try {
-            await generateBillingInvoice().unwrap();
+            await dispatch(generateBillingInvoice()).unwrap();
             toast.success("Invoice generated for last closed month");
-            await refetch();
+            await dispatch(fetchBillingDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to generate invoice");
         }
@@ -131,9 +151,9 @@ export default function BillingPage() {
     const retryInvoice = async (invoiceId: string) => {
         try {
             setRetryingInvoiceId(invoiceId);
-            await retryBillingInvoice(invoiceId).unwrap();
+            await dispatch(retryBillingInvoice(invoiceId)).unwrap();
             toast.success("Invoice retry scheduled");
-            await refetch();
+            await dispatch(fetchBillingDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to retry invoice");
         } finally {
@@ -394,3 +414,4 @@ export default function BillingPage() {
         </main>
     );
 }
+

@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@/components/ui/input-group";
-import { useSubmitPublicEnquiryMutation } from "@/services/appUi.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { submitPublicEnquiry } from "@/features/appInstitute/appInstituteSlice";
 
 const publicEnquirySchema = z.object({
     name: z.string().trim().min(2, "Name must be at least 2 characters.").max(80, "Name cannot exceed 80 characters."),
@@ -29,7 +30,8 @@ type PublicEnquiryFormProps = {
 };
 
 export default function PublicEnquiryForm({ slug }: PublicEnquiryFormProps) {
-    const [submitPublicEnquiry] = useSubmitPublicEnquiryMutation();
+    const dispatch = useAppDispatch();
+    const isSubmittingEnquiry = useAppSelector((state) => state.appInstitute.publicEnquiry.loading);
     const form = useForm<PublicEnquiryValues>({
         resolver: zodResolver(publicEnquirySchema),
         mode: "onBlur",
@@ -46,7 +48,7 @@ export default function PublicEnquiryForm({ slug }: PublicEnquiryFormProps) {
         const phoneDigits = values.phone.replace(/\D/g, "");
 
         try {
-            await submitPublicEnquiry({
+            await dispatch(submitPublicEnquiry({
                 slug,
                 values: {
                     name: values.name.trim(),
@@ -55,7 +57,7 @@ export default function PublicEnquiryForm({ slug }: PublicEnquiryFormProps) {
                     course: values.course || undefined,
                     message: values.message || undefined,
                 },
-            }).unwrap();
+            })).unwrap();
             toast.success("Enquiry submitted successfully");
             form.reset();
         } catch (error: any) {
@@ -156,8 +158,8 @@ export default function PublicEnquiryForm({ slug }: PublicEnquiryFormProps) {
                 </form>
             </CardContent>
             <CardFooter>
-                <Button disabled={form.formState.isSubmitting} onClick={form.handleSubmit(onSubmit)} className="w-full">
-                    {form.formState.isSubmitting ? "Submitting..." : "Submit Enquiry"}
+                <Button disabled={form.formState.isSubmitting || isSubmittingEnquiry} onClick={form.handleSubmit(onSubmit)} className="w-full">
+                    {form.formState.isSubmitting || isSubmittingEnquiry ? "Submitting..." : "Submit Enquiry"}
                 </Button>
             </CardFooter>
         </Card>

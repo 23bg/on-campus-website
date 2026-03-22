@@ -12,7 +12,8 @@ import { Loader2, MoreHorizontal, Plus } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import ListWidget from "@/components/custom/ListWidget";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
-import { useDeleteTeacherMutation, useGetTeachersQuery, useSaveTeacherMutation } from "@/services/dashboardTables.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { deleteTeacher as deleteTeacherThunk, fetchTeachers, saveTeacher as saveTeacherThunk } from "@/features/dashboard/dashboardSlice";
 
 type Teacher = {
     id: string;
@@ -27,13 +28,18 @@ const emptyForm: TeacherForm = { name: "", subject: "", bio: "" };
 const PAGE_SIZE = 10;
 
 export default function TeachersPage() {
-    const { data: teachers = [], isLoading: loading, refetch } = useGetTeachersQuery(undefined, { refetchOnMountOrArgChange: true });
-    const [saveTeacherMutation, { isLoading: saving }] = useSaveTeacherMutation();
-    const [deleteTeacherMutation] = useDeleteTeacherMutation();
+    const dispatch = useAppDispatch();
+    const teachers = useAppSelector((state) => state.dashboard.teachers.data);
+    const loading = useAppSelector((state) => state.dashboard.teachers.loading);
+    const saving = useAppSelector((state) => state.dashboard.teachers.mutation.loading);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState<TeacherForm>(emptyForm);
     const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        void dispatch(fetchTeachers());
+    }, [dispatch]);
 
     useEffect(() => {
         setPage(1);
@@ -60,13 +66,13 @@ export default function TeachersPage() {
         }
 
         try {
-            await saveTeacherMutation({
+            await dispatch(saveTeacherThunk({
                 editingId,
                 body: { name: form.name, subject: form.subject || undefined, bio: form.bio || undefined },
-            }).unwrap();
+            })).unwrap();
             toast.success(editingId ? "Teacher updated" : "Teacher added");
             setDialogOpen(false);
-            await refetch();
+            await dispatch(fetchTeachers()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -74,9 +80,9 @@ export default function TeachersPage() {
 
     const deleteTeacher = async (id: string) => {
         try {
-            await deleteTeacherMutation(id).unwrap();
+            await dispatch(deleteTeacherThunk(id)).unwrap();
             toast.success("Teacher deleted");
-            await refetch();
+            await dispatch(fetchTeachers()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }

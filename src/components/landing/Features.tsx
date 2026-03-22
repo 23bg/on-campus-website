@@ -36,7 +36,7 @@
                     {modules.map((module) => (
                         <article
                             key={module.title}
-                            className="rounded-xl border border-stone-200 bg-stone-50/60 p-6 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                            className="rounded-xl border border-border bg-muted/50 p-6 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                         >
                             <h3 className="text-lg font-semibold">{module.title}</h3>
                             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">

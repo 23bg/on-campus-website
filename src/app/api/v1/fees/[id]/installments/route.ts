@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { feeService } from "@/features/fee/services/fee.service";
+import { feeService } from "@/features/fee/feeApi";
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -63,3 +63,4 @@ export async function POST(req: NextRequest, context: RouteContext) {
         );
     }
 }
+

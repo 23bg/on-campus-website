@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
-import { leadService } from "@/server/services/leads.service";
+import { leadService } from "@/server/leadsApi";
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = {
@@ -28,4 +28,5 @@ export async function GET(_: Request, context: RouteContext) {
         );
     }
 }
+
 

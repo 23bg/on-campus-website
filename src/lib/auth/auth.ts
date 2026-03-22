@@ -1,6 +1,7 @@
 ﻿import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { env, requireEnv } from "@/lib/config/env";
+import { readAccessTokenFromCookie, AccessTokenPayload } from "./tokens";
 
 const SESSION_COOKIE = "session_token";
 
@@ -63,7 +64,19 @@ export const clearSessionCookie = async (): Promise<void> => {
     });
 };
 
+/**
+ * Read session from cookies.
+ * IMPORTANT: Prioritizes new access_token over legacy session_token.
+ * During migration, both will work but access_token takes precedence.
+ */
 export const readSessionFromCookie = async (): Promise<SessionPayload | null> => {
+    // Try new access_token first
+    const accessTokenPayload = await readAccessTokenFromCookie();
+    if (accessTokenPayload) {
+        return accessTokenPayload as SessionPayload;
+    }
+
+    // Fall back to legacy session_token
     const cookieStore = await cookies();
     const token = cookieStore.get(SESSION_COOKIE)?.value;
     if (!token) return null;

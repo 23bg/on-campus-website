@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/lib/auth/auth";
 import { canManageBilling } from "@/lib/auth/permissions";
-import { subscriptionService } from "@/features/subscription/services/subscription.service";
+import { subscriptionService } from "@/features/subscription/subscriptionApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function POST(req: NextRequest) {
@@ -59,3 +59,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/lib/config/env";
 import { prisma } from "@/lib/db/prisma";
-import { sendWhatsAppText } from "@/lib/services/whatsapp";
+import { sendWhatsAppText } from "@/lib/whatsappApi";
 import { normalizePhone } from "@/lib/utils/phone";
 import { createRouteLogger } from "@/lib/api/route-logger";
 import { DEMO_VIDEO_URL } from "@/constants/external-links";
@@ -136,3 +136,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+

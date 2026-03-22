@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/lib/auth/auth";
 import { canManageBilling } from "@/lib/auth/permissions";
-import { BillingInterval, subscriptionService } from "@/features/subscription/services/subscription.service";
-import { billingService } from "@/features/billing/services/billing.service";
+import { BillingInterval, subscriptionService } from "@/features/subscription/subscriptionApi";
+import { billingService } from "@/features/billing/billingApi";
 import { toAppError } from "@/lib/utils/error";
 import { isPlanType } from "@/config/plans";
 import { env } from "@/lib/config/env";
@@ -120,3 +120,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+

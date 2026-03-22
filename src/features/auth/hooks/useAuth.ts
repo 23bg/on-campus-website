@@ -17,17 +17,17 @@
 //     return { user, loading, error, isAuthenticated, login, signup, verifyOTP };
 // };
 
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { loginUser, signupUser, verifyOtp, logoutUser } from "../slices/authSlice";
+import { useState } from "react";
+import { api } from "@/lib/api";
+import { useAppSelector } from "@/hooks/reduxHooks";
 
 export const useAuth = () => {
-    const dispatch = useAppDispatch();
-    const { loading, error } = useAppSelector(
-        (state) => state.auth
-    );
+    const { user } = useAppSelector((state) => state.auth);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<unknown>(null);
 
     // Generic wrapper for dispatch + callbacks
-    const withCallbacks = async (action: any, callbacks?: {
+    const withCallbacks = async <T>(request: Promise<T>, callbacks?: {
         onSuccess?: (data: any) => void;
         onError?: (error: any) => void;
         onFinally?: () => void;
@@ -35,13 +35,17 @@ export const useAuth = () => {
         const { onSuccess, onError, onFinally } = callbacks || {};
 
         try {
-            const result = await dispatch(action).unwrap(); // unwrap gives actual response
+            setLoading(true);
+            setError(null);
+            const result = await request;
             onSuccess?.(result);
             return result;
         } catch (err) {
+            setError(err);
             onError?.(err);
             throw err;
         } finally {
+            setLoading(false);
             onFinally?.();
         }
     };
@@ -49,22 +53,23 @@ export const useAuth = () => {
     // --- AUTH METHODS WITH CALLBACK SUPPORT ---
 
     const login = (data: { email: string }, callbacks?: any) =>
-        withCallbacks(loginUser(data), callbacks);
+        withCallbacks(api.post("auth/request-otp", data).then((res) => res.data), callbacks);
 
     const signup = (
         data: { name: string; email: string; phoneNumber: string },
         callbacks?: any
-    ) => withCallbacks(signupUser(data), callbacks);
+    ) => withCallbacks(api.post("auth/request-otp", data).then((res) => res.data), callbacks);
 
     const verifyOTP = (
         data: { email: string; otp: string },
         callbacks?: any
-    ) => withCallbacks(verifyOtp(data), callbacks);
+    ) => withCallbacks(api.post("auth/verify-otp", data).then((res) => res.data), callbacks);
 
     const logout = (callbacks?: any) =>
-        withCallbacks(logoutUser(), callbacks);
+        withCallbacks(api.post("auth/logout", {}).then((res) => res.data), callbacks);
 
     return {
+        user,
         loading,
         error,
         login,

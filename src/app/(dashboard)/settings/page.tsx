@@ -11,15 +11,28 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import {
-    DomainSettings,
-    useActivateDomainSettingsMutation,
-    useExportSettingsDataMutation,
-    useGetDomainSettingsQuery,
-    useGetSettingsCountsQuery,
-    useSaveDomainSettingsMutation,
-    useVerifyDomainSettingsMutation,
-} from "@/services/appUi.api";
+    activateDomainSettings,
+    exportSettingsData,
+    fetchDomainSettings,
+    fetchSettingsCounts,
+    saveDomainSettings,
+    verifyDomainSettings,
+} from "@/features/appInstitute/appInstituteSlice";
+
+type DomainSettings = {
+    slug: string;
+    customDomain: string;
+    domainVerified: boolean;
+    domainStatus: "PENDING" | "VERIFIED" | "ACTIVE" | "FAILED";
+    defaultDomain: string;
+    dnsInstruction: {
+        type: string;
+        name: string;
+        target: string;
+    };
+};
 
 type DashboardSettings = {
     compactTables: boolean;
@@ -54,16 +67,23 @@ const defaultSettings: AppSettings = {
 };
 
 export default function SettingsPage() {
+    const dispatch = useAppDispatch();
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [settings, setSettings] = useState<AppSettings>(defaultSettings);
-    const { data: dataCounts = { students: 0, leads: 0, courses: 0, payments: 0 } } = useGetSettingsCountsQuery();
-    const [exportSettingsData, { isLoading: exporting }] = useExportSettingsDataMutation();
-    const { data: domainSettings } = useGetDomainSettingsQuery();
-    const [saveDomainSettings, { isLoading: savingDomain }] = useSaveDomainSettingsMutation();
-    const [verifyDomainSettings, { isLoading: verifyingDomain }] = useVerifyDomainSettingsMutation();
-    const [activateDomainSettings, { isLoading: activatingDomain }] = useActivateDomainSettingsMutation();
+    const dataCounts = useAppSelector((state) => state.appInstitute.counts.data);
+    const exporting = useAppSelector((state) => state.appInstitute.exportData.loading);
+    const domainSettings = useAppSelector((state) => state.appInstitute.domain.data);
+    const domainLoading = useAppSelector((state) => state.appInstitute.domain.loading);
+    const savingDomain = domainLoading;
+    const verifyingDomain = domainLoading;
+    const activatingDomain = domainLoading;
     const [domainInput, setDomainInput] = useState("");
+
+    useEffect(() => {
+        void dispatch(fetchSettingsCounts());
+        void dispatch(fetchDomainSettings());
+    }, [dispatch]);
 
     useEffect(() => {
         setMounted(true);
@@ -99,7 +119,7 @@ export default function SettingsPage() {
         }
 
         try {
-            await saveDomainSettings({ customDomain: domainInput }).unwrap();
+            await dispatch(saveDomainSettings({ customDomain: domainInput })).unwrap();
             toast.success("Domain saved. Add DNS record and verify.");
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to save custom domain");
@@ -108,7 +128,7 @@ export default function SettingsPage() {
 
     const verifyDomain = async () => {
         try {
-            const latest = await verifyDomainSettings({ customDomain: domainInput }).unwrap();
+            const latest = await dispatch(verifyDomainSettings({ customDomain: domainInput })).unwrap();
             toast.success(latest?.domainVerified ? "Domain verified" : "Domain not verified yet");
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to verify domain");
@@ -117,7 +137,7 @@ export default function SettingsPage() {
 
     const activateDomain = async () => {
         try {
-            await activateDomainSettings({ customDomain: domainInput }).unwrap();
+            await dispatch(activateDomainSettings({ customDomain: domainInput })).unwrap();
             toast.success("Domain activated");
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to activate domain");
@@ -131,7 +151,7 @@ export default function SettingsPage() {
 
     const exportData = async () => {
         try {
-            const payload = await exportSettingsData().unwrap();
+            const payload = await dispatch(exportSettingsData()).unwrap();
 
             const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);

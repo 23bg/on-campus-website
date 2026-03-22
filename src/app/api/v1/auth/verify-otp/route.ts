@@ -1,5 +1,5 @@
-﻿import { NextRequest, NextResponse } from "next/server";
-import { authService } from "@/features/auth/services/auth.service";
+import { NextRequest, NextResponse } from "next/server";
+import { authService } from "@/features/auth/authDomainApi";
 import { toAppError } from "@/lib/utils/error";
 import { verifyOtpValidation } from "@/validations/auth.validation";
 import { createRouteLogger } from "@/lib/api/route-logger";
@@ -35,4 +35,5 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
 

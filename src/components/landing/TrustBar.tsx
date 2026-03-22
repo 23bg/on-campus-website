@@ -19,7 +19,7 @@ export default function TrustBar({ compact = false }: TrustBarProps) {
                     {trustItems.map(({ icon: Icon, text }) => (
                         <div
                             key={text}
-                            className="rounded-lg border border-stone-200 bg-stone-50/70 px-4 py-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                            className="rounded-lg border border-border bg-muted/50 px-4 py-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                         >
                             <span className="inline-flex items-center gap-2 text-sm font-medium">
                                 <Icon className="h-4 w-4 text-primary" aria-hidden />

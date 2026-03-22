@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from "next";
 import "@/styles/globals.css";
-import { ReduxProvider } from "@/providers/ReduxProvider";
+import { QueryProvider } from "@/providers/QueryProvider";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -83,7 +83,7 @@ export default async function RootLayout({
       <body>
         <ThemeProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <ReduxProvider>
+            <QueryProvider>
               <NextTopLoader
                 showSpinner={false}
                 color="#00BF63"
@@ -111,7 +111,7 @@ export default async function RootLayout({
                 }
 
               />
-            </ReduxProvider>
+            </QueryProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

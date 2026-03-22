@@ -13,15 +13,16 @@ import { Loader2, Plus, Upload, CheckCircle2, AlertCircle, Eye, MoreHorizontal }
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import ListWidget from "@/components/custom/ListWidget";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import {
-    useAssignStudentCourseMutation,
-    useDeleteStudentMutation,
-    useGetStudentAssignmentsQuery,
-    useGetStudentsDashboardQuery,
-    useSaveStudentMutation,
-    useUpdateStudentPortalCredentialsMutation,
-    useUploadStudentsCsvMutation,
-} from "@/services/dashboardTables.api";
+    assignStudentCourse,
+    deleteStudent as deleteStudentThunk,
+    fetchStudentAssignments,
+    fetchStudentsDashboard,
+    saveStudent as saveStudentThunk,
+    updateStudentPortalCredentials,
+    uploadStudentsCsv,
+} from "@/features/dashboard/dashboardSlice";
 
 type Course = { id: string; name: string; defaultFees?: number | null };
 type Batch = { id: string; courseId: string; name: string };
@@ -57,17 +58,18 @@ type StudentAssignment = {
 const PAGE_SIZE = 10;
 
 export default function StudentsPage() {
+    const dispatch = useAppDispatch();
     const searchParams = useSearchParams();
-    const { data: dashboardState, isLoading: loading, refetch } = useGetStudentsDashboardQuery(undefined, { refetchOnMountOrArgChange: true });
+    const dashboardState = useAppSelector((state) => state.dashboard.students.data);
+    const loading = useAppSelector((state) => state.dashboard.students.loading);
     const students = (dashboardState?.rows ?? []) as Student[];
     const courses = (dashboardState?.courses ?? []) as Course[];
     const batches = (dashboardState?.batches ?? []) as Batch[];
     const feeSummaries = (dashboardState?.feeSummaries ?? {}) as Record<string, FeeSummary>;
-    const [saveStudentMutation, { isLoading: saving }] = useSaveStudentMutation();
-    const [deleteStudentMutation] = useDeleteStudentMutation();
-    const [assignStudentCourseMutation, { isLoading: assigningCourse }] = useAssignStudentCourseMutation();
-    const [updateStudentPortalCredentialsMutation, { isLoading: updatingPortalCredentials }] = useUpdateStudentPortalCredentialsMutation();
-    const [uploadStudentsCsvMutation, { isLoading: uploading }] = useUploadStudentsCsvMutation();
+    const saving = useAppSelector((state) => state.dashboard.students.mutation.loading);
+    const assigningCourse = useAppSelector((state) => state.dashboard.students.assignments.loading);
+    const updatingPortalCredentials = useAppSelector((state) => state.dashboard.students.mutation.loading);
+    const uploading = useAppSelector((state) => state.dashboard.students.upload.loading);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -81,10 +83,17 @@ export default function StudentsPage() {
     const [assignmentForm, setAssignmentForm] = useState<{ courseId: string; batchId: string }>({ courseId: "", batchId: "" });
     const [page, setPage] = useState(1);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { data: studentAssignments = [], isLoading: loadingAssignments } = useGetStudentAssignmentsQuery(selectedStudent?.id ?? "", {
-        skip: !selectedStudent,
-        refetchOnMountOrArgChange: true,
-    });
+    const studentAssignments = useAppSelector((state) => state.dashboard.students.assignments.data);
+    const loadingAssignments = useAppSelector((state) => state.dashboard.students.assignments.loading);
+
+    useEffect(() => {
+        void dispatch(fetchStudentsDashboard());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (!selectedStudent?.id) return;
+        void dispatch(fetchStudentAssignments(selectedStudent.id));
+    }, [dispatch, selectedStudent?.id]);
 
     useEffect(() => {
         const query = searchParams.get("query") ?? "";
@@ -172,10 +181,10 @@ export default function StudentsPage() {
             if (form.admissionDate) body.admissionDate = form.admissionDate;
             if (!editingId && form.fees) body.fees = parseFloat(form.fees);
 
-            await saveStudentMutation({ editingId, body }).unwrap();
+            await dispatch(saveStudentThunk({ editingId, body })).unwrap();
             toast.success(editingId ? "Student updated" : "Student added");
             setDialogOpen(false);
-            await refetch();
+            await dispatch(fetchStudentsDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -183,9 +192,9 @@ export default function StudentsPage() {
 
     const deleteStudent = async (id: string) => {
         try {
-            await deleteStudentMutation(id).unwrap();
+            await dispatch(deleteStudentThunk(id)).unwrap();
             toast.success("Student deleted");
-            await refetch();
+            await dispatch(fetchStudentsDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -210,16 +219,16 @@ export default function StudentsPage() {
         }
 
         try {
-            await assignStudentCourseMutation({
+            await dispatch(assignStudentCourse({
                 studentId: selectedStudent.id,
                 body: {
                     courseId: assignmentForm.courseId,
                     batchId: assignmentForm.batchId || undefined,
                 },
-            }).unwrap();
+            })).unwrap();
             setAssignmentForm({ courseId: "", batchId: "" });
             toast.success("Course assigned successfully");
-            await refetch();
+            await dispatch(fetchStudentsDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Failed to assign course");
         }
@@ -233,10 +242,10 @@ export default function StudentsPage() {
         }
 
         try {
-            await updateStudentPortalCredentialsMutation({
+            await dispatch(updateStudentPortalCredentials({
                 studentId: selectedStudent.id,
                 body: portalCredentials,
-            }).unwrap();
+            })).unwrap();
             toast.success("Student portal credentials updated");
             setPortalCredentials((prev) => ({ ...prev, password: "" }));
         } catch (error: any) {
@@ -248,10 +257,10 @@ export default function StudentsPage() {
         setUploadFileName(file.name);
         setUploadResult(null);
         try {
-            const data = await uploadStudentsCsvMutation(file).unwrap();
+            const data = await dispatch(uploadStudentsCsv(file)).unwrap();
             setUploadResult(data);
             toast.success(`${data.inserted} students imported`);
-            await refetch();
+            await dispatch(fetchStudentsDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error during upload");
         }

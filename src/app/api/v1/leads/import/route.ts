@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { leadService } from "@/server/services/leads.service";
+import { leadService } from "@/server/leadsApi";
 import { toAppError } from "@/lib/utils/error";
 
 type ParsedRow = {
@@ -192,4 +192,5 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
 

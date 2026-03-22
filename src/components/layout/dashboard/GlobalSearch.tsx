@@ -14,7 +14,14 @@ import {
     CommandSeparator,
 } from "@/components/ui/command";
 import ROUTES from "@/constants/routes";
-import { SearchResults, useLazyGetGlobalSearchQuery } from "@/services/appUi.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchGlobalSearch } from "@/features/globalSearch/globalSearchSlice";
+
+type SearchResults = {
+    leads: Array<{ id: string; name: string; phone: string; course?: string | null; status: string }>;
+    students: Array<{ id: string; name: string; phone: string; email?: string | null }>;
+    courses: Array<{ id: string; name: string; duration?: string | null }>;
+};
 
 const EMPTY_RESULTS: SearchResults = {
     leads: [],
@@ -24,10 +31,12 @@ const EMPTY_RESULTS: SearchResults = {
 
 export default function GlobalSearch() {
     const router = useRouter();
+    const dispatch = useAppDispatch();
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
-    const [triggerSearch, { data: results = EMPTY_RESULTS, isFetching: loading }] = useLazyGetGlobalSearchQuery();
+    const results = useAppSelector((state) => state.globalSearch.data) as SearchResults;
+    const loading = useAppSelector((state) => state.globalSearch.loading);
 
     const hasAnyResult = useMemo(
         () => results.leads.length > 0 || results.students.length > 0 || results.courses.length > 0,
@@ -54,11 +63,11 @@ export default function GlobalSearch() {
         }
 
         const timer = setTimeout(() => {
-            triggerSearch(query);
+            void dispatch(fetchGlobalSearch(query));
         }, 250);
 
         return () => clearTimeout(timer);
-    }, [open, query, triggerSearch]);
+    }, [dispatch, open, query]);
 
     const visibleResults = query.trim().length >= 2 ? results : EMPTY_RESULTS;
 

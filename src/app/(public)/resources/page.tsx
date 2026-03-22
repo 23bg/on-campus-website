@@ -48,7 +48,7 @@ export default function ResourcesPage() {
                     return (
                         <article
                             key={resource.title}
-                            className="rounded-xl border border-stone-200 bg-stone-50/70 p-5 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                            className="rounded-xl border border-border bg-muted/50 p-5 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                         >
                             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                                 <Icon className="h-3.5 w-3.5" aria-hidden />

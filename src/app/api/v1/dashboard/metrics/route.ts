@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dashboardService } from "@/features/dashboard/services/dashboard.service";
+import { dashboardService } from "@/features/dashboard/dashboardApi";
 import { verifySessionToken } from "@/lib/auth/auth";
 import { toAppError } from "@/lib/utils/error";
 
@@ -31,3 +31,4 @@ export async function GET(req: NextRequest) {
         );
     }
 }
+

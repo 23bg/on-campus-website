@@ -1,15 +1,16 @@
-﻿import { useGetSessionQuery, SessionData } from '@/features/auth/services/authApi';
+import { useGetSession } from '@/features/auth/api';
+import type { AuthResponse } from '@/features/auth/types';
 
 export interface UseSessionReturn {
-    data: SessionData | undefined;
+    data: AuthResponse | undefined;
     isLoading: boolean;
     isError: boolean;
-    error: any;
-    refetch: () => void;
+    error: unknown;
+    refetch: () => Promise<unknown>;
 }
 
 export const useSession = (): UseSessionReturn => {
-    const { data, isLoading, isError, error, refetch } = useGetSessionQuery();
+    const { data, isLoading, isError, error, refetch } = useGetSession(true);
 
     // If there's an error, treat it as no session
     const sessionData = isError ? undefined : data;
@@ -29,3 +30,4 @@ export const useInvalidateSession = () => {
         // Invalidate session will be handled by RTK Query invalidation
     };
 };
+

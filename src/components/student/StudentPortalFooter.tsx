@@ -1,9 +1,17 @@
 "use client";
 
-import { useGetStudentPortalQuery } from "@/services/appUi.api";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchStudentPortal } from "@/features/studentPortal/studentPortalSlice";
 
 export default function StudentPortalFooter() {
-    const { data } = useGetStudentPortalQuery();
+    const dispatch = useAppDispatch();
+    const data = useAppSelector((state) => state.studentPortal.data);
+
+    useEffect(() => {
+        void dispatch(fetchStudentPortal());
+    }, [dispatch]);
+
     const instituteName = data?.student?.institute?.name?.trim() || "Institute Name";
 
     return (

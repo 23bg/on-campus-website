@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { instituteService } from "@/features/institute/services/institute.service";
+import { instituteService } from "@/features/institute/instituteApi";
 
 export const STUDENT_PORTAL_URL = "https://student.oncampus.in";
 
@@ -120,3 +120,4 @@ export const instituteRoute = {
 };
 
 export type { InstitutePublicData, InstituteCourse, InstituteTeacher, InstituteAnnouncement, InstituteBatch };
+

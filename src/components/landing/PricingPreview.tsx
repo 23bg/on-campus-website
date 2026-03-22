@@ -28,7 +28,7 @@ export default function PricingPreview() {
                     {plans.map((plan) => (
                         <div
                             key={plan.name}
-                            className="rounded-xl border border-stone-200 bg-stone-50/60 p-5 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                            className="rounded-xl border border-border bg-muted/50 p-5 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                         >
                             <p className="text-sm font-semibold text-primary">{plan.name}</p>
                             <p className="mt-2 text-2xl font-bold">{plan.price}</p>

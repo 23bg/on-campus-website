@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/lib/auth/auth";
-import { subscriptionService } from "@/features/subscription/services/subscription.service";
+import { subscriptionService } from "@/features/subscription/subscriptionApi";
 import { createRouteLogger } from "@/lib/api/route-logger";
 
 export async function GET() {
@@ -55,3 +55,4 @@ export async function GET() {
         },
     });
 }
+

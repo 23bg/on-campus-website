@@ -12,14 +12,15 @@ import { Loader2, Plus, Layers, Eye, MoreHorizontal } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import ListWidget from "@/components/custom/ListWidget";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import {
-    useAddBatchAttendanceMutation,
-    useAddBatchNoteMutation,
-    useDeleteBatchMutation,
-    useGetBatchDetailsQuery,
-    useGetBatchesDashboardQuery,
-    useSaveBatchMutation,
-} from "@/services/dashboardTables.api";
+    addBatchAttendance,
+    addBatchNote,
+    deleteBatch as deleteBatchThunk,
+    fetchBatchDetails,
+    fetchBatchesDashboard,
+    saveBatch as saveBatchThunk,
+} from "@/features/dashboard/dashboardSlice";
 
 type Course = { id: string; name: string };
 type Teacher = { id: string; name: string; subject?: string | null };
@@ -40,11 +41,12 @@ const emptyForm: BatchForm = { courseId: "", name: "", startDate: "", schedule: 
 const PAGE_SIZE = 10;
 
 export default function BatchesPage() {
-    const { data: batchesState, isLoading: loading, refetch } = useGetBatchesDashboardQuery(undefined, { refetchOnMountOrArgChange: true });
-    const [saveBatchMutation, { isLoading: saving }] = useSaveBatchMutation();
-    const [deleteBatchMutation] = useDeleteBatchMutation();
-    const [addBatchNoteMutation, { isLoading: savingNote }] = useAddBatchNoteMutation();
-    const [addBatchAttendanceMutation, { isLoading: savingAttendance }] = useAddBatchAttendanceMutation();
+    const dispatch = useAppDispatch();
+    const batchesState = useAppSelector((state) => state.dashboard.batches.data);
+    const loading = useAppSelector((state) => state.dashboard.batches.loading);
+    const saving = useAppSelector((state) => state.dashboard.batches.mutation.loading);
+    const savingNote = useAppSelector((state) => state.dashboard.batches.noteMutation.loading);
+    const savingAttendance = useAppSelector((state) => state.dashboard.batches.attendanceMutation.loading);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [viewDialogOpen, setViewDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -59,12 +61,18 @@ export default function BatchesPage() {
     const courses = batchesState?.courses ?? [];
     const teachers = batchesState?.teachers ?? [];
     const students = batchesState?.students ?? [];
-    const { data: batchDetails } = useGetBatchDetailsQuery(selectedBatch?.id ?? "", {
-        skip: !selectedBatch,
-        refetchOnMountOrArgChange: true,
-    });
+    const batchDetails = useAppSelector((state) => state.dashboard.batches.details.data);
     const batchNotes = batchDetails?.notes ?? [];
     const batchAttendance = batchDetails?.attendance ?? [];
+
+    useEffect(() => {
+        void dispatch(fetchBatchesDashboard());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (!selectedBatch?.id) return;
+        void dispatch(fetchBatchDetails(selectedBatch.id));
+    }, [dispatch, selectedBatch?.id]);
 
     useEffect(() => {
         setPage(1);
@@ -105,10 +113,10 @@ export default function BatchesPage() {
             if (form.schedule) body.schedule = form.schedule;
             if (form.teacherId) body.teacherId = form.teacherId;
 
-            await saveBatchMutation({ editingId, body }).unwrap();
+            await dispatch(saveBatchThunk({ editingId, body })).unwrap();
             toast.success(editingId ? "Batch updated" : "Batch added");
             setDialogOpen(false);
-            await refetch();
+            await dispatch(fetchBatchesDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -116,9 +124,9 @@ export default function BatchesPage() {
 
     const deleteBatch = async (id: string) => {
         try {
-            await deleteBatchMutation(id).unwrap();
+            await dispatch(deleteBatchThunk(id)).unwrap();
             toast.success("Batch deleted");
-            await refetch();
+            await dispatch(fetchBatchesDashboard()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -147,7 +155,7 @@ export default function BatchesPage() {
         }
 
         try {
-            await addBatchNoteMutation({
+            await dispatch(addBatchNote({
                 batchId: selectedBatch.id,
                 courseId: selectedBatch.courseId,
                 body: {
@@ -155,7 +163,7 @@ export default function BatchesPage() {
                     description: noteForm.description || undefined,
                     fileUrl: noteForm.fileUrl || undefined,
                 },
-            }).unwrap();
+            })).unwrap();
             toast.success("Note added");
             setNoteForm({ title: "", description: "", fileUrl: "" });
         } catch (error: any) {
@@ -171,7 +179,7 @@ export default function BatchesPage() {
         }
 
         try {
-            await addBatchAttendanceMutation({
+            await dispatch(addBatchAttendance({
                 batchId: selectedBatch.id,
                 courseId: selectedBatch.courseId,
                 body: {
@@ -179,7 +187,7 @@ export default function BatchesPage() {
                     date: attendanceDate,
                     status: attendanceStatus,
                 },
-            }).unwrap();
+            })).unwrap();
             toast.success("Attendance marked");
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Failed to mark attendance");
