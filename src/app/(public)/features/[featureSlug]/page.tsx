@@ -10,9 +10,9 @@ type FeaturePageProps = {
 
 const FEATURE_SET = new Set(FEATURE_DEEP_DIVE_SLUGS);
 
-export function generateStaticParams() {
-    return FEATURE_DEEP_DIVE_SLUGS.map((featureSlug) => ({ featureSlug }));
-}
+// export function generateStaticParams() {
+//     return FEATURE_DEEP_DIVE_SLUGS.map((featureSlug) => ({ featureSlug }));
+// }
 
 export async function generateMetadata({ params }: FeaturePageProps): Promise<Metadata> {
     const { featureSlug } = await params;
