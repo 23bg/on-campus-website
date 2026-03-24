@@ -15,9 +15,9 @@ function humanizeSlug(value: string) {
 }
 
 // ✅ Static generation
-export function generateStaticParams() {
-    return SEO_KEYWORDS.map((keyword) => ({ keyword }));
-}
+// export function generateStaticParams() {
+//     return SEO_KEYWORDS.map((keyword) => ({ keyword }));
+// }
 
 // ✅ Metadata
 export async function generateMetadata({

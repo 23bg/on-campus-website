@@ -17,14 +17,14 @@ function humanizeSlug(value: string) {
         .join(" ");
 }
 
-export async function generateStaticParams() {
-    return SEO_KEYWORDS.flatMap((keyword) =>
-        INDIAN_CITIES.map((city) => ({
-            keyword,
-            city,
-        })),
-    );
-}
+// export async function generateStaticParams() {
+//     return SEO_KEYWORDS.flatMap((keyword) =>
+//         INDIAN_CITIES.map((city) => ({
+//             keyword,
+//             city,
+//         })),
+//     );
+// }
 
 export async function generateMetadata({ params }: ProgrammaticPageProps): Promise<Metadata> {
     const { keyword, city } = await params;
