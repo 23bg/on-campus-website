@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupTextarea } from "@/components/ui/input-group";
-import { useSaveInstituteProfileMutation } from "@/services/adminDashboard.api";
+import { useAppDispatch } from "@/hooks/reduxHooks";
+import { saveInstituteProfile } from "@/features/dashboard/dashboardSlice";
 
 export const instituteProfileSchema = z.object({
     name: z.string().trim().min(2, "Institute name must be at least 2 characters.").max(80, "Institute name cannot exceed 80 characters."),
@@ -45,7 +46,7 @@ type InstituteProfileFormProps = {
 };
 
 export default function InstituteProfileForm({ initialValues, onCancel, onSaved }: InstituteProfileFormProps) {
-    const [saveInstituteProfile] = useSaveInstituteProfileMutation();
+    const dispatch = useAppDispatch();
     const form = useForm<InstituteFormValues>({
         resolver: zodResolver(instituteProfileSchema),
         mode: "onBlur",
@@ -58,7 +59,7 @@ export default function InstituteProfileForm({ initialValues, onCancel, onSaved 
 
     const onSubmit = async (values: InstituteFormValues) => {
         try {
-            await saveInstituteProfile(values).unwrap();
+            await dispatch(saveInstituteProfile(values)).unwrap();
             toast.success("Profile updated successfully");
             await onSaved();
         } catch (error: any) {

@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import ListWidget from "@/components/custom/ListWidget";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
-import { useGetPaymentsQuery } from "@/services/dashboardTables.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchPayments } from "@/features/dashboard/dashboardSlice";
 
 type PaymentRow = {
     id: string;
@@ -27,6 +28,7 @@ const PAYMENT_METHODS = ["ALL", "CASH", "UPI", "CARD", "BANK_TRANSFER", "OTHER"]
 const PAGE_SIZE = 10;
 
 export default function PaymentsPage() {
+    const dispatch = useAppDispatch();
     const [from, setFrom] = useState("");
     const [to, setTo] = useState("");
     const [studentQuery, setStudentQuery] = useState("");
@@ -39,7 +41,12 @@ export default function PaymentsPage() {
         if (method !== "ALL") params.set("method", method);
         return params.toString();
     }, [from, method, to]);
-    const { data: rows = [], isLoading: loading, refetch } = useGetPaymentsQuery(queryString, { refetchOnMountOrArgChange: true });
+    const rows = useAppSelector((state) => state.dashboard.payments.data);
+    const loading = useAppSelector((state) => state.dashboard.payments.loading);
+
+    useEffect(() => {
+        void dispatch(fetchPayments(queryString));
+    }, [dispatch, queryString]);
 
     const filteredRows = useMemo(() => {
         if (!studentQuery.trim()) return rows;
@@ -120,12 +127,12 @@ export default function PaymentsPage() {
             search={studentQuery}
             onSearchChange={setStudentQuery}
             searchPlaceholder="Search student name or phone"
-                loading={loading}
-                isEmpty={!loading && filteredRows.length === 0}
-                emptyMessage="No payments found for selected filters."
-                actions={
-                <Button variant="outline" onClick={() => refetch()}>Refresh</Button>
-                }
+            loading={loading}
+            isEmpty={!loading && filteredRows.length === 0}
+            emptyMessage="No payments found for selected filters."
+            actions={
+                <Button variant="outline" onClick={() => void dispatch(fetchPayments(queryString))}>Refresh</Button>
+            }
             footer={
                 <TablePaginationControls
                     page={page}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { studentService } from "@/server/services/students.service";
+import { studentService } from "@/server/studentsApi";
 import { createStudentSessionToken, setStudentSessionCookie } from "@/lib/auth/student-auth";
 import { toAppError } from "@/lib/utils/error";
 import { createRouteLogger } from "@/lib/api/route-logger";
@@ -26,3 +26,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+

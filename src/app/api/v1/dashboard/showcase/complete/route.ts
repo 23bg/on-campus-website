@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
-import { userRepository } from "@/features/auth/repositories/user.repo";
+import { userRepository } from "@/features/auth/userDataApi";
 
 export async function POST() {
     const session = await readSessionFromCookie();
@@ -15,3 +15,4 @@ export async function POST() {
 
     return NextResponse.json({ success: true });
 }
+

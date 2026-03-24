@@ -1,6 +1,7 @@
 ﻿import AuthLayout from '@/components/layout/AuthLayout'
 import type { Metadata } from "next";
 import React from 'react'
+import { ReduxProvider } from "@/providers/ReduxProvider";
 
 export const metadata: Metadata = {
     robots: {
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
 };
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-    return <AuthLayout>{children}</AuthLayout>
+    return (
+        <ReduxProvider>
+            <AuthLayout>{children}</AuthLayout>
+        </ReduxProvider>
+    );
 }
 
 

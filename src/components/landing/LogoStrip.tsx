@@ -25,7 +25,7 @@ export default function LogoStrip({
     compact = false,
 }: LogoStripProps) {
     return (
-        <section className={cn("w-full border-b bg-stone-50/80", compact ? "py-12" : "py-20")}>
+        <section className={cn("w-full border-b bg-muted/50", compact ? "py-12" : "py-20")}>
             <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
                 <div className="mx-auto max-w-2xl text-center">
                     <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
@@ -36,7 +36,7 @@ export default function LogoStrip({
                     {logos.map((logo) => (
                         <div
                             key={logo}
-                            className="rounded-lg border border-stone-200 bg-stone-100/70 px-4 py-3 text-center text-xs font-medium text-stone-500 transition-all duration-200 hover:scale-[1.02] hover:border-primary/40 hover:bg-background hover:text-foreground"
+                            className="rounded-lg border border-border bg-muted px-4 py-3 text-center text-xs font-medium text-muted-foreground transition-all duration-200 hover:scale-[1.02] hover:border-primary/40 hover:bg-background hover:text-foreground"
                         >
                             {logo}
                         </div>

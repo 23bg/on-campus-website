@@ -6,13 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import {
-    useActivateWhatsappMutation,
-    useConnectWhatsappMutation,
-    useGetWhatsappIntegrationQuery,
-    useVerifyWhatsappMutation,
-    WhatsAppIntegrationState,
-} from "@/services/adminDashboard.api";
+    activateWhatsapp,
+    connectWhatsapp,
+    fetchWhatsappIntegration,
+    verifyWhatsapp,
+} from "@/features/dashboard/dashboardSlice";
+
+type WhatsAppIntegrationState = {
+    mode: "ONCAMPUS_SHARED" | "INSTITUTE_CUSTOM";
+    connectedNumber: string | null;
+    status: "PENDING" | "VERIFIED" | "ACTIVE" | "DISCONNECTED" | "FAILED";
+    phoneNumberId: string | null;
+    businessAccountId: string | null;
+    connectedAt: string | null;
+};
 
 const DEFAULT_STATE: WhatsAppIntegrationState = {
     mode: "ONCAMPUS_SHARED",
@@ -24,10 +33,13 @@ const DEFAULT_STATE: WhatsAppIntegrationState = {
 };
 
 export default function WhatsAppIntegrationPage() {
-    const { data: state = DEFAULT_STATE, isLoading: loading, refetch } = useGetWhatsappIntegrationQuery();
-    const [connectWhatsapp, { isLoading: connecting }] = useConnectWhatsappMutation();
-    const [verifyWhatsapp, { isLoading: verifying }] = useVerifyWhatsappMutation();
-    const [activateWhatsapp, { isLoading: activating }] = useActivateWhatsappMutation();
+    const dispatch = useAppDispatch();
+    const state = useAppSelector((appState) => appState.dashboard.whatsapp.data);
+    const loading = useAppSelector((appState) => appState.dashboard.whatsapp.loading);
+    const mutating = useAppSelector((appState) => appState.dashboard.whatsapp.mutation.loading);
+    const connecting = mutating;
+    const verifying = mutating;
+    const activating = mutating;
 
     const [phoneNumber, setPhoneNumber] = useState("");
     const [otp, setOtp] = useState("");
@@ -35,17 +47,22 @@ export default function WhatsAppIntegrationPage() {
     const [businessAccountId, setBusinessAccountId] = useState("");
 
     useEffect(() => {
-        setPhoneNumber(state.connectedNumber ?? "");
-        setPhoneNumberId(state.phoneNumberId ?? "");
-        setBusinessAccountId(state.businessAccountId ?? "");
-    }, [state.businessAccountId, state.connectedNumber, state.phoneNumberId]);
+        void dispatch(fetchWhatsappIntegration());
+    }, [dispatch]);
+
+    useEffect(() => {
+        const current = state ?? DEFAULT_STATE;
+        setPhoneNumber(current.connectedNumber ?? "");
+        setPhoneNumberId(current.phoneNumberId ?? "");
+        setBusinessAccountId(current.businessAccountId ?? "");
+    }, [state]);
 
     const connect = async () => {
         try {
-            const response = await connectWhatsapp(phoneNumber).unwrap();
+            const response = await dispatch(connectWhatsapp(phoneNumber)).unwrap();
             const otpHint = response.otpHint;
             toast.success(otpHint ? `OTP sent. Use ${otpHint} in this environment.` : "OTP sent");
-            await refetch();
+            await dispatch(fetchWhatsappIntegration()).unwrap();
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to initiate connection");
         }
@@ -53,9 +70,9 @@ export default function WhatsAppIntegrationPage() {
 
     const verify = async () => {
         try {
-            await verifyWhatsapp(otp).unwrap();
+            await dispatch(verifyWhatsapp(otp)).unwrap();
             toast.success("Number verified");
-            await refetch();
+            await dispatch(fetchWhatsappIntegration()).unwrap();
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to verify OTP");
         }
@@ -63,9 +80,9 @@ export default function WhatsAppIntegrationPage() {
 
     const activate = async () => {
         try {
-            await activateWhatsapp({ phoneNumberId, businessAccountId }).unwrap();
+            await dispatch(activateWhatsapp({ phoneNumberId, businessAccountId })).unwrap();
             toast.success("Institute WhatsApp number activated");
-            await refetch();
+            await dispatch(fetchWhatsappIntegration()).unwrap();
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to activate number");
         }
@@ -91,16 +108,16 @@ export default function WhatsAppIntegrationPage() {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Current Mode</span>
                         <span className="font-medium">
-                            {state.mode === "INSTITUTE_CUSTOM" ? "Institute WhatsApp Number" : "OnCampus System Number"}
+                            {(state ?? DEFAULT_STATE).mode === "INSTITUTE_CUSTOM" ? "Institute WhatsApp Number" : "OnCampus System Number"}
                         </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Connected Number</span>
-                        <span className="font-medium">{state.connectedNumber ?? "Not connected"}</span>
+                        <span className="font-medium">{(state ?? DEFAULT_STATE).connectedNumber ?? "Not connected"}</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Status</span>
-                        <Badge variant={state.status === "ACTIVE" ? "default" : "secondary"}>{state.status}</Badge>
+                        <Badge variant={(state ?? DEFAULT_STATE).status === "ACTIVE" ? "default" : "secondary"}>{(state ?? DEFAULT_STATE).status}</Badge>
                     </div>
                 </CardContent>
             </Card>

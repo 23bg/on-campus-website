@@ -5,7 +5,7 @@ const flowSteps = ["Enquiry", "Follow-up", "Admission", "Student"];
 
 export default function Hero() {
     return (
-        <section className="w-full border-b bg-linear-to-b from-stone-50 to-background py-14 md:py-20">
+        <section className="w-full border-b bg-linear-to-b from-secondary to-background py-14 md:py-20">
             <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 md:grid-cols-2 md:items-center md:px-6">
                 <div className="max-w-2xl space-y-6">
                     <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">

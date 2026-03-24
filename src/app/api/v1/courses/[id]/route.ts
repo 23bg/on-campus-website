@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { courseService } from "@/server/services/courses.service";
+import { courseService } from "@/server/coursesApi";
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -64,3 +64,4 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
         );
     }
 }
+

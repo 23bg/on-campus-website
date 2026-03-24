@@ -8,7 +8,7 @@
     ];
 
     return (
-        <section className="w-full border-b bg-stone-50/70 py-14 md:py-20">
+        <section className="w-full border-b bg-muted/50 py-14 md:py-20">
             <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
                 <div className="max-w-2xl space-y-2">
                     <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
@@ -22,7 +22,7 @@
                     {steps.map((step, index) => (
                         <div
                             key={step}
-                            className="rounded-xl border border-stone-200 bg-background p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                            className="rounded-xl border border-border bg-background p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                         >
                             <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-primary/40 bg-primary/10 text-sm font-semibold text-primary">
                                 {index + 1}

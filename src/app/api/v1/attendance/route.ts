@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { toAppError } from "@/lib/utils/error";
-import { attendanceService } from "@/features/attendance/services/attendance.service";
+import { attendanceService } from "@/features/attendance/attendanceApi";
 
 export async function GET(req: NextRequest) {
     try {
@@ -110,3 +110,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+

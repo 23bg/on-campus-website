@@ -7,11 +7,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useStudentPortalLoginMutation } from "@/services/appUi.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { studentPortalLogin } from "@/features/studentPortal/studentPortalSlice";
 
 export default function StudentLoginPage() {
     const router = useRouter();
-    const [studentPortalLogin, { isLoading: submitting }] = useStudentPortalLoginMutation();
+    const dispatch = useAppDispatch();
+    const submitting = useAppSelector((state) => state.studentPortal.authLoading);
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
 
@@ -22,7 +24,7 @@ export default function StudentLoginPage() {
         }
 
         try {
-            await studentPortalLogin({ identifier, password }).unwrap();
+            await dispatch(studentPortalLogin({ identifier, password })).unwrap();
             router.push("/student");
             router.refresh();
         } catch (error: any) {

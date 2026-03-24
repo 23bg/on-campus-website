@@ -14,7 +14,8 @@ import { Eye, Loader2, MoreHorizontal, Plus } from "lucide-react";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import ListWidget from "@/components/custom/ListWidget";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
-import { useDeleteCourseMutation, useGetCoursesQuery, useSaveCourseMutation } from "@/services/dashboardTables.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { deleteCourse as deleteCourseThunk, fetchCourses, saveCourse as saveCourseThunk } from "@/features/dashboard/dashboardSlice";
 
 type Course = {
     id: string;
@@ -31,10 +32,11 @@ const emptyForm: CourseForm = { name: "", banner: "", duration: "", defaultFees:
 const PAGE_SIZE = 10;
 
 export default function CoursesPage() {
+    const dispatch = useAppDispatch();
     const searchParams = useSearchParams();
-    const { data: courses = [], isLoading: loading, refetch } = useGetCoursesQuery(undefined, { refetchOnMountOrArgChange: true });
-    const [saveCourseMutation, { isLoading: saving }] = useSaveCourseMutation();
-    const [deleteCourseMutation] = useDeleteCourseMutation();
+    const courses = useAppSelector((state) => state.dashboard.courses.data);
+    const loading = useAppSelector((state) => state.dashboard.courses.loading);
+    const saving = useAppSelector((state) => state.dashboard.courses.mutation.loading);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [viewDialogOpen, setViewDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -42,6 +44,10 @@ export default function CoursesPage() {
     const [form, setForm] = useState<CourseForm>(emptyForm);
     const [searchQuery, setSearchQuery] = useState("");
     const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        void dispatch(fetchCourses());
+    }, [dispatch]);
 
     useEffect(() => {
         const query = searchParams.get("query") ?? "";
@@ -85,10 +91,10 @@ export default function CoursesPage() {
             if (form.defaultFees) body.defaultFees = parseFloat(form.defaultFees);
             if (form.description) body.description = form.description;
 
-            await saveCourseMutation({ editingId, body }).unwrap();
+            await dispatch(saveCourseThunk({ editingId, body })).unwrap();
             toast.success(editingId ? "Course updated" : "Course added");
             setDialogOpen(false);
-            await refetch();
+            await dispatch(fetchCourses()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -96,9 +102,9 @@ export default function CoursesPage() {
 
     const deleteCourse = async (id: string) => {
         try {
-            await deleteCourseMutation(id).unwrap();
+            await dispatch(deleteCourseThunk(id)).unwrap();
             toast.success("Course deleted");
-            await refetch();
+            await dispatch(fetchCourses()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }

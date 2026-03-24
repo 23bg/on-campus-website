@@ -17,14 +17,16 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import ListWidget from "@/components/custom/ListWidget";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
 import {
-    useConfirmLeadImportMutation,
-    useDownloadLeadImportTemplateMutation,
-    useGetLeadTimelineQuery,
-    useGetLeadsQuery,
-    usePreviewLeadImportMutation,
-    useUpdateLeadMutation,
-} from "@/services/dashboardTables.api";
+    confirmLeadImport,
+    downloadLeadImportTemplate,
+    fetchLeadTimeline,
+    fetchLeads,
+    previewLeadImport,
+    saveLeadDetails,
+    updateLeadStatus,
+} from "@/features/dashboard/dashboardSlice";
 
 type Lead = {
     id: string;
@@ -75,6 +77,7 @@ const STATUS_COLORS: Record<string, string> = {
 const PAGE_SIZE = 10;
 
 export default function LeadsPage() {
+    const dispatch = useAppDispatch();
     const searchParams = useSearchParams();
     const isMobile = useIsMobile();
     const [status, setStatus] = useState("all");
@@ -105,16 +108,23 @@ export default function LeadsPage() {
         return params.toString();
     }, [status, query, from, to]);
 
-    const { data: leads = [], isLoading: loading, refetch } = useGetLeadsQuery(queryString, { refetchOnMountOrArgChange: true });
-    const { data: timeline = [], isLoading: timelineLoading } = useGetLeadTimelineQuery(editingLead?.id ?? "", {
-        skip: !editingLead,
-        refetchOnMountOrArgChange: true,
-    });
-    const [updateLead, { isLoading: savingDetails }] = useUpdateLeadMutation();
-    const [downloadLeadImportTemplate] = useDownloadLeadImportTemplateMutation();
-    const [previewLeadImport, { isLoading: previewImporting }] = usePreviewLeadImportMutation();
-    const [confirmLeadImport, { isLoading: confirmImporting }] = useConfirmLeadImportMutation();
+    const leads = useAppSelector((state) => state.dashboard.leads.data);
+    const loading = useAppSelector((state) => state.dashboard.leads.loading);
+    const timeline = useAppSelector((state) => state.dashboard.leads.timeline.data);
+    const timelineLoading = useAppSelector((state) => state.dashboard.leads.timeline.loading);
+    const savingDetails = useAppSelector((state) => state.dashboard.leads.mutation.loading);
+    const previewImporting = useAppSelector((state) => state.dashboard.leads.import.loading);
+    const confirmImporting = useAppSelector((state) => state.dashboard.leads.import.loading);
     const importing = previewImporting || confirmImporting;
+
+    useEffect(() => {
+        void dispatch(fetchLeads(queryString));
+    }, [dispatch, queryString]);
+
+    useEffect(() => {
+        if (!editingLead?.id) return;
+        void dispatch(fetchLeadTimeline(editingLead.id));
+    }, [dispatch, editingLead?.id]);
 
     useEffect(() => {
         setPage(1);
@@ -124,9 +134,9 @@ export default function LeadsPage() {
 
     const updateStatus = async (leadId: string, nextStatus: string) => {
         try {
-            await updateLead({ id: leadId, body: { status: nextStatus } }).unwrap();
+            await dispatch(updateLeadStatus({ leadId, nextStatus })).unwrap();
             toast.success(`Lead marked as ${nextStatus}`);
-            await refetch();
+            await dispatch(fetchLeads(queryString)).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -142,10 +152,10 @@ export default function LeadsPage() {
         if (!editingLead) return;
 
         try {
-            await updateLead({ id: editingLead.id, body: { message: notes || null, followUpAt: followUpAt || null } }).unwrap();
+            await dispatch(saveLeadDetails({ leadId: editingLead.id, message: notes || null, followUpAt: followUpAt || null })).unwrap();
             toast.success("Lead details updated");
             setEditingLead(null);
-            await refetch();
+            await dispatch(fetchLeads(queryString)).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Network error");
         }
@@ -153,8 +163,8 @@ export default function LeadsPage() {
 
     const downloadSampleTemplate = async (format: "csv" | "xlsx" | "json") => {
         try {
-            const response = await downloadLeadImportTemplate(format).unwrap();
-            const blobUrl = window.URL.createObjectURL(new Blob([response]));
+            const response = await dispatch(downloadLeadImportTemplate(format)).unwrap();
+            const blobUrl = window.URL.createObjectURL(response.blob);
             const link = document.createElement("a");
             link.href = blobUrl;
             link.download = `lead-import-sample.${format}`;
@@ -172,7 +182,7 @@ export default function LeadsPage() {
         }
 
         try {
-            const summary = await previewLeadImport(selectedImportFile).unwrap();
+            const summary = await dispatch(previewLeadImport(selectedImportFile)).unwrap();
             setImportSummary(summary);
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Failed to preview import");
@@ -186,10 +196,10 @@ export default function LeadsPage() {
         }
 
         try {
-            const summary = await confirmLeadImport(selectedImportFile).unwrap();
+            const summary = await dispatch(confirmLeadImport(selectedImportFile)).unwrap();
             setImportSummary(summary);
             toast.success(`${summary.imported} leads imported successfully`);
-            await refetch();
+            await dispatch(fetchLeads(queryString)).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Import failed");
         }

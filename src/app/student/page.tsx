@@ -1,14 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useGetStudentPortalQuery } from "@/services/appUi.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchStudentPortal } from "@/features/studentPortal/studentPortalSlice";
 
 const asCurrency = (value: number | null | undefined) => `₹${(value ?? 0).toLocaleString("en-IN")}`;
 
 export default function StudentDashboardPage() {
-    const { data } = useGetStudentPortalQuery();
+    const dispatch = useAppDispatch();
+    const data = useAppSelector((state) => state.studentPortal.data);
+
+    useEffect(() => {
+        void dispatch(fetchStudentPortal());
+    }, [dispatch]);
 
     const scheduleTime = data?.student?.batch?.time || data?.student?.batch?.timing;
     const teacherName = data?.student?.batch?.teacherName;

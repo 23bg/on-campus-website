@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { useGetOnboardingInstituteQuery, useSubmitOnboardingMutation } from "@/services/appUi.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchOnboardingInstitute, submitOnboarding } from "@/features/appInstitute/appInstituteSlice";
 
 type OnboardingForm = {
     name: string;
@@ -34,8 +35,10 @@ type FieldError = Partial<Record<keyof OnboardingForm, string>>;
 
 export default function OnboardingIndexPage() {
     const router = useRouter();
-    const { data: onboardingData, isLoading: loading } = useGetOnboardingInstituteQuery();
-    const [submitOnboarding, { isLoading: saving }] = useSubmitOnboardingMutation();
+    const dispatch = useAppDispatch();
+    const onboardingData = useAppSelector((state) => state.appInstitute.onboarding.data);
+    const loading = useAppSelector((state) => state.appInstitute.onboarding.loading);
+    const saving = useAppSelector((state) => state.appInstitute.onboarding.loading);
     const [errors, setErrors] = useState<FieldError>({});
     const [form, setForm] = useState<OnboardingForm>({
         name: "",
@@ -56,6 +59,10 @@ export default function OnboardingIndexPage() {
         youtube: "",
         linkedin: "",
     });
+
+    useEffect(() => {
+        void dispatch(fetchOnboardingInstitute());
+    }, [dispatch]);
 
     useEffect(() => {
         const data = onboardingData as any;
@@ -108,7 +115,7 @@ export default function OnboardingIndexPage() {
     const submit = async () => {
         if (!validate()) return;
         try {
-            await submitOnboarding({
+            await dispatch(submitOnboarding({
                 ...form,
                 address: {
                     addressLine1: form.addressLine1,
@@ -120,7 +127,7 @@ export default function OnboardingIndexPage() {
                     country: form.country,
                     countryCode: form.countryCode,
                 },
-            }).unwrap();
+            })).unwrap();
 
             toast.success("Institute setup complete!");
             router.push("/overview");

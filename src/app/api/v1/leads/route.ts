@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
-import { leadService } from "@/server/services/leads.service";
+import { leadService } from "@/server/leadsApi";
 import { toAppError } from "@/lib/utils/error";
 import { createRouteLogger } from "@/lib/api/route-logger";
 
@@ -35,4 +35,5 @@ export async function GET(req: NextRequest) {
         );
     }
 }
+
 

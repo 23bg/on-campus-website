@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ReduxProvider } from "@/providers/ReduxProvider";
 
 export const metadata: Metadata = {
     robots: {
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
-    return children;
+    return <ReduxProvider>{children}</ReduxProvider>;
 }

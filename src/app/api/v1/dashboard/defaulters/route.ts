@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/auth";
-import { feeService } from "@/features/fee/services/fee.service";
+import { feeService } from "@/features/fee/feeApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET(req: NextRequest) {
@@ -31,3 +31,4 @@ export async function GET(req: NextRequest) {
         );
     }
 }
+

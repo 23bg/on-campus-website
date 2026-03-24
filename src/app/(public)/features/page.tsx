@@ -66,7 +66,7 @@ export default async function FeaturesPage() {
                 {architectureSections.map((section) => (
                     <section
                         key={section.title}
-                        className="rounded-xl border border-stone-200 bg-stone-50/70 p-6 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                        className="rounded-xl border border-border bg-muted/50 p-6 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
                     >
                         <h2 className="text-lg font-semibold">{section.title}</h2>
                         <ul className="mt-3 space-y-2 text-sm text-muted-foreground">

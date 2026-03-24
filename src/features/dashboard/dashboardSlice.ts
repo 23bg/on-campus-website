@@ -312,6 +312,14 @@ type BillingDashboardPayload = {
     invoices: InvoiceHistoryItem[];
 };
 
+type IntegrationItem = {
+    id: string;
+    provider: "WHATSAPP" | "EMAIL" | "RAZORPAY";
+    status: "CONNECTED" | "DISCONNECTED" | "DEGRADED";
+    config?: Record<string, unknown> | null;
+    updatedAt: string;
+};
+
 type DashboardState = {
     courses: RequestState<Course[]> & { mutation: MutationState };
     teachers: RequestState<Teacher[]> & { mutation: MutationState };
@@ -362,6 +370,7 @@ type DashboardState = {
         retry: MutationState & { invoiceId: string | null };
         confirm: MutationState;
     };
+    integrations: RequestState<IntegrationItem[]>;
 };
 
 const DEFAULT_PREFS: NotificationPreferences = {
@@ -432,6 +441,7 @@ const initialState: DashboardState = {
         retry: { loading: false, error: null, invoiceId: null },
         confirm: { loading: false, error: null },
     },
+    integrations: { data: [], loading: false, error: null },
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -859,6 +869,10 @@ export const retryBillingInvoice = createAsyncThunk("dashboard/retryBillingInvoi
     await api.post(API.INTERNAL.BILLING.ROOT, { action: "retry-invoice", invoiceId });
     return invoiceId;
 });
+
+export const fetchIntegrations = createAsyncThunk("dashboard/fetchIntegrations", async () =>
+    await apiGet<IntegrationItem[]>(API.INTERNAL.INTEGRATIONS.ROOT)
+);
 
 const dashboardSlice = createSlice({
     name: "dashboard",
@@ -1420,6 +1434,18 @@ const dashboardSlice = createSlice({
                 state.billing.retry.loading = false;
                 state.billing.retry.invoiceId = null;
                 state.billing.retry.error = getErrorMessage(action.error);
+            })
+            .addCase(fetchIntegrations.pending, (state) => {
+                state.integrations.loading = true;
+                state.integrations.error = null;
+            })
+            .addCase(fetchIntegrations.fulfilled, (state, action) => {
+                state.integrations.loading = false;
+                state.integrations.data = action.payload ?? [];
+            })
+            .addCase(fetchIntegrations.rejected, (state, action) => {
+                state.integrations.loading = false;
+                state.integrations.error = getErrorMessage(action.error);
             });
     },
 });

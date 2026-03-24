@@ -8,8 +8,8 @@ import {
 } from "@/lib/notifications/event-catalog";
 import { resolveNotificationContent } from "@/lib/notifications/notification-content";
 import { notificationStoreService } from "@/lib/notifications/notification-store.service";
-import { sendEventBasedWhatsAppAlert, type PlatformNotificationEvent } from "@/lib/services/whatsapp-alert-events";
-import { mailerService } from "@/lib/services/mailer.service";
+import { sendEventBasedWhatsAppAlert, type PlatformNotificationEvent } from "@/lib/whatsappAlertEventsApi";
+import { mailerService } from "@/lib/mailerApi";
 
 export type DispatchEventInput = {
     event: NotificationEvent;
@@ -177,3 +177,4 @@ export const eventDispatcherService = {
         }
     },
 };
+

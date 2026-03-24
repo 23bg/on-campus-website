@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendWhatsAppText } from "@/lib/services/whatsapp";
+import { sendWhatsAppText } from "@/lib/whatsappApi";
 import { normalizePhone } from "@/lib/utils/phone";
 
 const DEFAULT_MESSAGE = "Hello, this is a WhatsApp test message from OnCampus.";
@@ -42,3 +42,4 @@ export async function GET(req: Request) {
         );
     }
 }
+

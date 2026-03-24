@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
-import { integrationService } from "@/features/integration/services/integration.service";
+import { integrationService } from "@/features/integration/integrationApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET(_req: NextRequest) {
@@ -23,3 +23,4 @@ export async function GET(_req: NextRequest) {
         );
     }
 }
+

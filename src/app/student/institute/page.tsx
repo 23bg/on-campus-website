@@ -1,18 +1,55 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { useGetStudentPortalQuery } from "@/services/appUi.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchStudentPortal } from "@/features/studentPortal/studentPortalSlice";
+
+type Teacher = {
+    photo?: string | null;
+    name?: string | null;
+    subject?: string | null;
+    experience?: string | null;
+    bio?: string | null;
+};
+
+type PortalInstitute = {
+    name?: string | null;
+    logo?: string | null;
+    logoUrl?: string | null;
+    description?: string | null;
+    address?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    website?: string | null;
+    whatsapp?: string | null;
+    supportPhone?: string | null;
+    supportEmail?: string | null;
+    officeAddress?: string | null;
+    services?: string[] | null;
+    teachers?: Teacher[] | null;
+};
+
+type StudentInstitutePortalData = {
+    student?: {
+        institute?: PortalInstitute | null;
+    };
+    teachers?: Teacher[];
+};
 
 export default function StudentInstitutePage() {
-    const { data } = useGetStudentPortalQuery();
+    const dispatch = useAppDispatch();
+    const data = useAppSelector((state) => state.studentPortal.data) as StudentInstitutePortalData | null;
+
+    useEffect(() => {
+        void dispatch(fetchStudentPortal());
+    }, [dispatch]);
 
     const institute = data?.student?.institute;
     const teachers = useMemo(() => {
-        const rows = data?.teachers ?? institute?.teachers ?? [];
-        return rows;
+        return (data?.teachers ?? institute?.teachers ?? []) as Teacher[];
     }, [data?.teachers, institute?.teachers]);
 
     const services = institute?.services ?? [

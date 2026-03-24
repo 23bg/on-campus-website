@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { batchService } from "@/features/batch/services/batch.service";
+import { batchService } from "@/features/batch/batchDomainApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET(req: NextRequest) {
@@ -56,3 +56,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import TeamForm, { TeamFormValues as TeamFormState } from "@/modules/team/forms/TeamForm";
 import TeamTable, { TeamRow } from "@/modules/team/components/TeamTable";
 import ListWidget from "@/components/custom/ListWidget";
-import { useDeleteTeamMemberMutation, useGetTeamDataQuery, useSaveTeamMemberMutation } from "@/services/dashboardTables.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { deleteTeamMember, fetchTeamData, saveTeamMember } from "@/features/appTeam/appTeamSlice";
 
 const emptyForm: TeamFormState = {
     name: "",
@@ -22,14 +23,18 @@ const emptyForm: TeamFormState = {
 };
 
 export default function TeamPage() {
-    const { data, isLoading: loading, refetch } = useGetTeamDataQuery(undefined, { refetchOnMountOrArgChange: true });
-    const [saveTeamMember, { isLoading: saving }] = useSaveTeamMemberMutation();
-    const [deleteTeamMember] = useDeleteTeamMemberMutation();
-    const rows = data?.rows ?? [];
-    const sessionRole = data?.sessionRole ?? null;
+    const dispatch = useAppDispatch();
+    const rows = useAppSelector((state) => state.appTeam.data);
+    const sessionRole = useAppSelector((state) => state.appTeam.sessionRole);
+    const loading = useAppSelector((state) => state.appTeam.loading);
+    const saving = useAppSelector((state) => state.appTeam.mutationLoading);
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<TeamRow | null>(null);
     const [form, setForm] = useState<TeamFormState>(emptyForm);
+
+    useEffect(() => {
+        void dispatch(fetchTeamData());
+    }, [dispatch]);
 
     const canManage = useMemo(() => sessionRole === "OWNER", [sessionRole]);
 
@@ -56,10 +61,10 @@ export default function TeamPage() {
 
     const save = async (values: TeamFormState) => {
         try {
-            await saveTeamMember({ values, editing }).unwrap();
+            await dispatch(saveTeamMember({ values, editing })).unwrap();
             toast.success(editing ? "Team member updated" : "Team member created");
             setOpen(false);
-            await refetch();
+            await dispatch(fetchTeamData()).unwrap();
         } catch (error: any) {
             const apiErrorCode = error?.response?.data?.error?.code;
             if (apiErrorCode === "PLAN_USER_LIMIT_REACHED") {
@@ -79,9 +84,9 @@ export default function TeamPage() {
 
     const remove = async (member: TeamRow) => {
         try {
-            await deleteTeamMember(member).unwrap();
+            await dispatch(deleteTeamMember(member)).unwrap();
             toast.success("Team member removed");
-            await refetch();
+            await dispatch(fetchTeamData()).unwrap();
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message ?? "Failed to remove member");
         }

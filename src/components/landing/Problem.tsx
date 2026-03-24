@@ -12,8 +12,8 @@
                 </div>
 
                 <div className="mt-8 grid gap-4 md:grid-cols-2">
-                    <article className="rounded-xl border border-stone-200 bg-stone-100/60 p-6 opacity-75">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-stone-600">Before</p>
+                    <article className="rounded-xl border border-border bg-muted p-6 opacity-75">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Before</p>
                         <h3 className="mt-2 text-lg font-semibold">WhatsApp + Excel</h3>
                         <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                             <li>• Follow-ups scattered across personal chats</li>

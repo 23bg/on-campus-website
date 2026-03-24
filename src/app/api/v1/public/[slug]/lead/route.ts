@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { leadService } from "@/server/services/leads.service";
+import { leadService } from "@/server/leadsApi";
 import { enforceRateLimit } from "@/lib/utils/rateLimit";
 import { env } from "@/lib/config/env";
 import { toAppError } from "@/lib/utils/error";
@@ -84,3 +84,4 @@ export async function POST(req: NextRequest, context: RouteContext) {
         );
     }
 }
+

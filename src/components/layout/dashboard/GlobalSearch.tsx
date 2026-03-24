@@ -14,7 +14,8 @@ import {
     CommandSeparator,
 } from "@/components/ui/command";
 import ROUTES from "@/constants/routes";
-import { SearchResults, useLazyGetGlobalSearchQuery } from "@/services/appUi.api";
+import { searchGlobal } from "@/app/actions/globalSearchAction";
+import type { SearchResults } from "@/features/globalSearch/globalSearchApi";
 
 const EMPTY_RESULTS: SearchResults = {
     leads: [],
@@ -27,7 +28,8 @@ export default function GlobalSearch() {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
-    const [triggerSearch, { data: results = EMPTY_RESULTS, isFetching: loading }] = useLazyGetGlobalSearchQuery();
+    const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS);
+    const [loading, setLoading] = useState(false);
 
     const hasAnyResult = useMemo(
         () => results.leads.length > 0 || results.students.length > 0 || results.courses.length > 0,
@@ -53,12 +55,18 @@ export default function GlobalSearch() {
             return;
         }
 
-        const timer = setTimeout(() => {
-            triggerSearch(query);
+        const timer = setTimeout(async () => {
+            try {
+                setLoading(true);
+                const res = await searchGlobal(query);
+                setResults(res ?? EMPTY_RESULTS);
+            } finally {
+                setLoading(false);
+            }
         }, 250);
 
         return () => clearTimeout(timer);
-    }, [open, query, triggerSearch]);
+    }, [open, query]);
 
     const visibleResults = query.trim().length >= 2 ? results : EMPTY_RESULTS;
 

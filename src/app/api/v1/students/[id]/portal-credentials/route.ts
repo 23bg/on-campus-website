@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { studentService } from "@/server/services/students.service";
+import { studentService } from "@/server/studentsApi";
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = {
@@ -42,3 +42,4 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         );
     }
 }
+

@@ -5,14 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useGetStudentPortalQuery } from "@/services/appUi.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchStudentPortal } from "@/features/studentPortal/studentPortalSlice";
 
 export default function StudentProfilePage() {
-    const { data } = useGetStudentPortalQuery();
+    const dispatch = useAppDispatch();
+    const data = useAppSelector((state) => state.studentPortal.data);
     const [isEditing, setIsEditing] = useState(false);
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
     const [savedHint, setSavedHint] = useState("");
+
+    useEffect(() => {
+        void dispatch(fetchStudentPortal());
+    }, [dispatch]);
 
     useEffect(() => {
         setPhone(data?.student?.phone ?? "");

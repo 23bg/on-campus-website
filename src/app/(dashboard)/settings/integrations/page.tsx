@@ -4,7 +4,17 @@ import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IntegrationItem, useGetIntegrationsQuery } from "@/services/adminDashboard.api";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchIntegrations } from "@/features/dashboard/dashboardSlice";
+
+type IntegrationItem = {
+    id: string;
+    provider: "WHATSAPP" | "EMAIL" | "RAZORPAY";
+    status: "CONNECTED" | "DISCONNECTED" | "DEGRADED";
+    config?: Record<string, unknown> | null;
+    updatedAt: string;
+};
 
 type IntegrationStatus = IntegrationItem["status"];
 
@@ -15,11 +25,17 @@ const statusVariant = (status: IntegrationStatus) => {
 };
 
 export default function IntegrationsSettingsPage() {
-    const { data: items = [], isLoading: loading, refetch } = useGetIntegrationsQuery();
+    const dispatch = useAppDispatch();
+    const items = useAppSelector((state) => state.dashboard.integrations.data);
+    const loading = useAppSelector((state) => state.dashboard.integrations.loading);
+
+    useEffect(() => {
+        void dispatch(fetchIntegrations());
+    }, [dispatch]);
 
     const refresh = async () => {
         try {
-            await refetch();
+            await dispatch(fetchIntegrations()).unwrap();
         } catch {
             toast.error("Failed to load integrations");
         }

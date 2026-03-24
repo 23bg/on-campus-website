@@ -1,10 +1,10 @@
-﻿import DashboardLayout from "@/components/layout/dashboard/DashboardLayout";
 import React from "react";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readSessionFromCookie } from "@/lib/auth/auth";
-import { instituteService } from "@/features/institute/services/institute.service";
-import { userRepository } from "@/features/auth/repositories/user.repo";
+import { instituteService } from "@/features/institute/instituteApi";
+import { userRepository } from "@/features/auth/userDataApi";
+import { DashboardLayoutWithProviders } from "@/providers/DashboardLayoutWithProviders";
 
 export const metadata: Metadata = {
     title: "Dashboard",
@@ -33,6 +33,11 @@ export default async function AppLayout({
 
     const user = await userRepository.findById(session.userId);
 
-    return <DashboardLayout showFirstLoginShowcase={Boolean(user?.firstLogin)}>{children}</DashboardLayout>;
+    return (
+        <DashboardLayoutWithProviders showFirstLoginShowcase={Boolean(user?.firstLogin)}>
+            {children}
+        </DashboardLayoutWithProviders>
+    );
 }
+
 

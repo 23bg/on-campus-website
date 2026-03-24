@@ -11,10 +11,42 @@ import { Loader2, IndianRupee, AlertTriangle, GraduationCap, UserPlus, Users } f
 import { TablePaginationControls } from "@/components/ui/table-pagination-controls";
 import MetricCard from "@/components/layout/dashboard/MetricCard";
 import TableWidget, { Column } from "@/components/custom/TableWidget";
-import { DashboardOverviewResponse, useGetOverviewQuery, usePostAnnouncementMutation } from "@/services/adminDashboard.api";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { fetchOverview, postAnnouncement } from "@/features/dashboard/dashboardSlice";
 
-type Metrics = NonNullable<DashboardOverviewResponse>["metrics"];
-type Defaulter = NonNullable<DashboardOverviewResponse>["defaulters"][number];
+type Metrics = {
+    leadsThisMonth: number;
+    admissionsThisMonth: number;
+    totalStudents: number;
+    conversionPercentage: number;
+    totalFeesCollectedThisMonth: number;
+    totalOutstandingFees: number;
+    todayOverview?: {
+        newLeads: number;
+        feesCollected: number;
+        feesDueToday: number;
+        newStudents: number;
+    };
+    recentLeads?: Array<{ id: string; name: string; phone: string; status: string; createdAt: string }>;
+    recentPayments?: Array<{ id: string; amount: number; method?: string | null; paidOn: string; student: { name: string; phone: string } }>;
+    followUpOverview?: {
+        todayCount: number;
+        overdueCount: number;
+        todaysFollowUps: Array<{ id: string; name: string; phone: string; followUpAt?: string | null; status: string }>;
+        overdueFollowUps: Array<{ id: string; name: string; phone: string; followUpAt?: string | null; status: string }>;
+    };
+};
+
+type Defaulter = {
+    studentId: string;
+    studentName: string;
+    phone: string;
+    courseName: string;
+    totalFees: number;
+    totalPaid: number;
+    pending: number;
+    dueDate?: string | null;
+};
 
 const PAGE_SIZE = 5;
 
@@ -23,8 +55,10 @@ type RecentLead = NonNullable<Metrics["recentLeads"]>[number];
 type RecentPayment = NonNullable<Metrics["recentPayments"]>[number];
 
 export default function DashboardPage() {
-    const { data: overview, isLoading: loading } = useGetOverviewQuery();
-    const [postAnnouncement, { isLoading: postingAnnouncement }] = usePostAnnouncementMutation();
+    const dispatch = useAppDispatch();
+    const overview = useAppSelector((state) => state.dashboard.overview.data);
+    const loading = useAppSelector((state) => state.dashboard.overview.loading);
+    const postingAnnouncement = useAppSelector((state) => state.dashboard.overview.announcement.loading);
     const metrics = overview?.metrics ?? null;
     const defaulters = overview?.defaulters ?? [];
     const [announcementTitle, setAnnouncementTitle] = useState("");
@@ -34,6 +68,10 @@ export default function DashboardPage() {
     const [recentLeadsPage, setRecentLeadsPage] = useState(1);
     const [recentPaymentsPage, setRecentPaymentsPage] = useState(1);
     const [defaultersPage, setDefaultersPage] = useState(1);
+
+    useEffect(() => {
+        void dispatch(fetchOverview());
+    }, [dispatch]);
 
     const formatCurrency = (v: number) => `₹${v.toLocaleString("en-IN")}`;
 
@@ -93,7 +131,7 @@ export default function DashboardPage() {
         }
 
         try {
-            await postAnnouncement({ title: announcementTitle, body: announcementBody }).unwrap();
+            await dispatch(postAnnouncement({ title: announcementTitle, body: announcementBody })).unwrap();
             setAnnouncementTitle("");
             setAnnouncementBody("");
             toast.success("Announcement posted");

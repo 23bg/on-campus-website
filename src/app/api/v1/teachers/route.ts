@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { teacherService } from "@/features/teacher/services/teacher.service";
+import { teacherService } from "@/features/teacher/teacherApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET() {
@@ -53,3 +53,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
