@@ -1,6 +1,11 @@
 import api from "@/lib/axios";
 import { API } from "@/constants/api";
-import type { SearchResults } from "@/features/globalSearch/types";
+
+export type SearchResults = {
+    leads: Array<{ id: string; name: string; phone: string; course?: string | null; status: string }>;
+    students: Array<{ id: string; name: string; phone: string; email?: string | null }>;
+    courses: Array<{ id: string; name: string; duration?: string | null }>;
+};
 
 export const getGlobalSearchResults = async (query: string) => {
     const response = await api.get(`${API.INTERNAL.SEARCH}?q=${encodeURIComponent(query.trim())}`);

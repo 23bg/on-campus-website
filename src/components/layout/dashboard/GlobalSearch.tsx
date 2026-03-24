@@ -14,14 +14,8 @@ import {
     CommandSeparator,
 } from "@/components/ui/command";
 import ROUTES from "@/constants/routes";
-import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
-import { fetchGlobalSearch } from "@/features/globalSearch/globalSearchSlice";
-
-type SearchResults = {
-    leads: Array<{ id: string; name: string; phone: string; course?: string | null; status: string }>;
-    students: Array<{ id: string; name: string; phone: string; email?: string | null }>;
-    courses: Array<{ id: string; name: string; duration?: string | null }>;
-};
+import { searchGlobal } from "@/app/actions/globalSearchAction";
+import type { SearchResults } from "@/features/globalSearch/globalSearchApi";
 
 const EMPTY_RESULTS: SearchResults = {
     leads: [],
@@ -31,12 +25,11 @@ const EMPTY_RESULTS: SearchResults = {
 
 export default function GlobalSearch() {
     const router = useRouter();
-    const dispatch = useAppDispatch();
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
-    const results = useAppSelector((state) => state.globalSearch.data) as SearchResults;
-    const loading = useAppSelector((state) => state.globalSearch.loading);
+    const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS);
+    const [loading, setLoading] = useState(false);
 
     const hasAnyResult = useMemo(
         () => results.leads.length > 0 || results.students.length > 0 || results.courses.length > 0,
@@ -62,12 +55,18 @@ export default function GlobalSearch() {
             return;
         }
 
-        const timer = setTimeout(() => {
-            void dispatch(fetchGlobalSearch(query));
+        const timer = setTimeout(async () => {
+            try {
+                setLoading(true);
+                const res = await searchGlobal(query);
+                setResults(res ?? EMPTY_RESULTS);
+            } finally {
+                setLoading(false);
+            }
         }, 250);
 
         return () => clearTimeout(timer);
-    }, [dispatch, open, query]);
+    }, [open, query]);
 
     const visibleResults = query.trim().length >= 2 ? results : EMPTY_RESULTS;
 

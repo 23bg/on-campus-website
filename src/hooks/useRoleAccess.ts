@@ -2,7 +2,8 @@
 
 interface UserRole {
     businessId: string;
-    role: "OWNER" | "MANAGER" | "VIEWER";
+    role: "OWNER" | "MANAGER" | "VIEWER" | "EDITOR";
+
     outletId?: string;
 }
 

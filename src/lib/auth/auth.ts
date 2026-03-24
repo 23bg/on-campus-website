@@ -1,7 +1,7 @@
-﻿import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
-import { env, requireEnv } from "@/lib/config/env";
+﻿import { cookies } from "next/headers";
 import { readAccessTokenFromCookie, AccessTokenPayload } from "./tokens";
+import { jwtAuthService } from "@/modules/auth/infrastructure/jwtAuthService";
+import { issueSessionUseCase } from "@/modules/auth/application/issueSession.useCase";
 
 const SESSION_COOKIE = "session_token";
 
@@ -17,36 +17,21 @@ export type SessionPayload = {
     subscriptionStatus: SubscriptionStatus;
 };
 
-const getJwtSecret = (): string => requireEnv("JWT_SECRET");
-
-const stripJwtMetaClaims = <T extends Record<string, unknown>>(payload: T): T => {
-    const { exp: _exp, iat: _iat, nbf: _nbf, jti: _jti, ...rest } = payload as T & {
-        exp?: number;
-        iat?: number;
-        nbf?: number;
-        jti?: string;
-    };
-    return rest as T;
-};
-
 export const createSessionToken = (payload: SessionPayload): string =>
-    jwt.sign(stripJwtMetaClaims(payload), getJwtSecret(), { expiresIn: "7d" });
+    jwtAuthService.signAccessToken(payload as AccessTokenPayload);
 
 export const verifySessionToken = (token: string): SessionPayload | null => {
-    try {
-        return jwt.verify(token, getJwtSecret()) as SessionPayload;
-    } catch {
-        return null;
-    }
+    return jwtAuthService.verifyAccessToken(token) as SessionPayload | null;
 };
 
 export const setSessionCookie = async (token: string): Promise<void> => {
+    await jwtAuthService.setAccessCookie(token);
+
     const cookieStore = await cookies();
     cookieStore.set(SESSION_COOKIE, token, {
         httpOnly: true,
         sameSite: "lax",
-        secure: env.NODE_ENV === "production",
-        domain: env.SESSION_COOKIE_DOMAIN,
+        secure: process.env.NODE_ENV === "production",
         path: "/",
         maxAge: 7 * 24 * 60 * 60,
     });
@@ -54,14 +39,8 @@ export const setSessionCookie = async (token: string): Promise<void> => {
 
 export const clearSessionCookie = async (): Promise<void> => {
     const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE, "", {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: env.NODE_ENV === "production",
-        domain: env.SESSION_COOKIE_DOMAIN,
-        path: "/",
-        expires: new Date(0),
-    });
+    await jwtAuthService.clearAuthCookies();
+    cookieStore.delete(SESSION_COOKIE);
 };
 
 /**
@@ -86,6 +65,37 @@ export const readSessionFromCookie = async (): Promise<SessionPayload | null> =>
 export const readSessionUserId = async (): Promise<string | null> => {
     const session = await readSessionFromCookie();
     return session?.userId ?? null;
+};
+
+export const issueSessionForUser = async (userId: string): Promise<void> => {
+    const issued = await issueSessionUseCase({ userId });
+    if (!issued) {
+        return;
+    }
+
+    const legacyPayload: SessionPayload = {
+        userId: issued.access.userId,
+        email: issued.access.email,
+        role: issued.access.role,
+        instituteId: issued.access.instituteId,
+        isOnboarded: issued.access.isOnboarded,
+        subscriptionStatus: issued.access.subscriptionStatus,
+    };
+
+    const legacyToken = createSessionToken(legacyPayload);
+    const cookieStore = await cookies();
+    cookieStore.set(SESSION_COOKIE, legacyToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+    });
+};
+
+export const revokeAllSessionsForUser = async (userId: string): Promise<void> => {
+    const { authUserRepository } = await import("@/modules/auth/infrastructure/authUserRepository");
+    await authUserRepository.incrementTokenVersion(userId);
 };
 
 export const SESSION_COOKIE_NAME = SESSION_COOKIE;

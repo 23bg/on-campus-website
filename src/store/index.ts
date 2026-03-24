@@ -7,7 +7,6 @@ import courseReducer from "@/features/course/courseSlice";
 import appTeamReducer from "@/features/appTeam/appTeamSlice";
 import appInstituteReducer from "@/features/appInstitute/appInstituteSlice";
 import studentPortalReducer from "@/features/studentPortal/studentPortalSlice";
-import globalSearchReducer from "@/features/globalSearch/globalSearchSlice";
 import dashboardReducer from "@/features/dashboard/dashboardSlice";
 
 export const store = configureStore({
@@ -20,7 +19,6 @@ export const store = configureStore({
         appTeam: appTeamReducer,
         appInstitute: appInstituteReducer,
         studentPortal: studentPortalReducer,
-        globalSearch: globalSearchReducer,
         dashboard: dashboardReducer,
     },
 });

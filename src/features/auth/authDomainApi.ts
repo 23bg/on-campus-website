@@ -1,4 +1,4 @@
-import { createSessionToken, setSessionCookie, SubscriptionStatus } from "@/lib/auth/auth";
+import { SubscriptionStatus } from "@/lib/auth/auth";
 import { env } from "@/lib/config/env";
 import { AppError } from "@/lib/utils/error";
 import { logger } from "@/lib/utils/logger";
@@ -22,8 +22,10 @@ export type VerifyOtpInput = {
 
 export type AuthResult = {
     userId: string;
+    email: string;
     instituteId: string;
     role: "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+    isOnboarded: boolean;
     subscriptionStatus: SubscriptionStatus;
     redirectTo: "/overview" | "/pricing" | "/onboarding";
 };
@@ -122,21 +124,12 @@ export const authService = {
         const role = user.role;
         const subscriptionStatus = subscription.status as SubscriptionStatus;
 
-        const token = createSessionToken({
-            userId: user.id,
-            email,
-            role,
-            instituteId: user.instituteId,
-            isOnboarded,
-            subscriptionStatus,
-        });
-
-        await setSessionCookie(token);
-
         return {
             userId: user.id,
+            email,
             instituteId: user.instituteId,
             role,
+            isOnboarded,
             subscriptionStatus,
             redirectTo: !isOnboarded
                 ? "/onboarding"

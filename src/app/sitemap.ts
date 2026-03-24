@@ -4,14 +4,14 @@ import { INDIAN_CITIES } from "@/data/indianCities";
 import { SEO_KEYWORDS } from "@/data/seoKeywords";
 import {
     FEATURE_DEEP_DIVE_SLUGS,
-    INDUSTRY_PAGE_SLUGS,
-    PROBLEM_PAGE_SLUGS,
+    // INDUSTRY_PAGE_SLUGS,
+    // PROBLEM_PAGE_SLUGS,
 } from "@/lib/seo/programmatic";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://oncampus.in";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const now = new Date();
+    const now = new Date("2026-01-01")
 
     const corePages: MetadataRoute.Sitemap = [
         {
@@ -56,36 +56,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: "daily",
             priority: 0.8,
         },
-        {
-            url: `${BASE_URL}/admission-crm`,
-            lastModified: now,
-            changeFrequency: "monthly",
-            priority: 0.8,
-        },
-        {
-            url: `${BASE_URL}/student-management-software`,
-            lastModified: now,
-            changeFrequency: "monthly",
-            priority: 0.8,
-        },
-        {
-            url: `${BASE_URL}/coaching-institute-crm`,
-            lastModified: now,
-            changeFrequency: "monthly",
-            priority: 0.8,
-        },
-        {
-            url: `${BASE_URL}/admission-management-software`,
-            lastModified: now,
-            changeFrequency: "monthly",
-            priority: 0.8,
-        },
-        {
-            url: `${BASE_URL}/student-admission-system`,
-            lastModified: now,
-            changeFrequency: "monthly",
-            priority: 0.8,
-        },
+
+
     ];
 
     const featureSlugs = [...new Set([...FEATURE_DEEP_DIVE_SLUGS, "public-institute-page", "subscription-billing"])];
@@ -106,7 +78,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${BASE_URL}${path}`,
         lastModified: now,
         changeFrequency: "monthly",
-        priority: 0.7,
+        priority: 0.8,
     }));
 
     const toolPages: MetadataRoute.Sitemap = [
@@ -119,31 +91,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${BASE_URL}${path}`,
         lastModified: now,
         changeFrequency: "weekly",
-        priority: 0.7,
+        priority: 0.9,
     }));
 
+    const programmaticKeywordPages: MetadataRoute.Sitemap = SEO_KEYWORDS.map((keyword) => (
+        {
+
+            url: `${BASE_URL}/${keyword}`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.8,
+
+        }
+    ));
     const programmaticPages: MetadataRoute.Sitemap = SEO_KEYWORDS.flatMap((keyword) =>
         INDIAN_CITIES.map((city) => ({
-            url: `${BASE_URL}/solutions/${keyword}/${city}`,
+            url: `${BASE_URL}/${keyword}/${city}`,
             lastModified: now,
             changeFrequency: "monthly" as const,
             priority: 0.7,
         })),
     );
 
-    const industryPages: MetadataRoute.Sitemap = INDUSTRY_PAGE_SLUGS.map((slug) => ({
-        url: `${BASE_URL}/${slug}`,
-        lastModified: now,
-        changeFrequency: "monthly",
-        priority: 0.7,
-    }));
 
-    const problemPages: MetadataRoute.Sitemap = PROBLEM_PAGE_SLUGS.map((slug) => ({
-        url: `${BASE_URL}/${slug}`,
-        lastModified: now,
-        changeFrequency: "monthly",
-        priority: 0.68,
-    }));
 
     // Dynamic institute pages
     let institutePages: MetadataRoute.Sitemap = [];
@@ -183,19 +153,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 {
                     url: `${BASE_URL}/i/${institute.slug}`,
                     lastModified: institute.updatedAt,
-                    changeFrequency: "weekly" as const,
+                    changeFrequency: "daily" as const,
                     priority: 0.6,
                 },
                 {
                     url: `${BASE_URL}/i/${institute.slug}/courses`,
                     lastModified: institute.updatedAt,
-                    changeFrequency: "weekly" as const,
+                    changeFrequency: "daily" as const,
                     priority: 0.55,
                 },
                 {
                     url: `${BASE_URL}/i/${institute.slug}/faculty`,
                     lastModified: institute.updatedAt,
-                    changeFrequency: "weekly" as const,
+                    changeFrequency: "daily" as const,
                     priority: 0.52,
                 },
                 {
@@ -207,13 +177,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 {
                     url: `${BASE_URL}/i/${institute.slug}/contact`,
                     lastModified: institute.updatedAt,
-                    changeFrequency: "weekly" as const,
+                    changeFrequency: "daily" as const,
                     priority: 0.5,
                 },
                 {
                     url: `${BASE_URL}/i/${institute.slug}/student`,
                     lastModified: institute.updatedAt,
-                    changeFrequency: "weekly" as const,
+                    changeFrequency: "daily" as const,
                     priority: 0.45,
                 },
             ]);
@@ -225,8 +195,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             return [{
                 url: `${BASE_URL}/i/${institute.slug}/courses/${routeSlug}`,
                 lastModified: course.updatedAt,
-                changeFrequency: "weekly" as const,
-                priority: 0.52,
+                changeFrequency: "daily" as const,
+                priority: 0.6,
             }];
         });
 
@@ -240,9 +210,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...featurePages,
         ...useCasePages,
         ...toolPages,
+        ...programmaticKeywordPages,
         ...programmaticPages,
-        ...industryPages,
-        ...problemPages,
         ...institutePages,
     ];
 

@@ -1,6 +1,5 @@
 ﻿import type { Metadata } from "next";
 import "@/styles/globals.css";
-import { QueryProvider } from "@/providers/QueryProvider";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -83,35 +82,33 @@ export default async function RootLayout({
       <body>
         <ThemeProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <QueryProvider>
-              <NextTopLoader
-                showSpinner={false}
-                color="#00BF63"
-                shadow={false}
-              />
-              {children}
-              <Toaster
-                duration={3000}
-                position={"bottom-right"}
-                richColors
-                expand={true}
+            <NextTopLoader
+              showSpinner={false}
+              color="#00BF63"
+              shadow={false}
+            />
+            {children}
+            <Toaster
+              duration={3000}
+              position={"bottom-right"}
+              richColors
+              expand={true}
 
 
-                offset={{ bottom: '30px' }}
-                // closeButton
+              offset={{ bottom: '30px' }}
+              // closeButton
 
-                style={
-                  {
-                    background: "var(--background)",
-                    color: "var(--foreground)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "8px",
-                  }
-
+              style={
+                {
+                  background: "var(--background)",
+                  color: "var(--foreground)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
                 }
 
-              />
-            </QueryProvider>
+              }
+
+            />
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>
