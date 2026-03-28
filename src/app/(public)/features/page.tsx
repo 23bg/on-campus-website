@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import ROUTES from "@/constants/routes";
 
 export async function generateMetadata(): Promise<Metadata> {
-    const title = "Features | OnCampus";
+    const title = "Features | Classes360";
     const description = "System architecture for coaching institute admission operations.";
 
     return {
@@ -57,7 +57,7 @@ export default async function FeaturesPage() {
                 <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">System Architecture</p>
                 <h1 className="text-4xl font-bold tracking-tight">One architecture for admission operations</h1>
                 <p className="text-sm text-muted-foreground md:text-base">
-                    OnCampus connects admissions, students, teams, communication, and integrations into one structured
+                    Classes360 connects admissions, students, teams, communication, and integrations into one structured
                     workflow.
                 </p>
             </div>

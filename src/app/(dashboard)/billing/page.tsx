@@ -118,7 +118,7 @@ export default function BillingPage() {
             const rzp = new RazorpayCtor({
                 key: payload.key,
                 subscription_id: payload.subscriptionId,
-                name: "OnCampus",
+                name: "Classes360",
                 description: "Admission and Student Management Platform Subscription",
                 handler: async (checkoutResponse) => {
                     await dispatch(confirmBillingSubscription(checkoutResponse as unknown as Record<string, unknown>)).unwrap();
@@ -346,7 +346,7 @@ export default function BillingPage() {
                         <span className="font-medium">
                             {sender?.mode === "INSTITUTE_CUSTOM"
                                 ? `Institute WhatsApp Number${sender?.connectedNumber ? ` (${sender.connectedNumber})` : ""}`
-                                : "OnCampus Shared Number"}
+                                : "Classes360 Shared Number"}
                         </span>
                     </div>
                     <div className="flex justify-between">
@@ -355,7 +355,7 @@ export default function BillingPage() {
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">In plan</span>
-                        <span className="font-medium">OnCampus system alerts for institute staff</span>
+                        <span className="font-medium">Classes360 system alerts for institute staff</span>
                     </div>
                 </CardContent>
             </Card>

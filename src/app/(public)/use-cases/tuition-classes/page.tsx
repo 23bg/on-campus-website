@@ -3,8 +3,8 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Tuition Class Admission and Student Management Platform - OnCampus",
-    description: "Use OnCampus to simplify enquiry handling, admissions, student records, and fee tracking for tuition classes.",
+    title: "Tuition Class Admission and Student Management Platform - Classes360",
+    description: "Use Classes360 to simplify enquiry handling, admissions, student records, and fee tracking for tuition classes.",
 };
 
 export default function TuitionUseCasePage() {

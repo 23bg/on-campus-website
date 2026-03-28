@@ -3,18 +3,18 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Lead Management for Coaching Institutes | OnCampus",
+    title: "Lead Management for Coaching Institutes | Classes360",
     description: "Track every admission enquiry from first touchpoint to final enrollment with a coaching-focused workflow.",
     alternates: { canonical: "/features/lead-management" },
     openGraph: {
-        title: "Lead Management for Coaching Institutes | OnCampus",
+        title: "Lead Management for Coaching Institutes | Classes360",
         description: "Track every admission enquiry from first touchpoint to final enrollment with a coaching-focused workflow.",
         url: "/features/lead-management",
         type: "website",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Lead Management for Coaching Institutes | OnCampus",
+        title: "Lead Management for Coaching Institutes | Classes360",
         description: "Track every admission enquiry from first touchpoint to final enrollment with a coaching-focused workflow.",
     },
 };

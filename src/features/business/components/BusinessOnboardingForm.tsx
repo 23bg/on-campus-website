@@ -100,7 +100,7 @@ export function BusinessOnboardingForm({ onSuccess }: BusinessOnboardingFormProp
             <CardHeader>
                 <CardTitle>Setup Your Business</CardTitle>
                 <CardDescription>
-                    Tell us about your business to get started with OnCampus
+                    Tell us about your business to get started with Classes360
                 </CardDescription>
             </CardHeader>
             <CardContent>

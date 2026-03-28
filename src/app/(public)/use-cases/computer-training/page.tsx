@@ -3,7 +3,7 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Computer Training Admission and Student Management Platform - OnCampus",
+    title: "Computer Training Admission and Student Management Platform - Classes360",
     description: "Admission workflow for computer training centers with structured enquiry, student, and fee tracking.",
 };
 

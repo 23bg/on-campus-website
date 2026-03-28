@@ -10,7 +10,7 @@ describe("pricing copy for WhatsApp sender support", () => {
     });
 
     it("exposes custom sender capability in pricing copy", () => {
-        expect(messages.pricing.whatsAppSenderModesLine).toContain("OnCampus system number");
+        expect(messages.pricing.whatsAppSenderModesLine).toContain("Classes360 system number");
         expect(messages.pricing.whatsAppSenderModesLine).toContain("own WhatsApp Business number");
         expect(messages.pricing.tableCustomWhatsAppNumber).toBe("Custom WhatsApp Number");
     });

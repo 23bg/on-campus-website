@@ -16,7 +16,7 @@
         "supportHours": "Support Hours"
     },
     "navbar": {
-        "brand": "OnCampus",
+        "brand": "Classes360",
         "menu": "Menu",
         "openMenu": "Open menu",
         "features": "Features",
@@ -26,11 +26,11 @@
         "resources": "Resources"
     },
     "footer": {
-        "brand": "OnCampus",
+        "brand": "Classes360",
         "tagline": "A simple system to manage enquiries, admissions, and students.",
         "builtInIndia": "Built in India",
         "securePayments": "Secure payments via Razorpay",
-        "copyright": "© {year} OnCampus. All rights reserved.",
+        "copyright": "© {year} Classes360. All rights reserved.",
         "product": "Product",
         "company": "Company",
         "helpCenter": "Help Center",
@@ -60,14 +60,14 @@
         "terms": "Terms"
     },
     "hero": {
-        "label": "OnCampus",
+        "label": "Classes360",
         "title": "Never miss an admission enquiry again.",
         "subtitleLine1": "A simple system to manage admission enquiries.",
         "subtitleLine2": "Capture enquiries. Remember follow-ups.",
         "subtitleLine3": "Manage students, courses, and fees in one place.",
         "cta": "Start Free Trial",
         "secondaryCta": "See how it works",
-        "previewAlt": "OnCampus dashboard preview"
+        "previewAlt": "Classes360 dashboard preview"
     },
     "problem": {
         "title": "Managing enquiries on WhatsApp, Excel, or notebooks?",
@@ -114,7 +114,7 @@
     "trust": {
         "title": "Built for coaching institutes in India",
         "subtitle": "Simple, practical, and reliable.",
-        "item1": "Early institutes already using OnCampus in Pune",
+        "item1": "Early institutes already using Classes360 in Pune",
         "item2": "Secure payments through Razorpay",
         "item3": "Each institute has its own private workspace",
         "item4": "Your institute always owns its data"
@@ -130,7 +130,7 @@
         "title": "Institute Page Demo",
         "description": "Each institute gets a simple page where students can view courses and send enquiries.",
         "cta": "Watch Demo Video",
-        "previewAlt": "OnCampus demo video"
+        "previewAlt": "Classes360 demo video"
     },
     "pricing": {
         "title": "Simple pricing for coaching institutes.",
@@ -175,7 +175,7 @@
         "growthWhatsApp": "WhatsApp Alerts Included",
         "scaleWhatsApp": "WhatsApp Alerts Included",
         "whatsAppSystemAlertsTitle": "WhatsApp System Alerts",
-        "whatsAppAlertsTooltip": "OnCampus sends team alerts for enquiries and follow-ups, and you can optionally connect your own WhatsApp Business number for student messaging. Meta conversation charges are billed directly to the institute.",
+        "whatsAppAlertsTooltip": "Classes360 sends team alerts for enquiries and follow-ups, and you can optionally connect your own WhatsApp Business number for student messaging. Meta conversation charges are billed directly to the institute.",
         "whatsAppAutoLine1": "The system sends WhatsApp alerts automatically for operational workflows.",
         "whatsAppAutoLine2": "When you connect your own WhatsApp Business number, Meta conversation charges are billed directly to your institute.",
         "whatsAppAlertExample1": "New enquiry notifications",
@@ -198,7 +198,7 @@
         "startGrowthTrial": "Start Growth Trial",
         "startScaleCall": "Talk to Sales",
         "starterFeature1": "Public institute page with enquiry form",
-        "starterFeature2": "Free OnCampus page (yourinstitute.oncampus.in)",
+        "starterFeature2": "Free Classes360 page (yourinstitute.oncampus.in)",
         "starterFeature3": "Capture enquiries from website, QR, and shared links",
         "starterFeature4": "Enquiry tracking and follow-up management",
         "starterFeature5": "Student and course management",
@@ -227,7 +227,7 @@
         "scaleFeature1": "Everything in Growth",
         "scaleFeature2": "Unlimited user accounts",
         "scaleFeature3": "White-label admission system",
-        "scaleFeature4": "Remove OnCampus branding",
+        "scaleFeature4": "Remove Classes360 branding",
         "scaleFeature5": "Large team collaboration",
         "scaleFeature6": "High-volume enquiry handling",
         "scaleFeature7": "Expanded WhatsApp alert handling",
@@ -252,9 +252,9 @@
         "tableWhatsAppAlerts": "WhatsApp Alerts",
         "tableWhatsAppOptional": "Included",
         "tableCustomWhatsAppNumber": "Institute WhatsApp Business Number",
-        "tableSubdomainSupport": "Free OnCampus Page",
+        "tableSubdomainSupport": "Free Classes360 Page",
         "tableCustomDomainSupport": "Custom Domain Support",
-        "tableFullWhiteLabel": "Remove OnCampus branding",
+        "tableFullWhiteLabel": "Remove Classes360 branding",
         "tableUnlimitedStudents": "Unlimited Students",
         "tableUnlimitedCourses": "Unlimited Courses",
         "tableUnlimitedEnquiries": "Unlimited Enquiries",
@@ -271,7 +271,7 @@
         "sectionAnnual": "Annual Billing",
         "annualLine1": "Switch to Yearly and pay only 10 months for full-year access.",
         "annualLine2": "Pay yearly to save two months.",
-        "sectionTrust": "Why institutes trust OnCampus",
+        "sectionTrust": "Why institutes trust Classes360",
         "trust1": "No long-term contract",
         "trust2": "Cancel anytime",
         "trust3": "No commission on admissions",
@@ -292,7 +292,7 @@
         "faq3Question": "Is there a free trial?",
         "faq3Answer": "Yes. Every account includes a 14-day free trial. No credit card is required to start.",
         "faq4Question": "How does WhatsApp work?",
-        "faq4Answer": "OnCampus can send alerts to your team when enquiries or follow-ups occur. You can also connect your own WhatsApp Business number to automate messages to students. WhatsApp conversation charges are billed directly by Meta.",
+        "faq4Answer": "Classes360 can send alerts to your team when enquiries or follow-ups occur. You can also connect your own WhatsApp Business number to automate messages to students. WhatsApp conversation charges are billed directly by Meta.",
         "sectionSupport": "Support & Help",
         "supportLine": "Available across all plans.",
         "supportItem1": "24×7 AI assistant inside the system",
@@ -313,7 +313,7 @@
         "q5": "Do you support multi-user teams?",
         "a5": "Yes. Team plans support multiple users with separate access.",
         "q6": "Do you handle student fee payments?",
-        "a6": "Yes. You can track fee collections and payment records inside OnCampus. Student fee payments are recorded manually with payment method and reference."
+        "a6": "Yes. You can track fee collections and payment records inside Classes360. Student fee payments are recorded manually with payment method and reference."
     },
     "cta": {
         "title": "Keep your admissions organized.",
@@ -321,14 +321,14 @@
         "secondary": "Explore the System"
     },
     "pages": {
-        "landingMetaTitle": "OnCampus - Simple Admission System for Coaching Institutes",
-        "landingMetaDescription": "OnCampus helps coaching institutes capture enquiries, manage admissions, track students, courses, and fees in one platform.",
-        "pricingMetaTitle": "OnCampus Pricing - Simple Admission System for Coaching Institutes",
+        "landingMetaTitle": "Classes360 - Simple Admission System for Coaching Institutes",
+        "landingMetaDescription": "Classes360 helps coaching institutes capture enquiries, manage admissions, track students, courses, and fees in one platform.",
+        "pricingMetaTitle": "Classes360 Pricing - Simple Admission System for Coaching Institutes",
         "pricingMetaDescription": "Simple pricing starting at ₹999/month for coaching institute admission and student operations.",
-        "featuresMetaTitle": "OnCampus Features - Enquiries, Students, Courses and Fees",
-        "featuresMetaDescription": "Explore OnCampus features for enquiries, admissions, students, courses, fees, and institute operations.",
-        "contactMetaTitle": "Contact OnCampus",
-        "contactMetaDescription": "Contact the OnCampus team for product support and institute onboarding."
+        "featuresMetaTitle": "Classes360 Features - Enquiries, Students, Courses and Fees",
+        "featuresMetaDescription": "Explore Classes360 features for enquiries, admissions, students, courses, fees, and institute operations.",
+        "contactMetaTitle": "Contact Classes360",
+        "contactMetaDescription": "Contact the Classes360 team for product support and institute onboarding."
     },
     "featuresPage": {
         "label": "Features",
@@ -371,7 +371,7 @@
         "linkSubscriptionBilling": "Subscription Billing"
     },
     "contactPage": {
-        "title": "Contact OnCampus",
+        "title": "Contact Classes360",
         "subtitle": "Need help getting started or have a question? Reach us anytime.",
         "emailValue": "support@oncampus.in",
         "whatsAppValue": "+91 93568 36509",

@@ -1,4 +1,4 @@
-# OnCampus Load Test Report (k6)
+# Classes360 Load Test Report (k6)
 
 Date: 2026-03-14
 

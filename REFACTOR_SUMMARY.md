@@ -1,4 +1,4 @@
-# OnCampus Refactor - Implementation Summary
+# Classes360 Refactor - Implementation Summary
 
 ## 🎯 TL;DR
 

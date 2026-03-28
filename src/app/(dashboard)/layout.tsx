@@ -9,7 +9,7 @@ import { DashboardLayoutWithProviders } from "@/providers/DashboardLayoutWithPro
 export const metadata: Metadata = {
     title: "Dashboard",
     description:
-        "OnCampus Dashboard - Manage admissions, leads, students, teachers, and billing.",
+        "Classes360 Dashboard - Manage admissions, leads, students, teachers, and billing.",
     robots: {
         index: false,
         follow: false,

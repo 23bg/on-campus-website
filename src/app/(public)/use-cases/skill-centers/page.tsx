@@ -3,8 +3,8 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Skill Institute Admission and Student Management Platform - OnCampus",
-    description: "Manage admissions, student records, and fee operations for short-term skill programs with OnCampus.",
+    title: "Skill Institute Admission and Student Management Platform - Classes360",
+    description: "Manage admissions, student records, and fee operations for short-term skill programs with Classes360.",
 };
 
 export default function SkillCentersUseCasePage() {

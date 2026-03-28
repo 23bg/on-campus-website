@@ -195,7 +195,7 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Appearance</CardTitle>
-                    <CardDescription>Choose how OnCampus looks for your workspace.</CardDescription>
+                    <CardDescription>Choose how Classes360 looks for your workspace.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-2 max-w-xs">

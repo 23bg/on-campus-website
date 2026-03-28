@@ -2,7 +2,7 @@ import { PLAN_CONFIG, type PlanType } from "@/config/plans";
 
 export type FeatureId =
     | "publicInstitutePage"
-    | "freeOnCampusPage"
+    | "freeClasses360Page"
     | "captureEnquiries"
     | "enquiryTrackingFollowUps"
     | "studentCourseManagement"
@@ -15,7 +15,7 @@ export type FeatureId =
     | "whatsAppAlerts"
     | "whatsAppBusinessNumberIntegration"
     | "customDomain"
-    | "removeOnCampusBranding"
+    | "removeClasses360Branding"
     | "whiteLabelSystem"
     | "highVolumeSupport";
 
@@ -36,7 +36,7 @@ export const featureGroups: FeatureGroupDefinition[] = [
         title: "Core System",
         features: [
             { id: "publicInstitutePage", label: "Public institute page" },
-            { id: "freeOnCampusPage", label: "Free OnCampus page" },
+            { id: "freeClasses360Page", label: "Free Classes360 page" },
             { id: "captureEnquiries", label: "Capture enquiries (QR, links, website)" },
             { id: "enquiryTrackingFollowUps", label: "Enquiry tracking & follow-ups" },
             { id: "studentCourseManagement", label: "Student & course management" },
@@ -70,7 +70,7 @@ export const featureGroups: FeatureGroupDefinition[] = [
         title: "Branding",
         features: [
             { id: "customDomain", label: "Custom domain" },
-            { id: "removeOnCampusBranding", label: "Remove OnCampus branding" },
+            { id: "removeClasses360Branding", label: "Remove Classes360 branding" },
             { id: "whiteLabelSystem", label: "White-label system" },
             { id: "highVolumeSupport", label: "High-volume support" },
         ],
@@ -126,7 +126,7 @@ export type PlanFeatureAvailability = {
 export const planFeatureMatrix: Record<PlanType, Record<FeatureId, PlanFeatureAvailability>> = {
     STARTER: {
         publicInstitutePage: { included: true },
-        freeOnCampusPage: { included: true },
+        freeClasses360Page: { included: true },
         captureEnquiries: { included: true },
         enquiryTrackingFollowUps: { included: true },
         studentCourseManagement: { included: true },
@@ -139,13 +139,13 @@ export const planFeatureMatrix: Record<PlanType, Record<FeatureId, PlanFeatureAv
         whatsAppAlerts: { included: true },
         whatsAppBusinessNumberIntegration: { included: true },
         customDomain: { included: false },
-        removeOnCampusBranding: { included: false },
+        removeClasses360Branding: { included: false },
         whiteLabelSystem: { included: false },
         highVolumeSupport: { included: false },
     },
     TEAM: {
         publicInstitutePage: { included: true },
-        freeOnCampusPage: { included: true },
+        freeClasses360Page: { included: true },
         captureEnquiries: { included: true },
         enquiryTrackingFollowUps: { included: true },
         studentCourseManagement: { included: true },
@@ -158,13 +158,13 @@ export const planFeatureMatrix: Record<PlanType, Record<FeatureId, PlanFeatureAv
         whatsAppAlerts: { included: true },
         whatsAppBusinessNumberIntegration: { included: true },
         customDomain: { included: false },
-        removeOnCampusBranding: { included: false },
+        removeClasses360Branding: { included: false },
         whiteLabelSystem: { included: false },
         highVolumeSupport: { included: false },
     },
     GROWTH: {
         publicInstitutePage: { included: true },
-        freeOnCampusPage: { included: true },
+        freeClasses360Page: { included: true },
         captureEnquiries: { included: true },
         enquiryTrackingFollowUps: { included: true },
         studentCourseManagement: { included: true },
@@ -177,13 +177,13 @@ export const planFeatureMatrix: Record<PlanType, Record<FeatureId, PlanFeatureAv
         whatsAppAlerts: { included: true },
         whatsAppBusinessNumberIntegration: { included: true },
         customDomain: { included: true },
-        removeOnCampusBranding: { included: true },
+        removeClasses360Branding: { included: true },
         whiteLabelSystem: { included: false },
         highVolumeSupport: { included: false },
     },
     SCALE: {
         publicInstitutePage: { included: true },
-        freeOnCampusPage: { included: true },
+        freeClasses360Page: { included: true },
         captureEnquiries: { included: true },
         enquiryTrackingFollowUps: { included: true },
         studentCourseManagement: { included: true },
@@ -196,7 +196,7 @@ export const planFeatureMatrix: Record<PlanType, Record<FeatureId, PlanFeatureAv
         whatsAppAlerts: { included: true },
         whatsAppBusinessNumberIntegration: { included: true },
         customDomain: { included: true },
-        removeOnCampusBranding: { included: true },
+        removeClasses360Branding: { included: true },
         whiteLabelSystem: { included: true },
         highVolumeSupport: { included: true },
     },

@@ -1,6 +1,6 @@
-# OnCampus Load Tests (k6)
+# Classes360 Load Tests (k6)
 
-This folder contains scenario-based k6 load tests for the OnCampus multi-tenant SaaS surfaces.
+This folder contains scenario-based k6 load tests for the Classes360 multi-tenant SaaS surfaces.
 
 ## Covered Surfaces
 

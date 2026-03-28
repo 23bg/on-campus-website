@@ -82,7 +82,7 @@ export function InstitutePageShell({ slug, institute, title, subtitle, children 
             {children}
 
             <footer className="rounded-xl border bg-muted/30 p-5 text-sm text-muted-foreground">
-                Powered by OnCampus
+                Powered by Classes360
             </footer>
         </main>
     );

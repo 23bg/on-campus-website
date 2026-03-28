@@ -96,7 +96,7 @@ export default function WhatsAppIntegrationPage() {
         <main className="p-6 space-y-6 max-w-3xl">
             <div>
                 <h1 className="text-2xl font-semibold">WhatsApp Integration</h1>
-                <p className="text-sm text-muted-foreground mt-1">Connect your institute WhatsApp Business number while OnCampus continues to manage alert billing and usage.</p>
+                <p className="text-sm text-muted-foreground mt-1">Connect your institute WhatsApp Business number while Classes360 continues to manage alert billing and usage.</p>
             </div>
 
             <Card>
@@ -108,7 +108,7 @@ export default function WhatsAppIntegrationPage() {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Current Mode</span>
                         <span className="font-medium">
-                            {(state ?? DEFAULT_STATE).mode === "INSTITUTE_CUSTOM" ? "Institute WhatsApp Number" : "OnCampus System Number"}
+                            {(state ?? DEFAULT_STATE).mode === "INSTITUTE_CUSTOM" ? "Institute WhatsApp Number" : "Classes360 System Number"}
                         </span>
                     </div>
                     <div className="flex justify-between">

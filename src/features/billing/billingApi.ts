@@ -162,7 +162,7 @@ export const billingService = {
         const paymentLink = await (razorpay as any).paymentLink.create({
             amount: Math.round(invoice.totalAmount * 100),
             currency: "INR",
-            description: `OnCampus invoice ${invoice.month}/${invoice.year}`,
+            description: `Classes360 invoice ${invoice.month}/${invoice.year}`,
             reference_id: `invoice_${invoice.id}`,
             notify: {
                 sms: false,

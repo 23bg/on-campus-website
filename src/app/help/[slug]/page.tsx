@@ -17,13 +17,13 @@ export async function generateMetadata({ params }: HelpDocPageProps): Promise<Me
 
     if (!doc) {
         return {
-            title: "Help Article Not Found | OnCampus Help Center",
+            title: "Help Article Not Found | Classes360 Help Center",
             robots: { index: false, follow: false },
         };
     }
 
     return {
-        title: `${doc.title} | OnCampus Help Center`,
+        title: `${doc.title} | Classes360 Help Center`,
         description: doc.description,
         alternates: {
             canonical: `/help/${doc.slug}`,

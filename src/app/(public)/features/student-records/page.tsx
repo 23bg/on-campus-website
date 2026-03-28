@@ -3,18 +3,18 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Student Records for Coaching Institutes | OnCampus",
+    title: "Student Records for Coaching Institutes | Classes360",
     description: "Maintain complete student records in one place after admission conversion with coaching-focused operations.",
     alternates: { canonical: "/features/student-records" },
     openGraph: {
-        title: "Student Records for Coaching Institutes | OnCampus",
+        title: "Student Records for Coaching Institutes | Classes360",
         description: "Maintain complete student records in one place after admission conversion with coaching-focused operations.",
         url: "/features/student-records",
         type: "website",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Student Records for Coaching Institutes | OnCampus",
+        title: "Student Records for Coaching Institutes | Classes360",
         description: "Maintain complete student records in one place after admission conversion with coaching-focused operations.",
     },
 };

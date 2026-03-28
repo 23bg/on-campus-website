@@ -27,7 +27,7 @@ export async function generateMetadata({
 
     if (!SEO_KEYWORDS.includes(keyword as any)) {
         return {
-            title: "OnCampus",
+            title: "Classes360",
             robots: { index: false, follow: false },
         };
     }
@@ -35,14 +35,14 @@ export async function generateMetadata({
     const readable = keyword.replaceAll("-", " ");
 
     return {
-        title: `${readable} | OnCampus`,
-        description: `Manage admissions, enquiries, students and fees using ${readable} with OnCampus.`,
+        title: `${readable} | Classes360`,
+        description: `Manage admissions, enquiries, students and fees using ${readable} with Classes360.`,
         alternates: {
             canonical: `https://oncampus.in/${keyword}`,
         },
         openGraph: {
-            title: `${readable} | OnCampus`,
-            description: `Manage admissions, enquiries, students and fees using ${readable} with OnCampus.`,
+            title: `${readable} | Classes360`,
+            description: `Manage admissions, enquiries, students and fees using ${readable} with Classes360.`,
             url: `https://oncampus.in/${keyword}`,
             type: "website",
         },
@@ -69,7 +69,7 @@ export default async function KeywordPage({ params }: KeywordPageProps) {
                 </h1>
 
                 <p className="text-muted-foreground">
-                    OnCampus is a complete {keywordLabel.toLowerCase()} platform designed for coaching institutes to manage enquiries, admissions, students, and fee workflows in one unified system.
+                    Classes360 is a complete {keywordLabel.toLowerCase()} platform designed for coaching institutes to manage enquiries, admissions, students, and fee workflows in one unified system.
                 </p>
             </header>
 
@@ -120,11 +120,11 @@ export default async function KeywordPage({ params }: KeywordPageProps) {
             {/* DIFFERENTIATION */}
             <section className="mt-10 space-y-4">
                 <h2 className="text-2xl font-semibold">
-                    Why OnCampus is different
+                    Why Classes360 is different
                 </h2>
 
                 <p>
-                    Unlike generic CRM tools, OnCampus is built specifically for coaching institutes in India. It understands admission cycles, counseling workflows, and fee structures unique to this industry.
+                    Unlike generic CRM tools, Classes360 is built specifically for coaching institutes in India. It understands admission cycles, counseling workflows, and fee structures unique to this industry.
                 </p>
 
                 <p>
@@ -168,12 +168,12 @@ export default async function KeywordPage({ params }: KeywordPageProps) {
                 <div className="space-y-3 text-muted-foreground">
                     <p>
                         <strong>Is {keywordLabel.toLowerCase()} suitable for small institutes?</strong><br />
-                        Yes, OnCampus is designed for both small and growing coaching institutes.
+                        Yes, Classes360 is designed for both small and growing coaching institutes.
                     </p>
 
                     <p>
                         <strong>Can I replace Excel and WhatsApp tracking?</strong><br />
-                        Yes, OnCampus centralizes all enquiry, admission, and student workflows.
+                        Yes, Classes360 centralizes all enquiry, admission, and student workflows.
                     </p>
 
                     <p>
@@ -202,7 +202,7 @@ export default async function KeywordPage({ params }: KeywordPageProps) {
 //             </h1>
 
 //             <p className="mt-4 text-muted-foreground">
-//                 OnCampus provides a complete {keywordLabel.toLowerCase()} solution
+//                 Classes360 provides a complete {keywordLabel.toLowerCase()} solution
 //                 designed for coaching institutes to manage enquiries, admissions,
 //                 students, and fee workflows in one system.
 //             </p>
@@ -221,7 +221,7 @@ export default async function KeywordPage({ params }: KeywordPageProps) {
 
 //             <section className="mt-8 space-y-4">
 //                 <h2 className="text-xl font-semibold">
-//                     How OnCampus helps
+//                     How Classes360 helps
 //                 </h2>
 //                 <ul className="list-disc pl-6 space-y-2">
 //                     <li>Centralized enquiry tracking</li>

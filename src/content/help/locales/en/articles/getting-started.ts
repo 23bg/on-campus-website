@@ -7,7 +7,7 @@ export const gettingStartedArticle: HelpArticle = {
     slug: "getting-started",
     locale: "en",
     category: "gettingStarted",
-    title: "Getting Started with OnCampus",
+    title: "Getting Started with Classes360",
     description: "Set up your institute profile, courses, and enquiry workflow in the first day.",
     overview: "This quick setup flow helps your team complete institute setup and run the first end-to-end admission process.",
     lastUpdated: "2026-03-10",

@@ -3,7 +3,7 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "JEE / NEET Coaching Admission and Student Management Platform - OnCampus",
+    title: "JEE / NEET Coaching Admission and Student Management Platform - Classes360",
     description: "Manage high-volume enquiries, admissions, students, and fee operations for JEE and NEET coaching centers.",
 };
 

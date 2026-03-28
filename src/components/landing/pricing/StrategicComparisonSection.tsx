@@ -53,7 +53,7 @@ export default function StrategicComparisonSection() {
     return (
         <section className="mt-16 space-y-5">
             <h3 className="text-2xl font-semibold">
-                Why institutes switch to OnCampus
+                Why institutes switch to Classes360
             </h3>
 
             <div className="overflow-hidden rounded-lg border bg-background">
@@ -62,7 +62,7 @@ export default function StrategicComparisonSection() {
                         <TableRow>
                             <TableHead className="min-w-[160px]">Category</TableHead>
                             <TableHead className="min-w-[220px] font-semibold text-primary">
-                                OnCampus
+                                Classes360
                             </TableHead>
                             <TableHead className="min-w-[220px]">
                                 Generic CRM

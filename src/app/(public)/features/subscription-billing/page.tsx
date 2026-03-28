@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Subscription Billing - OnCampus",
+    title: "Subscription Billing - Classes360",
     description: "Manage institute plan subscriptions with secure Razorpay billing workflows.",
 };
 

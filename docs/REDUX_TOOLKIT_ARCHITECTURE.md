@@ -2,7 +2,7 @@
 /**
  * Redux Toolkit Architecture with createAsyncThunk
  * 
- * This is the scalable Redux architecture for OnCampus SaaS.
+ * This is the scalable Redux architecture for Classes360 SaaS.
  * It uses Redux Toolkit with createAsyncThunk for all async operations.
  * 
  * Features implemented: Student, Batch, Course (templates)

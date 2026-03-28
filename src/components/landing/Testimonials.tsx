@@ -4,7 +4,7 @@ const testimonials = [
     {
         institute: "Apex JEE Academy",
         role: "Owner",
-        quote: "Before OnCampus, we lost 30% enquiries. Now every enquiry has a clear follow-up owner.",
+        quote: "Before Classes360, we lost 30% enquiries. Now every enquiry has a clear follow-up owner.",
     },
     {
         institute: "FutureRank Classes",
@@ -25,7 +25,7 @@ export default function Testimonials() {
                 <div className="max-w-2xl space-y-3">
                     <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Results from real institutes</h2>
                     <p className="text-sm text-muted-foreground md:text-base">
-                        Teams choose OnCampus for operational clarity, faster follow-ups, and predictable admissions execution.
+                        Teams choose Classes360 for operational clarity, faster follow-ups, and predictable admissions execution.
                     </p>
                 </div>
 

@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { DEMO_VIDEO_EMBED_URL, DEMO_VIDEO_URL } from "@/constants/external-links";
 
 export const metadata: Metadata = {
-    title: "Demo Institute - OnCampus",
-    description: "Watch the OnCampus demo video to preview the platform experience.",
+    title: "Demo Institute - Classes360",
+    description: "Watch the Classes360 demo video to preview the platform experience.",
 };
 
 export default function DemoInstitutePage() {
@@ -13,9 +13,9 @@ export default function DemoInstitutePage() {
         <main className="mx-auto w-full max-w-6xl px-4 py-12 md:px-6 lg:py-16">
             <div className="space-y-4">
                 <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Demo</p>
-                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Watch the OnCampus product demo.</h1>
+                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Watch the Classes360 product demo.</h1>
                 <p className="max-w-3xl text-muted-foreground">
-                    See how OnCampus handles enquiries, admissions, students, courses, and operations in one workflow.
+                    See how Classes360 handles enquiries, admissions, students, courses, and operations in one workflow.
                 </p>
             </div>
 
@@ -23,7 +23,7 @@ export default function DemoInstitutePage() {
                 <div className="aspect-video overflow-hidden rounded-lg border bg-background">
                     <iframe
                         src={DEMO_VIDEO_EMBED_URL}
-                        title="OnCampus demo video"
+                        title="Classes360 demo video"
                         className="h-full w-full"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerPolicy="strict-origin-when-cross-origin"

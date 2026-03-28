@@ -190,8 +190,8 @@ export default function InstitutePublicView({ slug, institute }: any) {
                 <section className="rounded border bg-muted/30 p-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="space-y-1">
-                            <p className="text-sm font-medium text-primary">Powered by OnCampus</p>
-                            <h3 className="text-xl font-semibold">Run admissions and student operations with OnCampus</h3>
+                            <p className="text-sm font-medium text-primary">Powered by Classes360</p>
+                            <h3 className="text-xl font-semibold">Run admissions and student operations with Classes360</h3>
                             <p className="text-sm text-muted-foreground">
                                 Capture enquiries, manage students, and launch your institute page in minutes.
                             </p>

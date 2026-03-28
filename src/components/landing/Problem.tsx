@@ -25,7 +25,7 @@
 
                     <article className="rounded-xl border border-primary/35 bg-primary/5 p-6 shadow-sm">
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary">After</p>
-                        <h3 className="mt-2 text-lg font-semibold">OnCampus System</h3>
+                        <h3 className="mt-2 text-lg font-semibold">Classes360 System</h3>
                         <ul className="mt-4 space-y-2 text-sm text-foreground">
                             <li>• Every enquiry captured in one pipeline</li>
                             <li>• Follow-ups assigned with clear accountability</li>

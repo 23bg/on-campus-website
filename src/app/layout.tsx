@@ -24,11 +24,11 @@ export const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://oncampus.in"),
   title: {
-    default: "OnCampus - Admission CRM for Coaching Institutes",
-    template: "%s | OnCampus",
+    default: "Classes360 - Admission CRM for Coaching Institutes",
+    template: "%s | Classes360",
   },
   description:
-    "OnCampus helps coaching institutes capture enquiries, manage admissions, track students, courses and fees.",
+    "Classes360 helps coaching institutes capture enquiries, manage admissions, track students, courses and fees.",
   keywords: [
     "admission crm",
     "coaching institute crm",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "https://oncampus.in",
-    siteName: "OnCampus",
+    siteName: "Classes360",
     images: [
       {
         url: "/og-image.png",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "OnCampus Admission CRM",
+    title: "Classes360 Admission CRM",
     description: "Admission and student management platform for coaching institutes.",
     images: ["/og-image.png"],
   },

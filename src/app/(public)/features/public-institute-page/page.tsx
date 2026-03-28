@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Public Institute Page - OnCampus",
+    title: "Public Institute Page - Classes360",
     description: "Publish your institute profile online with a conversion-focused enquiry experience.",
 };
 

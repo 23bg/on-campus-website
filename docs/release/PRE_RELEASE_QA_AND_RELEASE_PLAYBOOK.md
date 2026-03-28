@@ -1,4 +1,4 @@
-# OnCampus Master Test Case Suite + Pre-Release Playbook (Senior QA)
+# Classes360 Master Test Case Suite + Pre-Release Playbook (Senior QA)
 
 ## 1) Quality gate and release policy
 

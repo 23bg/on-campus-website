@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Database, KeyRound, Lock, MessageSquareLock, ShieldCheck, Users } from "lucide-react";
 
 export const metadata: Metadata = {
-    title: "OnCampus Security - Data Protection & Privacy",
+    title: "Classes360 Security - Data Protection & Privacy",
     description:
-        "Learn how OnCampus protects institute and student data using secure architecture, encryption, and role-based access control.",
+        "Learn how Classes360 protects institute and student data using secure architecture, encryption, and role-based access control.",
 };
 
 const securitySections = [
@@ -12,7 +12,7 @@ const securitySections = [
         title: "Encryption & Secure Communication",
         icon: Lock,
         paragraphs: [
-            "All data transmitted between users and the OnCampus platform is encrypted using TLS (HTTPS). This helps protect student records, institute details, and authentication sessions while data is in transit.",
+            "All data transmitted between users and the Classes360 platform is encrypted using TLS (HTTPS). This helps protect student records, institute details, and authentication sessions while data is in transit.",
             "Sensitive data such as passwords are stored using secure cryptographic hashing with bcrypt rather than plaintext storage.",
         ],
     },
@@ -20,7 +20,7 @@ const securitySections = [
         title: "Secure Data Storage",
         icon: Database,
         paragraphs: [
-            "OnCampus stores institute and student data in secure cloud-backed databases with controlled access. Data is scoped by institute so one organization cannot access another organization's records through the application.",
+            "Classes360 stores institute and student data in secure cloud-backed databases with controlled access. Data is scoped by institute so one organization cannot access another organization's records through the application.",
             "We avoid making claims about custom application-level encryption that are not part of the current implementation.",
         ],
         bullets: [
@@ -47,7 +47,7 @@ const securitySections = [
         title: "Secure Multi-Tenant Architecture",
         icon: ShieldCheck,
         paragraphs: [
-            "OnCampus uses a multi-tenant architecture where each institute operates within its own scoped data environment.",
+            "Classes360 uses a multi-tenant architecture where each institute operates within its own scoped data environment.",
             "Records are associated with an institute identifier, which helps ensure that one institute cannot access another institute's data through normal application flows.",
         ],
     },
@@ -68,8 +68,8 @@ const securitySections = [
         title: "Secure Communication Integrations",
         icon: MessageSquareLock,
         paragraphs: [
-            "OnCampus integrates with the official Meta WhatsApp Cloud API for operational alerts.",
-            "Communication between OnCampus and external services is performed over encrypted HTTPS connections, and message logs are stored for operational tracking within the platform.",
+            "Classes360 integrates with the official Meta WhatsApp Cloud API for operational alerts.",
+            "Communication between Classes360 and external services is performed over encrypted HTTPS connections, and message logs are stored for operational tracking within the platform.",
         ],
     },
 ];
@@ -95,7 +95,7 @@ export default function SecurityPage() {
                             Your Institute Data is Protected
                         </h1>
                         <p className="text-base leading-7 text-muted-foreground md:text-lg">
-                            OnCampus is designed with security and privacy as a core principle. We use modern security practices to protect institute operations, student records, and communication data.
+                            Classes360 is designed with security and privacy as a core principle. We use modern security practices to protect institute operations, student records, and communication data.
                         </p>
                     </div>
                 </div>
@@ -143,7 +143,7 @@ export default function SecurityPage() {
                         <h2 className="text-2xl font-semibold tracking-tight">Institute Data Ownership</h2>
                         <div className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
                             <p>Institutes fully own their data.</p>
-                            <p>OnCampus does not sell, share, or expose institute or student data to third parties.</p>
+                            <p>Classes360 does not sell, share, or expose institute or student data to third parties.</p>
                             <p>Data is used only for providing and operating the platform services.</p>
                         </div>
                     </article>
@@ -169,7 +169,7 @@ export default function SecurityPage() {
                     </h2>
                     <div className="mx-auto mt-4 max-w-3xl space-y-3 text-sm leading-6 text-muted-foreground md:text-base">
                         <p>
-                            OnCampus is designed to provide a secure environment for managing institute operations and student records.
+                            Classes360 is designed to provide a secure environment for managing institute operations and student records.
                         </p>
                         <p>
                             Security improvements continue to evolve as the platform grows.

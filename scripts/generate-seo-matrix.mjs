@@ -168,13 +168,13 @@ function cap(value, max) {
     return value.length <= max ? value : `${value.slice(0, max - 3).trim()}...`;
 }
 
-function seoTitle(keyword, suffix = "| OnCampus") {
+function seoTitle(keyword, suffix = "| Classes360") {
     return cap(`${toTitleCase(keyword)} ${suffix}`, 60);
 }
 
 function metaDescription(keyword, context) {
     return cap(
-        `OnCampus helps coaching institutes ${context} with ${keyword}. Manage enquiries, admissions, students and fees. Book a demo today.`,
+        `Classes360 helps coaching institutes ${context} with ${keyword}. Manage enquiries, admissions, students and fees. Book a demo today.`,
         160,
     );
 }
@@ -185,7 +185,7 @@ function locationOutline(keyword, city) {
         `H2: Why coaching institutes in ${city} need a dedicated CRM`,
         "H3: Common admission and follow-up bottlenecks",
         "H3: Impact of fragmented tools on conversions",
-        "H2: How OnCampus helps manage leads, students, and fees",
+        "H2: How Classes360 helps manage leads, students, and fees",
         "H3: Enquiry capture and pipeline automation",
         "H3: Student records, batches, and installment tracking",
         "H2: FAQs for coaching institutes",
@@ -197,7 +197,7 @@ function featureOutline(feature) {
     return [
         `H1: ${toTitleCase(feature)}`,
         "H2: Problems this feature solves for coaching institutes",
-        "H2: How the workflow works in OnCampus",
+        "H2: How the workflow works in Classes360",
         "H3: Setup and configuration",
         "H3: Day-to-day team usage",
         "H2: Reporting and outcomes",
@@ -221,7 +221,7 @@ function problemOutline(problem) {
     return [
         `H1: ${toTitleCase(problem)}`,
         "H2: Root cause analysis",
-        "H2: Step-by-step solution using OnCampus",
+        "H2: Step-by-step solution using Classes360",
         "H3: Quick wins in first 7 days",
         "H3: Automation setup checklist",
         "H2: Metrics to track improvement",
@@ -351,7 +351,7 @@ const counts = rows.reduce(
 );
 
 const md = [
-    "# OnCampus Programmatic SEO Matrix (170 Pages)",
+    "# Classes360 Programmatic SEO Matrix (170 Pages)",
     "",
     "Generated from curated targets in `src/lib/seo/programmatic.ts` using `scripts/generate-seo-matrix.mjs`.",
     "",

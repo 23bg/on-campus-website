@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BookOpenCheck, ChartNoAxesCombined, FileSpreadsheet, Funnel } from "lucide-react";
 
 export const metadata: Metadata = {
-    title: "Resources - OnCampus",
+    title: "Resources - Classes360",
     description: "Practical resources to improve admission workflows for coaching institutes in India.",
 };
 

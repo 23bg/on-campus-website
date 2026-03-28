@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { sendWhatsAppText } from "@/lib/whatsappApi";
 import { normalizePhone } from "@/lib/utils/phone";
 
-const DEFAULT_MESSAGE = "Hello, this is a WhatsApp test message from OnCampus.";
+const DEFAULT_MESSAGE = "Hello, this is a WhatsApp test message from Classes360.";
 
 export async function GET(req: Request) {
     if (process.env.NODE_ENV === "production") {

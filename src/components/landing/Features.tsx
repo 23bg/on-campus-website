@@ -28,7 +28,7 @@
                 <div className="max-w-2xl space-y-2">
                     <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Product modules built like a system</h2>
                     <p className="text-sm text-muted-foreground md:text-base">
-                        OnCampus is organized into structured modules so each team can execute admissions reliably.
+                        Classes360 is organized into structured modules so each team can execute admissions reliably.
                     </p>
                 </div>
 

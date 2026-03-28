@@ -230,11 +230,11 @@ Read [](file:///p%3A/project/on-campus/on-campus-www/src/app/%28dashboard%29/lea
 
 Starting: *Compile full product report* (6/6)
 
-Here is the complete product audit for **OnCampus**, validated 100% against the actual codebase.
+Here is the complete product audit for **Classes360**, validated 100% against the actual codebase.
 
 ---
 
-# OnCampus — Complete Product Audit
+# Classes360 — Complete Product Audit
 
 **Stack:** Next.js 15 (App Router full-stack) · Prisma ORM · MongoDB · TypeScript · Tailwind CSS · shadcn/ui · Razorpay · Meta WhatsApp Cloud API
 
@@ -242,11 +242,11 @@ Here is the complete product audit for **OnCampus**, validated 100% against the 
 
 ## SECTION 1 — PRODUCT OVERVIEW
 
-### What Problem OnCampus Solves
+### What Problem Classes360 Solves
 
 Indian coaching institutes and training centers (JEE/NEET prep, tuition, computer training, skill development) are operationally chaotic. Admissions teams track enquiries in WhatsApp groups or Excel. There is no single system to capture leads from multiple sources, follow them up, admit students, and then collect fees — all in one place.
 
-OnCampus solves this by providing an **institute operations platform** that handles the complete journey: enquiry → follow-up → admission → fee collection, with a student-facing portal for basic communication.
+Classes360 solves this by providing an **institute operations platform** that handles the complete journey: enquiry → follow-up → admission → fee collection, with a student-facing portal for basic communication.
 
 ### Target Customer
 
@@ -504,7 +504,7 @@ Every payment creates both a `FeeInstallment` (status: PAID) and a `Payment` rec
 
 ### Is Razorpay Used for Student Payments?
 
-**No.** Razorpay is used exclusively for **platform subscription billing** (the SaaS fee paid by the institute owner to OnCampus). Student fee payments are recorded manually with method + reference — there is no online payment gateway integration for student fees.
+**No.** Razorpay is used exclusively for **platform subscription billing** (the SaaS fee paid by the institute owner to Classes360). Student fee payments are recorded manually with method + reference — there is no online payment gateway integration for student fees.
 
 ---
 
@@ -920,7 +920,7 @@ The following **do not exist** in the codebase:
 
 ## SECTION 19 — PRODUCT DIFFERENTIATION
 
-| Dimension | OnCampus | LeadSquared | Teachmint | Classplus | Generic CRM |
+| Dimension | Classes360 | LeadSquared | Teachmint | Classplus | Generic CRM |
 |---|---|---|---|---|---|
 | **Target** | Coaching institutes (India) | Enterprise sales teams | K-12 schools | Coaching (videos) | Any business |
 | **Lead → Admission pipeline** | ✅ Native | ✅ Core feature | ❌ Not focus | ❌ Not focus | ⚠️ Generic |
@@ -932,7 +932,7 @@ The following **do not exist** in the codebase:
 | **Complexity** | Low — built for non-tech owner | High | Medium | Medium | High |
 | **Video / LMS** | ❌ | ❌ | ✅ | ✅ | ❌ |
 
-**OnCampus's actual differentiation** (based on code, not marketing):
+**Classes360's actual differentiation** (based on code, not marketing):
 1. The **lead → admission → fee** flow is seamless in one product — few competitors bridge CRM and student operations
 2. The **public institute page** with a built-in enquiry form gives even small institutes a digital front door without needing a separate website
 3. Pricing is genuinely accessible for a ₹999/month solo owner
