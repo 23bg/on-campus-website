@@ -22,7 +22,7 @@ export const jakarta = Plus_Jakarta_Sans({
 
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://oncampus.in"),
+  metadataBase: new URL("https://classes360.online"),
   title: {
     default: "Classes360 - Admission CRM for Coaching Institutes",
     template: "%s | Classes360",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "https://oncampus.in",
+    url: "https://classes360.online",
     siteName: "Classes360",
     images: [
       {

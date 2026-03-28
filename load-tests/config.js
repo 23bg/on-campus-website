@@ -1,4 +1,4 @@
-export const BASE_URL = __ENV.BASE_URL || "https://oncampus.in";
+export const BASE_URL = __ENV.BASE_URL || "https://classes360.online";
 export const PUBLIC_INSTITUTE_SLUG = __ENV.PUBLIC_INSTITUTE_SLUG || "kiran-academy";
 export const TEST_PHONE = __ENV.TEST_PHONE || "9999999999";
 export const TEST_STUDENT_NAME = __ENV.TEST_STUDENT_NAME || "Test Student";

@@ -14,7 +14,7 @@ type CustomDomainMapping = {
     instituteSlug?: string;
 };
 
-const ROOT_DOMAIN = (process.env.APP_ROOT_DOMAIN ?? "oncampus.in").toLowerCase();
+const ROOT_DOMAIN = (process.env.APP_ROOT_DOMAIN ?? "classes360.online").toLowerCase();
 const PORTAL_SUBDOMAIN = (process.env.APP_PORTAL_SUBDOMAIN ?? "portal").toLowerCase();
 const STUDENT_SUBDOMAIN = (process.env.APP_STUDENT_SUBDOMAIN ?? "student").toLowerCase();
 

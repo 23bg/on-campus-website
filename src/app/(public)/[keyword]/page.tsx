@@ -38,12 +38,12 @@ export async function generateMetadata({
         title: `${readable} | Classes360`,
         description: `Manage admissions, enquiries, students and fees using ${readable} with Classes360.`,
         alternates: {
-            canonical: `https://oncampus.in/${keyword}`,
+            canonical: `https://classes360.online/${keyword}`,
         },
         openGraph: {
             title: `${readable} | Classes360`,
             description: `Manage admissions, enquiries, students and fees using ${readable} with Classes360.`,
-            url: `https://oncampus.in/${keyword}`,
+            url: `https://classes360.online/${keyword}`,
             type: "website",
         },
     };

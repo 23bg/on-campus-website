@@ -12,9 +12,9 @@ export default function ComputerTrainingUseCasePage() {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://oncampus.in/" },
-            { "@type": "ListItem", position: 2, name: "Use Cases", item: "https://oncampus.in/use-cases" },
-            { "@type": "ListItem", position: 3, name: "Computer Training Centers", item: "https://oncampus.in/use-cases/computer-training" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://classes360.online/" },
+            { "@type": "ListItem", position: 2, name: "Use Cases", item: "https://classes360.online/use-cases" },
+            { "@type": "ListItem", position: 3, name: "Computer Training Centers", item: "https://classes360.online/use-cases/computer-training" },
         ],
     };
 

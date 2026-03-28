@@ -24,9 +24,9 @@ export default function StudentRecordsFeaturePage() {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://oncampus.in/" },
-            { "@type": "ListItem", position: 2, name: "Features", item: "https://oncampus.in/features" },
-            { "@type": "ListItem", position: 3, name: "Student Records", item: "https://oncampus.in/features/student-records" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://classes360.online/" },
+            { "@type": "ListItem", position: 2, name: "Features", item: "https://classes360.online/features" },
+            { "@type": "ListItem", position: 3, name: "Student Records", item: "https://classes360.online/features/student-records" },
         ],
     };
 

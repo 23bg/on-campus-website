@@ -8,7 +8,7 @@ import {
     // PROBLEM_PAGE_SLUGS,
 } from "@/lib/seo/programmatic";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://oncampus.in";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://classes360.online";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const now = new Date("2026-01-01")

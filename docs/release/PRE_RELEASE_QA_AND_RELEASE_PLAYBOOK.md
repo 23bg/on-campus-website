@@ -498,7 +498,7 @@ Required:
 
 Discovery method:
 
-- Submit `https://oncampus.in/sitemap.xml` once in GSC
+- Submit `https://classes360.online/sitemap.xml` once in GSC
 - Ensure new onboarded slugs are auto-added to sitemap
 - Re-crawl follows sitemap updates
 

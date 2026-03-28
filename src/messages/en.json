@@ -198,7 +198,7 @@
         "startGrowthTrial": "Start Growth Trial",
         "startScaleCall": "Talk to Sales",
         "starterFeature1": "Public institute page with enquiry form",
-        "starterFeature2": "Free Classes360 page (yourinstitute.oncampus.in)",
+        "starterFeature2": "Free Classes360 page (yourinstitute.classes360.online)",
         "starterFeature3": "Capture enquiries from website, QR, and shared links",
         "starterFeature4": "Enquiry tracking and follow-up management",
         "starterFeature5": "Student and course management",
@@ -373,7 +373,7 @@
     "contactPage": {
         "title": "Contact Classes360",
         "subtitle": "Need help getting started or have a question? Reach us anytime.",
-        "emailValue": "support@oncampus.in",
+        "emailValue": "support@classes360.online",
         "whatsAppValue": "+91 93568 36509",
         "supportHoursValue": "Mon-Sat, 10:00 AM - 7:00 PM"
     },

@@ -475,7 +475,7 @@ export const instituteService = {
             customDomain: institute.customDomain ?? "",
             domainVerified: Boolean(institute.domainVerified),
             domainStatus: institute.domainStatus ?? "PENDING",
-            defaultDomain: institute.slug ? `${institute.slug}.oncampus.in` : "",
+            defaultDomain: institute.slug ? `${institute.slug}.classes360.online` : "",
             dnsInstruction: {
                 type: "CNAME",
                 name: "portal",
@@ -587,7 +587,7 @@ export const instituteService = {
         const byDomain = await instituteRepository.findByCustomDomain(normalizedHost);
         if (byDomain?.slug) return this.getPublicPage(byDomain.slug);
 
-        if (normalizedHost.endsWith(".oncampus.in")) {
+        if (normalizedHost.endsWith(".classes360.online")) {
             const sub = normalizedHost.replace(/\.oncampus\.in$/, "");
             if (sub && !["portal", "student", "www", "api"].includes(sub)) {
                 return this.getPublicPage(sub);

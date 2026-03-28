@@ -24,7 +24,7 @@ This folder contains scenario-based k6 load tests for the Classes360 multi-tenan
 
 ## Environment Variables
 
-- `BASE_URL` (default: `https://oncampus.in`)
+- `BASE_URL` (default: `https://classes360.online`)
 - `PUBLIC_INSTITUTE_SLUG` (default: `kiran-academy`)
 - `TEST_PHONE` (default: `9999999999`)
 - `TEST_STUDENT_NAME` (default: `Test Student`)

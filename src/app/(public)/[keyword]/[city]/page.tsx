@@ -45,13 +45,13 @@ export async function generateMetadata({ params }: ProgrammaticPageProps): Promi
         title: `${formattedKeyword} in ${city} | Classes360`,
         description: `Manage admissions, enquiries, students and fees for coaching institutes in ${city} using Classes360.`,
         alternates: {
-            canonical: `https://oncampus.in/solutions/${keyword}/${city}`,
+            canonical: `https://classes360.online/solutions/${keyword}/${city}`,
         },
         openGraph: {
             title: `${formattedKeyword} in ${city} | Classes360`,
             description: `Manage admissions, enquiries, students and fees for coaching institutes in ${city} using Classes360.`,
             type: "website",
-            url: `https://oncampus.in/solutions/${keyword}/${city}`,
+            url: `https://classes360.online/solutions/${keyword}/${city}`,
         },
         twitter: {
             card: "summary_large_image",

@@ -19,65 +19,65 @@ const makeResolver = async (envOverrides?: Record<string, string | undefined>) =
 describe("host routing resolver", () => {
     it("resolves platform apex as marketing", async () => {
         const { resolveHost } = await makeResolver({
-            APP_ROOT_DOMAIN: "oncampus.in",
+            APP_ROOT_DOMAIN: "classes360.online",
             CUSTOM_DOMAIN_MAPPINGS: undefined,
         });
 
-        expect(resolveHost("oncampus.in")).toEqual({
+        expect(resolveHost("classes360.online")).toEqual({
             surface: "marketing",
-            hostname: "oncampus.in",
+            hostname: "classes360.online",
         });
     });
 
     it("resolves portal and student reserved subdomains", async () => {
         const { resolveHost } = await makeResolver({
-            APP_ROOT_DOMAIN: "oncampus.in",
+            APP_ROOT_DOMAIN: "classes360.online",
             APP_PORTAL_SUBDOMAIN: "portal",
             APP_STUDENT_SUBDOMAIN: "student",
             CUSTOM_DOMAIN_MAPPINGS: undefined,
         });
 
-        expect(resolveHost("portal.oncampus.in")).toEqual({
+        expect(resolveHost("portal.classes360.online")).toEqual({
             surface: "portal",
-            hostname: "portal.oncampus.in",
+            hostname: "portal.classes360.online",
         });
 
-        expect(resolveHost("student.oncampus.in")).toEqual({
+        expect(resolveHost("student.classes360.online")).toEqual({
             surface: "student",
-            hostname: "student.oncampus.in",
+            hostname: "student.classes360.online",
         });
     });
 
     it("resolves wildcard institute subdomain", async () => {
         const { resolveHost } = await makeResolver({
-            APP_ROOT_DOMAIN: "oncampus.in",
+            APP_ROOT_DOMAIN: "classes360.online",
             CUSTOM_DOMAIN_MAPPINGS: undefined,
         });
 
-        expect(resolveHost("abcacademy.oncampus.in")).toEqual({
+        expect(resolveHost("abcacademy.classes360.online")).toEqual({
             surface: "institutePublic",
-            hostname: "abcacademy.oncampus.in",
+            hostname: "abcacademy.classes360.online",
             instituteSlug: "abcacademy",
         });
     });
 
     it("does not treat reserved names as tenant wildcard", async () => {
         const { resolveHost } = await makeResolver({
-            APP_ROOT_DOMAIN: "oncampus.in",
+            APP_ROOT_DOMAIN: "classes360.online",
             APP_PORTAL_SUBDOMAIN: "portal",
             APP_STUDENT_SUBDOMAIN: "student",
             CUSTOM_DOMAIN_MAPPINGS: undefined,
         });
 
-        expect(resolveHost("api.oncampus.in")).toEqual({
+        expect(resolveHost("api.classes360.online")).toEqual({
             surface: "marketing",
-            hostname: "api.oncampus.in",
+            hostname: "api.classes360.online",
         });
     });
 
     it("resolves custom white-label domains from mapping", async () => {
         const { resolveHost } = await makeResolver({
-            APP_ROOT_DOMAIN: "oncampus.in",
+            APP_ROOT_DOMAIN: "classes360.online",
             CUSTOM_DOMAIN_MAPPINGS: JSON.stringify([
                 { host: "portal.abcacademy.com", surface: "portal", instituteSlug: "abcacademy" },
                 { host: "crm.xyzacademy.com", surface: "portal", instituteSlug: "xyzacademy" },
