@@ -29,13 +29,12 @@ type ComparisonDialogProps = {
     featureGroups: FeatureGroupDefinition[];
 };
 
-const planOrder: PlanType[] = ["STARTER", "TEAM", "GROWTH", "SCALE"];
+const planOrder: PlanType[] = ["FREE", "BASIC", "PRO"];
 
 const planDisplayNames: Record<PlanType, string> = {
-    STARTER: "Starter",
-    TEAM: "Team",
-    GROWTH: "Growth",
-    SCALE: "Scale",
+    FREE: "Free",
+    BASIC: "Basic",
+    PRO: "Pro",
 };
 
 export default function ComparisonDialog({

@@ -5,7 +5,7 @@ import { issueSessionUseCase } from "@/modules/auth/application/issueSession.use
 
 const SESSION_COOKIE = "session_token";
 
-export type SessionRole = "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+export type SessionRole = "OWNER" | "EDITOR" | "VIEWER" | "MANAGER" | "EMPLOYER" | "CANDIDATE";
 export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
 
 export type SessionPayload = {
@@ -49,17 +49,8 @@ export const clearSessionCookie = async (): Promise<void> => {
  * During migration, both will work but access_token takes precedence.
  */
 export const readSessionFromCookie = async (): Promise<SessionPayload | null> => {
-    // Try new access_token first
     const accessTokenPayload = await readAccessTokenFromCookie();
-    if (accessTokenPayload) {
-        return accessTokenPayload as SessionPayload;
-    }
-
-    // Fall back to legacy session_token
-    const cookieStore = await cookies();
-    const token = cookieStore.get(SESSION_COOKIE)?.value;
-    if (!token) return null;
-    return verifySessionToken(token);
+    return accessTokenPayload ? (accessTokenPayload as SessionPayload) : null;
 };
 
 export const readSessionUserId = async (): Promise<string | null> => {
@@ -68,29 +59,7 @@ export const readSessionUserId = async (): Promise<string | null> => {
 };
 
 export const issueSessionForUser = async (userId: string): Promise<void> => {
-    const issued = await issueSessionUseCase({ userId });
-    if (!issued) {
-        return;
-    }
-
-    const legacyPayload: SessionPayload = {
-        userId: issued.access.userId,
-        email: issued.access.email,
-        role: issued.access.role,
-        instituteId: issued.access.instituteId,
-        isOnboarded: issued.access.isOnboarded,
-        subscriptionStatus: issued.access.subscriptionStatus,
-    };
-
-    const legacyToken = createSessionToken(legacyPayload);
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE, legacyToken, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60,
-    });
+    await issueSessionUseCase({ userId });
 };
 
 export const revokeAllSessionsForUser = async (userId: string): Promise<void> => {

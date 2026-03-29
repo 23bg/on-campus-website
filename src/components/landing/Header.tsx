@@ -21,7 +21,7 @@ export default function LandingHeader() {
     const tCommon = useTranslations("common");
 
     return (
-        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
+        <header className="sticky top-0 z-40 w-full border-borderbg-background/95 backdrop-blur">
             <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 md:px-6">
                 <div className="flex items-center gap-6">
                     <Link href="/" className="text-base font-bold tracking-tight">
@@ -37,6 +37,22 @@ export default function LandingHeader() {
                     </nav>
                 </div>
 
+                <div className="hidden items-center gap-4 md:flex">
+                    <div className="relative group">
+                        <button className="text-sm text-muted-foreground hover:text-foreground">For Employers</button>
+                        <div className="invisible group-hover:visible absolute top-full left-0 mt-2 w-40 rounded-md border bg-background shadow-lg">
+                            <Link href={ROUTES.AUTH.EMPLOYER.LOGIN} className="block px-3 py-2 text-sm hover:bg-muted">Employer Login</Link>
+                            <Link href={ROUTES.AUTH.EMPLOYER.SIGN_UP} className="block px-3 py-2 text-sm hover:bg-muted">Employer Signup</Link>
+                        </div>
+                    </div>
+                    <div className="relative group">
+                        <button className="text-sm text-muted-foreground hover:text-foreground">For Candidates</button>
+                        <div className="invisible group-hover:visible absolute top-full left-0 mt-2 w-40 rounded-md border bg-background shadow-lg">
+                            <Link href={ROUTES.AUTH.CANDIDATE.LOGIN} className="block px-3 py-2 text-sm hover:bg-muted">Candidate Login</Link>
+                            <Link href={ROUTES.AUTH.CANDIDATE.SIGN_UP} className="block px-3 py-2 text-sm hover:bg-muted">Candidate Signup</Link>
+                        </div>
+                    </div>
+                </div>
                 <div className="flex items-center gap-2">
                     <Sheet>
                         <SheetTrigger asChild>
@@ -71,6 +87,16 @@ export default function LandingHeader() {
                                 <SheetClose asChild>
                                     <Button asChild size="sm" className="justify-start">
                                         <Link href={ROUTES.AUTH.SIGN_UP}>{tCommon("startFreeTrial")}</Link>
+                                    </Button>
+                                </SheetClose>
+                                <SheetClose asChild>
+                                    <Button asChild variant="ghost" size="sm" className="justify-start">
+                                        <Link href={ROUTES.AUTH.EMPLOYER.LOGIN}>Employer Login</Link>
+                                    </Button>
+                                </SheetClose>
+                                <SheetClose asChild>
+                                    <Button asChild variant="ghost" size="sm" className="justify-start">
+                                        <Link href={ROUTES.AUTH.CANDIDATE.LOGIN}>Candidate Login</Link>
                                     </Button>
                                 </SheetClose>
                             </div>

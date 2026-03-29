@@ -116,10 +116,10 @@ export default function GlobalSearch() {
                             <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.LEADS)}>Leads</CommandItem>
                             <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.STUDENTS)}>Students</CommandItem>
                             <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.COURSES)}>Courses</CommandItem>
-                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BATCHES)}>Batches</CommandItem>
-                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.FEES)}>Fees</CommandItem>
-                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BILLING)}>Billing</CommandItem>
-                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BILLING_PAYMENTS)}>Payments</CommandItem>
+                            {/* <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BATCHES)}>Batches</CommandItem> */}
+                            {/* <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.FEES)}>Fees</CommandItem> */}
+                            {/* <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BILLING)}>Billing</CommandItem> */}
+                            {/* <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BILLING_PAYMENTS)}>Payments</CommandItem> */}
                             <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.INTEGRATIONS)}>Integrations</CommandItem>
                         </CommandGroup>
 
@@ -134,14 +134,14 @@ export default function GlobalSearch() {
                                 <UserPlus className="h-4 w-4" />
                                 Add Student
                             </CommandItem>
-                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.FEES)}>
+                            {/* <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.FEES)}>
                                 <HandCoins className="h-4 w-4" />
                                 Record Payment
-                            </CommandItem>
-                            <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BATCHES)}>
+                            </CommandItem> */}
+                            {/* <CommandItem onSelect={() => navigateTo(ROUTES.DASHBOARD.BATCHES)}>
                                 <Layers className="h-4 w-4" />
                                 Create Batch
-                            </CommandItem>
+                            </CommandItem> */}
                         </CommandGroup>
 
                         {query.trim().length >= 2 ? (

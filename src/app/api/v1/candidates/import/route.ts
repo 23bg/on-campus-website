@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { leadService } from "@/server/leadsApi";
+import { candidateService } from "@/server/candidatesApi"; // Updated import
 import { toAppError } from "@/lib/utils/error";
 
 type ParsedRow = {
     name?: string;
     email?: string;
     phone?: string;
-    course?: string;
+    jobId?: string; // Changed from course to jobId
     source?: string;
     city?: string;
     message?: string;
@@ -20,7 +20,7 @@ const SAMPLE_ROWS: ParsedRow[] = [
         name: "Rahul Sharma",
         email: "rahul@email.com",
         phone: "9876543210",
-        course: "JEE",
+        jobId: "Software Engineer", // Changed from course to jobId
         source: "Website",
         city: "Pune",
     },
@@ -28,7 +28,7 @@ const SAMPLE_ROWS: ParsedRow[] = [
         name: "Priya Patil",
         email: "priya@email.com",
         phone: "9123456780",
-        course: "NEET",
+        jobId: "Data Analyst", // Changed from course to jobId
         source: "Walk-in",
         city: "Nashik",
     },
@@ -46,7 +46,7 @@ function normalizeRows(rows: Record<string, unknown>[]): ParsedRow[] {
             phone: typeof normalized.phone === "string" || typeof normalized.phone === "number"
                 ? String(normalized.phone)
                 : undefined,
-            course: typeof normalized.course === "string" ? normalized.course : undefined,
+            jobId: typeof normalized.jobId === "string" ? normalized.jobId : undefined, // Changed from course to jobId
             source: typeof normalized.source === "string" ? normalized.source : undefined,
             city: typeof normalized.city === "string" ? normalized.city : undefined,
             message: typeof normalized.message === "string" ? normalized.message : undefined,
@@ -80,7 +80,7 @@ function parseJson(buffer: Buffer): ParsedRow[] {
 }
 
 function sampleCsvContent() {
-    return "name,email,phone,course,source,city\nRahul Sharma,rahul@email.com,9876543210,JEE,Website,Pune\nPriya Patil,priya@email.com,9123456780,NEET,Walk-in,Nashik\n";
+    return "name,email,phone,jobId,source,city\nRahul Sharma,rahul@email.com,9876543210,Software Engineer,Website,Pune\nPriya Patil,priya@email.com,9123456780,Data Analyst,Walk-in,Nashik\n"; // Updated to jobId
 }
 
 function sampleJsonContent() {
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
                 status: 200,
                 headers: {
                     "Content-Type": "text/csv; charset=utf-8",
-                    "Content-Disposition": "attachment; filename=lead-import-sample.csv",
+                    "Content-Disposition": "attachment; filename=candidate-import-sample.csv", // Updated filename
                 },
             });
         }
@@ -106,21 +106,21 @@ export async function GET(req: NextRequest) {
                 status: 200,
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
-                    "Content-Disposition": "attachment; filename=lead-import-sample.json",
+                    "Content-Disposition": "attachment; filename=candidate-import-sample.json", // Updated filename
                 },
             });
         }
 
         const worksheet = XLSX.utils.json_to_sheet(SAMPLE_ROWS);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Candidates"); // Updated sheet title
         const fileBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 
         return new NextResponse(fileBuffer, {
             status: 200,
             headers: {
                 "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Content-Disposition": "attachment; filename=lead-import-sample.xlsx",
+                "Content-Disposition": "attachment; filename=candidate-import-sample.xlsx", // Updated filename
             },
         });
     } catch (error) {
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const data = await leadService.importLeads(session.instituteId, rows, {
+        const data = await candidateService.importCandidates(session.instituteId, rows, { // Updated service call
             createdBy: session.userId,
             dryRun,
         });

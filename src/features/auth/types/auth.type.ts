@@ -17,6 +17,6 @@ export interface verificationPayload {
 export interface AuthUser {
     id: string;
     email: string;
-    role: "OWNER" | "MANAGER" | "VIEWER";
+    role: "OWNER" | "MANAGER" | "VIEWER" | "EMPLOYER" | "CANDIDATE";
 }
 

@@ -2,21 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-    title: "Use Cases - Classes360",
-    description: "Explore how coaching institutes use Classes360 to run enquiry, admission, student, and fee operations in one platform.",
+    title: "Use Cases - OnCampus",
+    description: "Explore how coaching institutes use OnCampus to run enquiry, admission, student, and fee operations in one platform.",
     alternates: {
         canonical: "/use-cases",
     },
     openGraph: {
-        title: "Use Cases - Classes360",
-        description: "Explore how coaching institutes use Classes360 to run enquiry, admission, student, and fee operations in one platform.",
+        title: "Use Cases - OnCampus",
+        description: "Explore how coaching institutes use OnCampus to run enquiry, admission, student, and fee operations in one platform.",
         url: "/use-cases",
         type: "website",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Use Cases - Classes360",
-        description: "Explore how coaching institutes use Classes360 to run enquiry, admission, student, and fee operations in one platform.",
+        title: "Use Cases - OnCampus",
+        description: "Explore how coaching institutes use OnCampus to run enquiry, admission, student, and fee operations in one platform.",
     },
 };
 
@@ -50,7 +50,7 @@ export default function UseCasesPage() {
                 <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Use Cases</p>
                 <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Admission and Student Management Platform for Coaching Institutes</h1>
                 <p className="max-w-3xl text-muted-foreground">
-                    Classes360 is built for the real operating style of Indian coaching institutes, from large coaching centers to focused skill academies.
+                    OnCampus is built for the real operating style of Indian coaching institutes, from large coaching centers to focused skill academies.
                 </p>
             </div>
 

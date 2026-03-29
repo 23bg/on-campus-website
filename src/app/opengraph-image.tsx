@@ -23,7 +23,7 @@ export default function OpengraphImage() {
                     fontFamily: "sans-serif",
                 }}
             >
-                <div style={{ fontSize: 36, opacity: 0.9 }}>Classes360</div>
+                <div style={{ fontSize: 36, opacity: 0.9 }}>OnCampus</div>
                 <div style={{ marginTop: 16, fontSize: 64, fontWeight: 700, lineHeight: 1.1 }}>
                     Admission CRM for Coaching Institutes
                 </div>

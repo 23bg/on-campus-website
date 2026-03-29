@@ -1,4 +1,4 @@
-# Classes360 Automated Testing Stack (Recommended)
+# OnCampus Automated Testing Stack (Recommended)
 
 ## 1) Package selection (appropriate for this codebase)
 

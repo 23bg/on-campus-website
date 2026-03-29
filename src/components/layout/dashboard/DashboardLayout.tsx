@@ -56,7 +56,7 @@ export default function DashboardLayout({
   "
                         >
                             {/* COPYRIGHT */}
-                            <span>© 2026 Classes360. Built for coaching institutes.</span>
+                            <span>© 2026 OnCampus. Built for coaching institutes.</span>
 
                             {/* LINKS */}
                             <div className="flex items-center gap-2">

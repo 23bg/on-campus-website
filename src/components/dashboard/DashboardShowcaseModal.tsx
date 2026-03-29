@@ -10,7 +10,7 @@ type DashboardShowcaseModalProps = {
 
 const steps = [
     {
-        title: "Welcome to Classes360",
+        title: "Welcome to OnCampus",
         description: "Manage admissions easily",
     },
     {

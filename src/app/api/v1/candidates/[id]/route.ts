@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { leadService } from "@/server/leadsApi";
+import { candidateService } from "@/server/candidatesApi"; // Updated import
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = {
-    params: Promise<{ id: string }>;
+    params: Promise<{ candidateId: string }>; // Updated to candidateId
 };
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
             );
         }
 
-        const { id } = await context.params;
+        const { candidateId } = await context.params; // Updated to candidateId
         const body = (await req.json()) as { status?: string; message?: string | null; followUpAt?: string | null };
 
         if (!body.status && body.message === undefined && body.followUpAt === undefined) {
@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
             );
         }
 
-        const data = await leadService.updateLead(session.instituteId, id, {
+        const data = await candidateService.updateCandidate(session.instituteId, candidateId, { // Updated service call and id parameter
             status: body.status,
             message: body.message,
             followUpAt: body.followUpAt,

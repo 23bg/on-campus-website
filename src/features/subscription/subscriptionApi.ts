@@ -1,8 +1,9 @@
 import { AppError } from "@/lib/utils/error";
 import { subscriptionRepository } from "@/features/subscription/subscriptionDataApi";
 import { assertRazorpayReady, razorpay, verifyRazorpayCheckoutSignature } from "@/lib/billing/razorpay";
+import { BillingProvider } from "@/lib/billing/types";
 import { env } from "@/lib/config/env";
-import { DEFAULT_PLAN_TYPE, getPlanPricing, isGrandfatheredSubscription, isPlanType, PLAN_CONFIG, PlanType, PricingVersion } from "@/config/plans";
+import { DEFAULT_PLAN_TYPE, getPlanPricing, isPlanType, PLAN_CONFIG, PlanType } from "@/config/plans";
 import { userRepository } from "@/features/auth/userDataApi";
 import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
@@ -14,6 +15,10 @@ type SubscriptionRecord = {
     planType?: string | null;
     userLimit?: number | null;
     razorpaySubId?: string | null;
+    provider?: BillingProvider | null;
+    providerCustomerId?: string | null;
+    providerSubscriptionId?: string | null;
+    providerPlanId?: string | null;
     currentPeriodEnd?: Date | null;
     updatedAt?: Date;
     createdAt?: Date;
@@ -28,26 +33,27 @@ const DASHBOARD_ALLOWED: SubscriptionState[] = ["TRIAL", "ACTIVE"];
 export type BillingInterval = "MONTHLY" | "YEARLY";
 
 const normalizeStoredPlanType = (storedPlanType: string | null | undefined, userLimit?: number | null): PlanType => {
-    if (storedPlanType === "STARTER" || storedPlanType === "TEAM" || storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
-        return storedPlanType;
+    if (!storedPlanType) {
+        return DEFAULT_PLAN_TYPE;
     }
 
-    if (storedPlanType === "SOLO") {
-        return "STARTER";
+    if (storedPlanType === "STARTER" || storedPlanType === "SOLO") {
+        return "FREE";
     }
 
     if (storedPlanType === "TEAM") {
-        const normalizedLimit = userLimit ?? 0;
-
-        if (normalizedLimit === 0) {
-            return "SCALE";
+        if (userLimit === null || userLimit === undefined) {
+            return "BASIC";
         }
+        return userLimit > 3 ? "PRO" : "BASIC";
+    }
 
-        if (normalizedLimit <= (PLAN_CONFIG.TEAM.userLimit ?? 5)) {
-            return "TEAM";
-        }
+    if (storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
+        return "PRO";
+    }
 
-        return "GROWTH";
+    if (isPlanType(storedPlanType)) {
+        return storedPlanType;
     }
 
     return DEFAULT_PLAN_TYPE;
@@ -59,58 +65,37 @@ export const subscriptionService = {
     },
 
     resolvePlanType(input?: string | null): PlanType {
-        if (input && isPlanType(input)) {
-            return input;
+        if (input) {
+            const plan = assertPlanType(input);
+            return plan;
         }
         return DEFAULT_PLAN_TYPE;
     },
 
     getRazorpayPlanId(
         planType: PlanType,
-        interval: BillingInterval = "MONTHLY",
-        options?: { grandfathered?: boolean }
+        interval: BillingInterval = "MONTHLY"
     ): string {
-        const currentLookup: Record<PlanType, Record<BillingInterval, string | undefined>> = {
-            STARTER: {
-                MONTHLY: env.RAZORPAY_PLAN_ID_STARTER_MONTHLY,
-                YEARLY: env.RAZORPAY_PLAN_ID_STARTER_YEARLY,
+        const planMap: Record<PlanType, Record<BillingInterval, string | undefined>> = {
+            FREE: {
+                MONTHLY: undefined,
+                YEARLY: undefined,
             },
-            TEAM: {
+            BASIC: {
                 MONTHLY: env.RAZORPAY_PLAN_ID_TEAM_MONTHLY ?? env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
                 YEARLY: env.RAZORPAY_PLAN_ID_TEAM_YEARLY ?? env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
             },
-            GROWTH: {
-                MONTHLY: env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
-                YEARLY: env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
-            },
-            SCALE: {
-                MONTHLY: env.RAZORPAY_PLAN_ID_SCALE_MONTHLY,
-                YEARLY: env.RAZORPAY_PLAN_ID_SCALE_YEARLY,
+            PRO: {
+                MONTHLY: env.RAZORPAY_PLAN_ID_SCALE_MONTHLY ?? env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
+                YEARLY: env.RAZORPAY_PLAN_ID_SCALE_YEARLY ?? env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
             },
         };
 
-        const legacyLookup: Record<PlanType, Record<BillingInterval, string | undefined>> = {
-            STARTER: {
-                MONTHLY: env.RAZORPAY_PLAN_ID_SOLO ?? env.RAZORPAY_PLAN_ID_STARTER_MONTHLY,
-                YEARLY: env.RAZORPAY_PLAN_ID_STARTER_YEARLY,
-            },
-            TEAM: {
-                MONTHLY: env.RAZORPAY_PLAN_ID_TEAM ?? env.RAZORPAY_PLAN_ID_TEAM_MONTHLY ?? env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
-                YEARLY: env.RAZORPAY_PLAN_ID_TEAM_YEARLY ?? env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
-            },
-            GROWTH: {
-                MONTHLY: env.RAZORPAY_PLAN_ID_GROWTH_MONTHLY,
-                YEARLY: env.RAZORPAY_PLAN_ID_GROWTH_YEARLY,
-            },
-            SCALE: {
-                MONTHLY: env.RAZORPAY_PLAN_ID_SCALE_MONTHLY,
-                YEARLY: env.RAZORPAY_PLAN_ID_SCALE_YEARLY,
-            },
-        };
-
-        const lookup = options?.grandfathered ? legacyLookup : currentLookup;
-        const planId = lookup[planType]?.[interval] ?? currentLookup[planType]?.[interval];
+        const planId = planMap[planType]?.[interval];
         if (!planId) {
+            if (planType === "FREE") {
+                return "";
+            }
             throw new AppError(`Missing Razorpay plan id for ${planType}/${interval}`, 500, "RAZORPAY_PLAN_ID_MISSING");
         }
 
@@ -158,11 +143,11 @@ export const subscriptionService = {
 
     async getBillingSummary(instituteId: string) {
         const subscription = await this.getSubscription(instituteId);
+        console.log("SUBSCRIPTION:", subscription);
         const planType = normalizeStoredPlanType(subscription.planType, subscription.userLimit);
         const plan = PLAN_CONFIG[planType];
-        const isGrandfathered = isGrandfatheredSubscription(subscription.createdAt);
-        const price = getPlanPricing(planType, { grandfathered: isGrandfathered });
-        const pricingVersion: PricingVersion = isGrandfathered ? "LEGACY" : "CURRENT";
+        const price = getPlanPricing(planType);
+        const pricingVersion = "CURRENT";
         const usersUsed = await userRepository.countByInstitute(instituteId);
         const userLimit = subscription.userLimit ?? plan.userLimit;
         const hasAnySubscriptionActivity = Boolean(subscription.razorpaySubId || subscription.currentPeriodEnd || subscription.status === "ACTIVE");
@@ -189,9 +174,26 @@ export const subscriptionService = {
             trialPaymentReminder,
             nextBillingDate: subscription.currentPeriodEnd ?? subscription.trialEndsAt,
             razorpaySubId: subscription.razorpaySubId,
+            provider: subscription.provider,
+            providerCustomerId: subscription.providerCustomerId,
+            providerSubscriptionId: subscription.providerSubscriptionId,
+            providerPlanId: subscription.providerPlanId,
             lastPaymentAmount: hasAnySubscriptionActivity ? price.monthly : null,
             lastPaymentDate: hasAnySubscriptionActivity ? subscription.updatedAt : null,
         };
+    },
+
+    async updateSubscriptionProvider(instituteId: string, providerData: {
+        provider: BillingProvider;
+        providerCustomerId: string;
+        providerSubscriptionId: string;
+        providerPlanId: string;
+    }) {
+        return subscriptionRepository.updateByInstituteId(instituteId, {
+            status: "ACTIVE",
+            billingInterval: "MONTHLY",
+            razorpaySubId: providerData.provider === BillingProvider.RAZORPAY ? providerData.providerSubscriptionId : undefined,
+        });
     },
 
     async createRazorpaySubscription(
@@ -204,8 +206,7 @@ export const subscriptionService = {
         const plan = PLAN_CONFIG[planType];
 
         const existing = await subscriptionRepository.findByInstituteId(instituteId);
-        const grandfathered = isGrandfatheredSubscription(existing?.createdAt);
-        const planId = this.getRazorpayPlanId(planType, interval, { grandfathered });
+        const planId = this.getRazorpayPlanId(planType, interval);
         const existingPlanType = existing
             ? normalizeStoredPlanType(existing.planType, existing.userLimit)
             : null;

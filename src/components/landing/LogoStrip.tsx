@@ -25,24 +25,23 @@ export default function LogoStrip({
     compact = false,
 }: LogoStripProps) {
     return (
-        <section className={cn("w-full border-b bg-muted/50", compact ? "py-12" : "py-20")}>
-            <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
-                <div className="mx-auto max-w-2xl text-center">
-                    <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
-                    <p className="mt-3 text-sm text-muted-foreground md:text-base">{subtitle}</p>
+        <div className={cn("w-full border-borderbg-card", compact ? "py-6" : "py-8 md:py-12 lg:py-16")}>
+            <div className="max-w-7xl mx-auto px-4 md:px-6">
+                <div className="max-w-2xl mx-auto text-center">
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">{title}</h2>
+                    <p className="mt-2 text-sm md:text-base text-muted-foreground">{subtitle}</p>
                 </div>
-
-                <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-5">
+                <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                     {logos.map((logo) => (
                         <div
                             key={logo}
-                            className="rounded-lg border border-border bg-muted px-4 py-3 text-center text-xs font-medium text-muted-foreground transition-all duration-200 hover:scale-[1.02] hover:border-primary/40 hover:bg-background hover:text-foreground"
+                            className="rounded-lg border border-border bg-background px-4 py-3 text-center text-xs font-medium text-muted-foreground transition-all hover:scale-[1.03] hover:shadow-md"
                         >
                             {logo}
                         </div>
                     ))}
                 </div>
             </div>
-        </section>
+        </div>
     );
 }

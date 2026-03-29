@@ -3,8 +3,8 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Tuition Class Admission and Student Management Platform - Classes360",
-    description: "Use Classes360 to simplify enquiry handling, admissions, student records, and fee tracking for tuition classes.",
+    title: "Tuition Class Admission and Student Management Platform - OnCampus",
+    description: "Use OnCampus to simplify enquiry handling, admissions, student records, and fee tracking for tuition classes.",
 };
 
 export default function TuitionUseCasePage() {
@@ -12,9 +12,9 @@ export default function TuitionUseCasePage() {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://classes360.online/" },
-            { "@type": "ListItem", position: 2, name: "Use Cases", item: "https://classes360.online/use-cases" },
-            { "@type": "ListItem", position: 3, name: "Tuition Classes", item: "https://classes360.online/use-cases/tuition-classes" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://oncampus.in/" },
+            { "@type": "ListItem", position: 2, name: "Use Cases", item: "https://oncampus.in/use-cases" },
+            { "@type": "ListItem", position: 3, name: "Tuition Classes", item: "https://oncampus.in/use-cases/tuition-classes" },
         ],
     };
 

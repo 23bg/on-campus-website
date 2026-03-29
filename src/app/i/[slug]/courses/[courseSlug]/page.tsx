@@ -48,9 +48,8 @@ export default async function InstituteCourseDetailsPage({ params }: InstituteCo
     const institute = await getPublicInstitute(slug).catch(() => notFound());
     const course = findCourseBySlug(institute.courses, courseSlug);
 
-    if (!course) {
-        notFound();
-    }
+    // LEGACY PAGE REMOVED: This page is no longer available in ATS/job management platform.
+    export default function RemovedPage() { return null; }
 
     const relatedBatches = institute.batches.filter((batch) => batch.courseId === course.id);
 

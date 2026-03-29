@@ -111,43 +111,7 @@ type Defaulter = {
     dueDate?: string | null;
 };
 
-type Lead = {
-    id: string;
-    name: string;
-    phone: string;
-    email?: string | null;
-    course?: string | null;
-    source?: string | null;
-    status: string;
-    message?: string | null;
-    followUpAt?: string | null;
-    createdAt: string;
-};
 
-type LeadActivity = {
-    activityType: string;
-    title: string;
-    description?: string;
-    createdAt: string;
-};
-
-type LeadImportSummary = {
-    totalRows: number;
-    validRows: number;
-    failedRows: number;
-    duplicateRows: number;
-    imported: number;
-    errors: Array<{ row: number; message: string }>;
-    duplicates: Array<{ row: number; phone: string }>;
-    preview: Array<{
-        name: string;
-        email?: string;
-        phone: string;
-        course?: string;
-        source?: string;
-        city?: string;
-    }>;
-};
 
 type Metrics = {
     leadsThisMonth: number;
@@ -351,11 +315,7 @@ type DashboardState = {
     };
     payments: RequestState<PaymentRow[]>;
     defaulters: RequestState<Defaulter[]>;
-    leads: RequestState<Lead[]> & {
-        mutation: MutationState;
-        timeline: RequestState<LeadActivity[]>;
-        import: { loading: boolean; error: string | null; summary: LeadImportSummary | null };
-    };
+
     overview: RequestState<DashboardOverviewResponse | null> & {
         announcement: MutationState;
     };
@@ -420,14 +380,7 @@ const initialState: DashboardState = {
     },
     payments: { data: [], loading: false, error: null },
     defaulters: { data: [], loading: false, error: null },
-    leads: {
-        data: [],
-        loading: false,
-        error: null,
-        mutation: { loading: false, error: null },
-        timeline: { data: [], loading: false, error: null },
-        import: { loading: false, error: null, summary: null },
-    },
+
     overview: { data: null, loading: false, error: null, announcement: { loading: false, error: null } },
     profile: { data: null, loading: false, error: null, mutation: { loading: false, error: null } },
     notifications: { data: DEFAULT_PREFS, loading: false, error: null, mutation: { loading: false, error: null } },
@@ -678,54 +631,7 @@ export const fetchDefaulters = createAsyncThunk("dashboard/fetchDefaulters", asy
     await apiGet<Defaulter[]>(API.INTERNAL.DASHBOARD.DEFAULTERS)
 );
 
-export const fetchLeads = createAsyncThunk("dashboard/fetchLeads", async (queryString: string) =>
-    await apiGet<Lead[]>(`${API.INTERNAL.LEADS.ROOT}${queryString ? `?${queryString}` : ""}`)
-);
 
-export const updateLeadStatus = createAsyncThunk(
-    "dashboard/updateLeadStatus",
-    async ({ leadId, nextStatus }: { leadId: string; nextStatus: string }) => {
-        await apiPatch(API.INTERNAL.LEADS.BY_ID(leadId), { status: nextStatus });
-        return { leadId, nextStatus };
-    }
-);
-
-export const fetchLeadTimeline = createAsyncThunk("dashboard/fetchLeadTimeline", async (leadId: string) =>
-    await apiGet<LeadActivity[]>(API.INTERNAL.LEADS.TIMELINE(leadId))
-);
-
-export const saveLeadDetails = createAsyncThunk(
-    "dashboard/saveLeadDetails",
-    async ({ leadId, message, followUpAt }: { leadId: string; message: string | null; followUpAt: string | null }) => {
-        await apiPatch(API.INTERNAL.LEADS.BY_ID(leadId), { message, followUpAt });
-        return true;
-    }
-);
-
-export const downloadLeadImportTemplate = createAsyncThunk("dashboard/downloadLeadImportTemplate", async (format: "csv" | "xlsx" | "json") => {
-    const response = await api.get(`${API.INTERNAL.LEADS.IMPORT}?format=${format}`, { responseType: "blob" });
-    return { format, blob: response.data as Blob };
-});
-
-export const previewLeadImport = createAsyncThunk("dashboard/previewLeadImport", async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("dryRun", "true");
-    const response = await api.post(API.INTERNAL.LEADS.IMPORT, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
-    return response.data?.data as LeadImportSummary;
-});
-
-export const confirmLeadImport = createAsyncThunk("dashboard/confirmLeadImport", async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("dryRun", "false");
-    const response = await api.post(API.INTERNAL.LEADS.IMPORT, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
-    return response.data?.data as LeadImportSummary;
-});
 
 export const fetchOverview = createAsyncThunk("dashboard/fetchOverview", async () =>
     await apiGet<DashboardOverviewResponse>(API.INTERNAL.DASHBOARD.OVERVIEW)
@@ -878,10 +784,7 @@ const dashboardSlice = createSlice({
     name: "dashboard",
     initialState,
     reducers: {
-        clearLeadImportSummary(state) {
-            state.leads.import.summary = null;
-            state.leads.import.error = null;
-        },
+
         clearStudentUploadResult(state) {
             state.students.upload.result = null;
             state.students.upload.error = null;
@@ -1184,78 +1087,7 @@ const dashboardSlice = createSlice({
                 state.defaulters.loading = false;
                 state.defaulters.error = getErrorMessage(action.error);
             })
-            .addCase(fetchLeads.pending, (state) => {
-                state.leads.loading = true;
-                state.leads.error = null;
-            })
-            .addCase(fetchLeads.fulfilled, (state, action) => {
-                state.leads.loading = false;
-                state.leads.data = action.payload ?? [];
-            })
-            .addCase(fetchLeads.rejected, (state, action) => {
-                state.leads.loading = false;
-                state.leads.error = getErrorMessage(action.error);
-            })
-            .addCase(updateLeadStatus.pending, (state) => {
-                state.leads.mutation.loading = true;
-                state.leads.mutation.error = null;
-            })
-            .addCase(updateLeadStatus.fulfilled, (state, action) => {
-                state.leads.mutation.loading = false;
-                state.leads.data = state.leads.data.map((lead) =>
-                    lead.id === action.payload.leadId ? { ...lead, status: action.payload.nextStatus } : lead
-                );
-            })
-            .addCase(updateLeadStatus.rejected, (state, action) => {
-                state.leads.mutation.loading = false;
-                state.leads.mutation.error = getErrorMessage(action.error);
-            })
-            .addCase(fetchLeadTimeline.pending, (state) => {
-                state.leads.timeline.loading = true;
-                state.leads.timeline.error = null;
-            })
-            .addCase(fetchLeadTimeline.fulfilled, (state, action) => {
-                state.leads.timeline.loading = false;
-                state.leads.timeline.data = action.payload ?? [];
-            })
-            .addCase(fetchLeadTimeline.rejected, (state, action) => {
-                state.leads.timeline.loading = false;
-                state.leads.timeline.error = getErrorMessage(action.error);
-            })
-            .addCase(saveLeadDetails.pending, (state) => {
-                state.leads.mutation.loading = true;
-            })
-            .addCase(saveLeadDetails.fulfilled, (state) => {
-                state.leads.mutation.loading = false;
-            })
-            .addCase(saveLeadDetails.rejected, (state, action) => {
-                state.leads.mutation.loading = false;
-                state.leads.mutation.error = getErrorMessage(action.error);
-            })
-            .addCase(previewLeadImport.pending, (state) => {
-                state.leads.import.loading = true;
-                state.leads.import.error = null;
-            })
-            .addCase(previewLeadImport.fulfilled, (state, action) => {
-                state.leads.import.loading = false;
-                state.leads.import.summary = action.payload;
-            })
-            .addCase(previewLeadImport.rejected, (state, action) => {
-                state.leads.import.loading = false;
-                state.leads.import.error = getErrorMessage(action.error);
-            })
-            .addCase(confirmLeadImport.pending, (state) => {
-                state.leads.import.loading = true;
-                state.leads.import.error = null;
-            })
-            .addCase(confirmLeadImport.fulfilled, (state, action) => {
-                state.leads.import.loading = false;
-                state.leads.import.summary = action.payload;
-            })
-            .addCase(confirmLeadImport.rejected, (state, action) => {
-                state.leads.import.loading = false;
-                state.leads.import.error = getErrorMessage(action.error);
-            })
+
             .addCase(fetchOverview.pending, (state) => {
                 state.overview.loading = true;
                 state.overview.error = null;
@@ -1450,5 +1282,5 @@ const dashboardSlice = createSlice({
     },
 });
 
-export const { clearLeadImportSummary, clearStudentUploadResult } = dashboardSlice.actions;
+export const { clearStudentUploadResult } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

@@ -52,18 +52,18 @@ export const useAuth = () => {
 
     // --- AUTH METHODS WITH CALLBACK SUPPORT ---
 
-    const login = (data: { email: string }, callbacks?: any) =>
-        withCallbacks(api.post("auth/request-otp", data).then((res) => res.data), callbacks);
+    const login = (data: { email: string; password: string; expectedRole?: "EMPLOYER" | "CANDIDATE" }, callbacks?: any) =>
+        withCallbacks(api.post("auth/login", data).then((res) => res.data), callbacks);
 
     const signup = (
-        data: { name: string; email: string; phoneNumber: string },
+        data: { email: string; password: string; role?: "EMPLOYER" | "CANDIDATE" },
         callbacks?: any
-    ) => withCallbacks(api.post("auth/request-otp", data).then((res) => res.data), callbacks);
+    ) => withCallbacks(api.post("auth/signup", data).then((res) => res.data), callbacks);
 
-    const verifyOTP = (
+    const verifyEmail = (
         data: { email: string; otp: string },
         callbacks?: any
-    ) => withCallbacks(api.post("auth/verify-otp", data).then((res) => res.data), callbacks);
+    ) => withCallbacks(api.post("auth/verification", data).then((res) => res.data), callbacks);
 
     const logout = (callbacks?: any) =>
         withCallbacks(api.post("auth/logout", {}).then((res) => res.data), callbacks);
@@ -74,7 +74,7 @@ export const useAuth = () => {
         error,
         login,
         signup,
-        verifyOTP,
+        verifyEmail,
         logout,
     };
 };

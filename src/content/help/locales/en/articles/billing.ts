@@ -5,7 +5,7 @@ export const billingArticle: HelpArticle = {
     locale: "en",
     category: "feesAndBilling",
     title: "Subscription and Billing",
-    description: "Understand Classes360 plans, free trial, billing cycle, and how to manage your subscription.",
+    description: "Understand OnCampus plans, free trial, billing cycle, and how to manage your subscription.",
     overview: "Review plans, trial details, billing options, and upgrade rules for your institute account.",
     lastUpdated: "2026-03-16",
     steps: [

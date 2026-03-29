@@ -1,4 +1,5 @@
 import { Database, ShieldCheck, WalletCards, XCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 const trustItems = [
     { icon: XCircle, text: "No commission" },
@@ -13,22 +14,19 @@ type TrustBarProps = {
 
 export default function TrustBar({ compact = false }: TrustBarProps) {
     return (
-        <section className={compact ? "w-full border-b bg-background py-8" : "w-full border-b bg-background py-14"}>
-            <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={compact ? "w-full border-border bg-background py-6" : "w-full border-borderbg-background py-8 md:py-12"}>
+            <div className="max-w-7xl mx-auto px-4 md:px-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {trustItems.map(({ icon: Icon, text }) => (
-                        <div
-                            key={text}
-                            className="rounded-lg border border-border bg-muted/50 px-4 py-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
-                        >
-                            <span className="inline-flex items-center gap-2 text-sm font-medium">
-                                <Icon className="h-4 w-4 text-primary" aria-hidden />
-                                {text}
-                            </span>
-                        </div>
+                        <Card key={text} className="border-border bg-card h-full">
+                            <CardContent className="p-4 flex items-center gap-2 h-full">
+                                <Icon className="h-5 w-5 text-primary" aria-hidden />
+                                <span className="text-sm font-medium text-foreground">{text}</span>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
             </div>
-        </section>
+        </div>
     );
 }

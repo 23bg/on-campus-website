@@ -33,7 +33,7 @@ export default function PricingPage() {
     const pricingSchema = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: "Classes360",
+        name: "OnCampus",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         offers: {

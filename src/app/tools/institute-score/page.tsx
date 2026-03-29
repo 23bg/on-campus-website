@@ -14,7 +14,8 @@ export default function InstituteScorePage() {
                 <h1 className="text-3xl font-bold">Institute Digital Score</h1>
                 <p className="text-muted-foreground">Find out your institute digital score instantly.</p>
             </div>
-            <InstituteScoreTool />
+            // LEGACY TOOL REMOVED: This tool is no longer available in ATS/job management platform.
+            export default function RemovedTool() { return null; }
             <p className="text-sm text-muted-foreground">
                 Run complete operations with <Link href="/features" className="text-primary underline-offset-4 hover:underline">platform features</Link> and <Link href="/pricing" className="text-primary underline-offset-4 hover:underline">pricing plans</Link>.
             </p>

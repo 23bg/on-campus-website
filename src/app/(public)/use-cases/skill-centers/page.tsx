@@ -3,8 +3,8 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Skill Institute Admission and Student Management Platform - Classes360",
-    description: "Manage admissions, student records, and fee operations for short-term skill programs with Classes360.",
+    title: "Skill Institute Admission and Student Management Platform - OnCampus",
+    description: "Manage admissions, student records, and fee operations for short-term skill programs with OnCampus.",
 };
 
 export default function SkillCentersUseCasePage() {
@@ -12,9 +12,9 @@ export default function SkillCentersUseCasePage() {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://classes360.online/" },
-            { "@type": "ListItem", position: 2, name: "Use Cases", item: "https://classes360.online/use-cases" },
-            { "@type": "ListItem", position: 3, name: "Skill Institutes", item: "https://classes360.online/use-cases/skill-centers" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://oncampus.in/" },
+            { "@type": "ListItem", position: 2, name: "Use Cases", item: "https://oncampus.in/use-cases" },
+            { "@type": "ListItem", position: 3, name: "Skill Institutes", item: "https://oncampus.in/use-cases/skill-centers" },
         ],
     };
 

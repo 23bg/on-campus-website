@@ -2,7 +2,7 @@ import { PLAN_CONFIG, type PlanType } from "@/config/plans";
 
 export type FeatureId =
     | "publicInstitutePage"
-    | "freeClasses360Page"
+    | "freeOnCampusPage"
     | "captureEnquiries"
     | "enquiryTrackingFollowUps"
     | "studentCourseManagement"
@@ -15,7 +15,7 @@ export type FeatureId =
     | "whatsAppAlerts"
     | "whatsAppBusinessNumberIntegration"
     | "customDomain"
-    | "removeClasses360Branding"
+    | "removeOnCampusBranding"
     | "whiteLabelSystem"
     | "highVolumeSupport";
 
@@ -36,7 +36,7 @@ export const featureGroups: FeatureGroupDefinition[] = [
         title: "Core System",
         features: [
             { id: "publicInstitutePage", label: "Public institute page" },
-            { id: "freeClasses360Page", label: "Free Classes360 page" },
+            { id: "freeOnCampusPage", label: "Free OnCampus page" },
             { id: "captureEnquiries", label: "Capture enquiries (QR, links, website)" },
             { id: "enquiryTrackingFollowUps", label: "Enquiry tracking & follow-ups" },
             { id: "studentCourseManagement", label: "Student & course management" },
@@ -70,7 +70,7 @@ export const featureGroups: FeatureGroupDefinition[] = [
         title: "Branding",
         features: [
             { id: "customDomain", label: "Custom domain" },
-            { id: "removeClasses360Branding", label: "Remove Classes360 branding" },
+            { id: "removeOnCampusBranding", label: "Remove OnCampus branding" },
             { id: "whiteLabelSystem", label: "White-label system" },
             { id: "highVolumeSupport", label: "High-volume support" },
         ],
@@ -88,33 +88,26 @@ export type PlanDefinition = {
 
 export const planDefinitions: PlanDefinition[] = [
     {
-        key: "STARTER",
-        name: "Starter",
-        description: "Best for single-owner institutes starting a structured admission workflow.",
-        cta: "Start Starter",
+        key: "FREE",
+        name: "Free",
+        description: "Get started with up to 3 jobs and 1 user at no cost.",
+        cta: "Start Free",
         link: "/signup",
     },
     {
-        key: "TEAM",
-        name: "Team",
-        description: "Built for small teams managing admissions together every day.",
-        cta: "Start Team",
+        key: "BASIC",
+        name: "Basic",
+        description: "Perfect for small teams with up to 10 jobs and 3 users.",
+        cta: "Start Basic",
         link: "/signup",
         highlight: true,
     },
     {
-        key: "GROWTH",
-        name: "Growth",
-        description: "For institutes scaling counsellor operations and admissions volume.",
-        cta: "Start Growth",
+        key: "PRO",
+        name: "Pro",
+        description: "Built for scaling teams with unlimited jobs and up to 10 users.",
+        cta: "Start Pro",
         link: "/signup",
-    },
-    {
-        key: "SCALE",
-        name: "Scale",
-        description: "For multi-team institutes that need advanced branding and high-volume support.",
-        cta: "Talk to Sales",
-        link: "/contact",
     },
 ];
 
@@ -124,12 +117,12 @@ export type PlanFeatureAvailability = {
 };
 
 export const planFeatureMatrix: Record<PlanType, Record<FeatureId, PlanFeatureAvailability>> = {
-    STARTER: {
-        publicInstitutePage: { included: true },
-        freeClasses360Page: { included: true },
+    FREE: {
+        publicInstitutePage: { included: false },
+        freeOnCampusPage: { included: true },
         captureEnquiries: { included: true },
         enquiryTrackingFollowUps: { included: true },
-        studentCourseManagement: { included: true },
+        studentCourseManagement: { included: false },
         excelImport: { included: true },
         razorpayPayments: { included: true },
         userAccounts: { included: true, value: "1 user" },
@@ -139,65 +132,46 @@ export const planFeatureMatrix: Record<PlanType, Record<FeatureId, PlanFeatureAv
         whatsAppAlerts: { included: true },
         whatsAppBusinessNumberIntegration: { included: true },
         customDomain: { included: false },
-        removeClasses360Branding: { included: false },
+        removeOnCampusBranding: { included: false },
         whiteLabelSystem: { included: false },
         highVolumeSupport: { included: false },
     },
-    TEAM: {
-        publicInstitutePage: { included: true },
-        freeClasses360Page: { included: true },
+    BASIC: {
+        publicInstitutePage: { included: false },
+        freeOnCampusPage: { included: true },
         captureEnquiries: { included: true },
         enquiryTrackingFollowUps: { included: true },
-        studentCourseManagement: { included: true },
+        studentCourseManagement: { included: false },
         excelImport: { included: true },
         razorpayPayments: { included: true },
-        userAccounts: { included: true, value: "Up to 5 users" },
+        userAccounts: { included: true, value: "Up to 3 users" },
         separateTeamAccounts: { included: true },
         assignEnquiries: { included: true },
         trackOwnership: { included: true },
         whatsAppAlerts: { included: true },
         whatsAppBusinessNumberIntegration: { included: true },
         customDomain: { included: false },
-        removeClasses360Branding: { included: false },
+        removeOnCampusBranding: { included: false },
         whiteLabelSystem: { included: false },
         highVolumeSupport: { included: false },
     },
-    GROWTH: {
-        publicInstitutePage: { included: true },
-        freeClasses360Page: { included: true },
+    PRO: {
+        publicInstitutePage: { included: false },
+        freeOnCampusPage: { included: false },
         captureEnquiries: { included: true },
         enquiryTrackingFollowUps: { included: true },
-        studentCourseManagement: { included: true },
+        studentCourseManagement: { included: false },
         excelImport: { included: true },
         razorpayPayments: { included: true },
-        userAccounts: { included: true, value: "Up to 20 users" },
+        userAccounts: { included: true, value: "Up to 10 users" },
         separateTeamAccounts: { included: true },
         assignEnquiries: { included: true },
         trackOwnership: { included: true },
         whatsAppAlerts: { included: true },
         whatsAppBusinessNumberIntegration: { included: true },
         customDomain: { included: true },
-        removeClasses360Branding: { included: true },
+        removeOnCampusBranding: { included: true },
         whiteLabelSystem: { included: false },
-        highVolumeSupport: { included: false },
-    },
-    SCALE: {
-        publicInstitutePage: { included: true },
-        freeClasses360Page: { included: true },
-        captureEnquiries: { included: true },
-        enquiryTrackingFollowUps: { included: true },
-        studentCourseManagement: { included: true },
-        excelImport: { included: true },
-        razorpayPayments: { included: true },
-        userAccounts: { included: true, value: "Unlimited users" },
-        separateTeamAccounts: { included: true },
-        assignEnquiries: { included: true },
-        trackOwnership: { included: true },
-        whatsAppAlerts: { included: true },
-        whatsAppBusinessNumberIntegration: { included: true },
-        customDomain: { included: true },
-        removeClasses360Branding: { included: true },
-        whiteLabelSystem: { included: true },
         highVolumeSupport: { included: true },
     },
 };

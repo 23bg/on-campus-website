@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import PageContainer from "@/components/layout/PageContainer";
+import Section from "@/components/layout/Section";
+import { Card, CardContent } from "@/components/ui/card";
 
 export async function generateMetadata(): Promise<Metadata> {
     const t = await getTranslations("pages");
@@ -31,24 +34,36 @@ export default async function ContactPage() {
     const t = await getTranslations("contactPage");
 
     return (
-        <main className="mx-auto w-full max-w-4xl px-4 py-12 md:px-6 lg:py-16">
-            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t("title")}</h1>
-            <p className="mt-3 text-muted-foreground">{t("subtitle")}</p>
-
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-                <div className="rounded-xl border p-5">
-                    <p className="text-sm text-muted-foreground">{tCommon("email")}</p>
-                    <p className="mt-1 font-medium">{t("emailValue")}</p>
-                </div>
-                <div className="rounded-xl border p-5">
-                    <p className="text-sm text-muted-foreground">{tCommon("whatsApp")}</p>
-                    <p className="mt-1 font-medium">{t("whatsAppValue")}</p>
-                </div>
-                <div className="rounded-xl border p-5">
-                    <p className="text-sm text-muted-foreground">{tCommon("supportHours")}</p>
-                    <p className="mt-1 font-medium">{t("supportHoursValue")}</p>
-                </div>
+        <PageContainer>
+            <div className="max-w-2xl space-y-3">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">{t("title")}</h1>
+                <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
             </div>
-        </main>
+
+            <Section>
+                <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="border-border bg-card">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-muted-foreground">{tCommon("email")}</p>
+                            <p className="mt-1 font-medium text-foreground">{t("emailValue")}</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border bg-card">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-muted-foreground">{tCommon("whatsApp")}</p>
+                            <p className="mt-1 font-medium text-foreground">{t("whatsAppValue")}</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border bg-card">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-muted-foreground">{tCommon("supportHours")}</p>
+                            <p className="mt-1 font-medium text-foreground">{t("supportHoursValue")}</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </Section>
+        </PageContainer>
     );
 }

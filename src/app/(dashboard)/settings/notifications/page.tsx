@@ -55,7 +55,7 @@ export default function NotificationSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Event Notifications</CardTitle>
-                    <CardDescription>Template text is managed by Classes360 and cannot be edited.</CardDescription>
+                    <CardDescription>Template text is managed by OnCampus and cannot be edited.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <ToggleRow

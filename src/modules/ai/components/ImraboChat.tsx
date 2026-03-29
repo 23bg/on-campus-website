@@ -152,7 +152,7 @@ export default function ImraboChat() {
                     </SheetTitle>
                 </SheetHeader>
 
-                <div className="px-4 py-2 border-b flex flex-wrap gap-2">
+                <div className="px-4 py-2 border-borderflex flex-wrap gap-2">
                     {QUICK_SUGGESTIONS.map((suggestion) => (
                         <Button
                             key={suggestion}

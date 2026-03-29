@@ -1,4 +1,4 @@
-# Classes360 Programmatic SEO Matrix (170 Pages)
+# OnCampus Programmatic SEO Matrix (170 Pages)
 
 Generated from curated targets in `src/lib/seo/programmatic.ts` using `scripts/generate-seo-matrix.mjs`.
 

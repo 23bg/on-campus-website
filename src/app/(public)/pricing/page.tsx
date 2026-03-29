@@ -1,7 +1,9 @@
 ﻿import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import Pricing from "../../../components/landing/Pricing";
-import CTA from "../../../components/landing/CTA";
+import PageContainer from "@/components/layout/PageContainer";
+import Section from "@/components/layout/Section";
+import Pricing from "@/components/landing/Pricing";
+import CTA from "@/components/landing/CTA";
 import LogoStrip from "@/components/landing/LogoStrip";
 import TrustBar from "@/components/landing/TrustBar";
 import JsonLd from "@/components/seo/JsonLd";
@@ -35,7 +37,7 @@ export default function PricingPage() {
     const pricingSchema = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: "Classes360",
+        name: "OnCampus",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         offers: {
@@ -47,13 +49,27 @@ export default function PricingPage() {
     };
 
     return (
-        <main>
+        <>
             <JsonLd id="schema-pricing-software" data={pricingSchema} />
-            <LogoStrip compact />
-            <Pricing />
-            <TrustBar compact />
-            <CTA />
-        </main>
+
+            <PageContainer>
+                <Section className="py-0">
+                    <LogoStrip compact />
+                </Section>
+
+                <Section>
+                    <Pricing />
+                </Section>
+
+                <Section>
+                    <TrustBar compact />
+                </Section>
+
+                <Section className="pb-0">
+                    <CTA />
+                </Section>
+            </PageContainer>
+        </>
     );
 }
 

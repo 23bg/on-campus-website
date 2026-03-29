@@ -1,10 +1,11 @@
 import { Quote } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 const testimonials = [
     {
         institute: "Apex JEE Academy",
         role: "Owner",
-        quote: "Before Classes360, we lost 30% enquiries. Now every enquiry has a clear follow-up owner.",
+        quote: "Before OnCampus, we lost 30% enquiries. Now every enquiry has a clear follow-up owner.",
     },
     {
         institute: "FutureRank Classes",
@@ -20,31 +21,31 @@ const testimonials = [
 
 export default function Testimonials() {
     return (
-        <section className="w-full border-b bg-muted/50 py-14 md:py-20">
-            <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
-                <div className="max-w-2xl space-y-3">
-                    <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Results from real institutes</h2>
-                    <p className="text-sm text-muted-foreground md:text-base">
-                        Teams choose Classes360 for operational clarity, faster follow-ups, and predictable admissions execution.
+        <div className="w-full">
+            <div className="max-w-7xl mx-auto px-4 md:px-6">
+                <div className="max-w-2xl space-y-4">
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">
+                        Results from real institutes
+                    </h2>
+                    <p className="text-sm md:text-base text-muted-foreground">
+                        Teams choose OnCampus for operational clarity, faster follow-ups, and predictable admissions execution.
                     </p>
                 </div>
-
-                <div className="mt-8 grid gap-4 md:grid-cols-3">
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                     {testimonials.map((item) => (
-                        <article
-                            key={item.institute}
-                            className="rounded-xl border border-border bg-background p-5 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
-                        >
-                            <Quote className="h-5 w-5 text-primary" aria-hidden />
-                            <p className="mt-4 text-sm leading-6 text-foreground">"{item.quote}"</p>
-                            <div className="mt-5 border-t pt-3">
-                                <p className="text-sm font-semibold">{item.institute}</p>
-                                <p className="text-xs text-muted-foreground">{item.role}</p>
-                            </div>
-                        </article>
+                        <Card key={item.institute} className="border-border bg-card h-full">
+                            <CardContent className="p-4 md:p-6 flex flex-col h-full">
+                                <Quote className="h-5 w-5 text-primary" aria-hidden />
+                                <p className="mt-4 text-sm leading-6 text-foreground">"{item.quote}"</p>
+                                <div className="mt-5 border-t pt-3">
+                                    <p className="text-sm font-semibold text-foreground">{item.institute}</p>
+                                    <p className="text-xs text-muted-foreground">{item.role}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
             </div>
-        </section>
+        </div>
     );
 }

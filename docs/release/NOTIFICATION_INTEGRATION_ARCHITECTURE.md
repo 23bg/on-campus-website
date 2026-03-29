@@ -4,7 +4,7 @@ Date: 2026-03-15
 
 ## Scope
 
-This implementation extends the existing Classes360 CRM without changing core module behavior.
+This implementation extends the existing OnCampus CRM without changing core module behavior.
 
 Implemented goals:
 - Central event dispatcher for channel fan-out.

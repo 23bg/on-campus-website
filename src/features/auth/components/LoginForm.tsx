@@ -118,27 +118,31 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 
-export default function LoginForm() {
+export default function LoginForm({ role }: { role?: "EMPLOYER" | "CANDIDATE" }) {
     const router = useRouter();
     const { login, loading } = useAuth();
 
     const form = useForm<loginFormData>({
         resolver: zodResolver(loginFormSchema),
         mode: "onBlur",
-        defaultValues: { email: "" },
+        defaultValues: { email: "", password: "" },
     });
 
     const onSubmit = async (data: loginFormData) => {
         login(
-            { email: data.email },
+            { email: data.email, password: data.password, expectedRole: role },
 
             {
-                onSuccess: () => {
-                    // Save email temporarily for OTP verification
-                    localStorage.setItem("login_email", data.email);
+                onSuccess: (result: { mfaRequired?: boolean; redirectTo?: string }) => {
+                    if (result?.mfaRequired) {
+                        localStorage.setItem("mfa_email", data.email);
+                        toast.info("MFA verification required.");
+                        router.push(ROUTES.AUTH.VERIFICATION);
+                        return;
+                    }
 
-                    toast.success("Login successful. OTP sent!");
-                    router.push(ROUTES.AUTH.VERIFICATION);
+                    toast.success("Login successful.");
+                    router.push(result?.redirectTo || "/overview");
                     form.reset();
                 },
 
@@ -154,7 +158,7 @@ export default function LoginForm() {
             <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl">Sign in</CardTitle>
                 <CardDescription>
-                    Enter your email below to continue
+                    Enter your email and password to continue
                 </CardDescription>
             </CardHeader>
 
@@ -174,6 +178,26 @@ export default function LoginForm() {
                                             placeholder="name@example.com"
                                             disabled={loading}
                                             maxLength={120}
+                                        />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Password</FieldLabel>
+                            <Controller
+                                name="password"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input
+                                            type="password"
+                                            {...field}
+                                            placeholder="Enter your password"
+                                            disabled={loading}
+                                            maxLength={128}
                                         />
                                         <FieldError errors={[fieldState.error]} />
                                     </>

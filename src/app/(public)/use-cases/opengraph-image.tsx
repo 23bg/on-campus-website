@@ -23,7 +23,7 @@ export default function OpengraphImage() {
                     fontFamily: "sans-serif",
                 }}
             >
-                <div style={{ fontSize: 34, opacity: 0.9 }}>Classes360 Use Cases</div>
+                <div style={{ fontSize: 34, opacity: 0.9 }}>OnCampus Use Cases</div>
                 <div style={{ marginTop: 16, fontSize: 58, fontWeight: 700, lineHeight: 1.15 }}>
                     Built for Coaching Institutes
                 </div>

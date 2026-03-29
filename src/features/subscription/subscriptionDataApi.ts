@@ -4,11 +4,10 @@ import { DEFAULT_PLAN_TYPE, PLAN_CONFIG, PlanType } from "@/config/plans";
 const mapPlanTypeToDb = (planType: PlanType) => {
     // Prisma enum currently uses SOLO/TEAM. Map app-level plans to DB enum.
     switch (planType) {
-        case "STARTER":
+        case "FREE":
             return "SOLO" as const;
-        case "TEAM":
-        case "GROWTH":
-        case "SCALE":
+        case "BASIC":
+        case "PRO":
             return "TEAM" as const;
         default:
             return "SOLO" as const;
@@ -46,6 +45,11 @@ export const subscriptionRepository = {
             status?: "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
             currentPeriodEnd?: Date | null;
             razorpaySubId?: string | null;
+            // provider fields may be configured in schema migration; ignore for older Prisma client
+            provider?: "RAZORPAY" | "STRIPE";
+            providerCustomerId?: string | null;
+            providerSubscriptionId?: string | null;
+            providerPlanId?: string | null;
             trialEndsAt?: Date | null;
             planType?: PlanType;
             userLimit?: number;
@@ -54,14 +58,23 @@ export const subscriptionRepository = {
             autopayEnabled?: boolean;
             paymentMethodAddedAt?: Date | null;
         }
-    ) =>
-        prisma.subscription.update({
+    ) => {
+        const {
+            provider,
+            providerCustomerId,
+            providerSubscriptionId,
+            providerPlanId,
+            ...prismaPayload
+        } = payload;
+
+        return prisma.subscription.update({
             where: { instituteId },
             data: {
-                ...payload,
+                ...prismaPayload,
                 ...(payload.planType ? { planType: mapPlanTypeToDb(payload.planType) } : {}),
             } as any,
-        }),
+        });
+    },
 
     upsertByRazorpaySubId: async (
         razorpaySubId: string,
@@ -69,6 +82,10 @@ export const subscriptionRepository = {
         payload: {
             status?: "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
             currentPeriodEnd?: Date | null;
+            provider?: "RAZORPAY" | "STRIPE";
+            providerCustomerId?: string | null;
+            providerSubscriptionId?: string | null;
+            providerPlanId?: string | null;
             trialEndsAt?: Date | null;
             planType?: PlanType;
             userLimit?: number;

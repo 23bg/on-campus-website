@@ -56,38 +56,42 @@ const useAsyncMutation = <TData, TVariables>(
 };
 
 /**
- * Request OTP for login
- * Sends email to get OTP code
+ * Password-based signup
  */
-export const useRequestOtp = () =>
-    useAsyncMutation<OtpResponse, LoginPayload>((payload: LoginPayload) =>
-        api.post('auth/request-otp', payload).then(res => res.data),
+export const useSignup = () =>
+    useAsyncMutation<AuthResponse, SignupPayload>((payload: SignupPayload) =>
+        api.post('auth/signup', payload).then(res => res.data),
     );
 
 /**
- * Request OTP for signup
- * Same as login but for new account creation
+ * Password-based login
  */
-export const useRequestOtpForSignup = () =>
-    useAsyncMutation<OtpResponse, SignupPayload>((payload: SignupPayload) =>
-        api.post('auth/request-otp', payload).then(res => res.data),
+export const useLogin = () =>
+    useAsyncMutation<AuthResponse, LoginPayload>((payload: LoginPayload) =>
+        api.post('auth/login', payload).then(res => res.data),
     );
 
 /**
- * Verify OTP and complete login
+ * Verify email OTP
  */
-export const useVerifyOtp = () =>
+export const useVerifyEmail = () =>
     useAsyncMutation<AuthResponse, VerifyOtpPayload>((payload: VerifyOtpPayload) =>
-        api.post('auth/verify-otp', payload).then(res => res.data),
+        api.post('auth/verification', payload).then(res => res.data),
     );
 
 /**
- * Complete signup with OTP verification
+ * Request OTP for email verification
  */
-export const useSignupWithOtp = () =>
-    useAsyncMutation<AuthResponse, VerifyOtpPayload>((payload: VerifyOtpPayload) =>
-        api.post('auth/verify-otp', payload).then(res => res.data),
+export const useRequestVerificationOtp = () =>
+    useAsyncMutation<OtpResponse, { email: string }>((payload) =>
+        api.post('auth/verification/request', payload).then(res => res.data),
     );
+
+// Backward-compatible aliases for older imports.
+export const useRequestOtp = useLogin;
+export const useRequestOtpForSignup = useSignup;
+export const useVerifyOtp = useVerifyEmail;
+export const useSignupWithOtp = useVerifyEmail;
 
 /**
  * Logout user

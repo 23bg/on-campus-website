@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { instituteService } from "@/features/institute/instituteApi";
 
-export const STUDENT_PORTAL_URL = "https://student.classes360.online";
+export const STUDENT_PORTAL_URL = "https://student.oncampus.in";
 
 type InstituteCourse = {
     id: string;

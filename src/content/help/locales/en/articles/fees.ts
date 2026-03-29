@@ -6,7 +6,7 @@ export const feesArticle: HelpArticle = {
     category: "feesAndBilling",
     title: "Managing Student Fees",
     description: "Record fee plans, installments, and payment receipts for enrolled students.",
-    overview: "Classes360 tracks fees manually recorded by your team. It does not collect student payments directly.",
+    overview: "OnCampus tracks fees manually recorded by your team. It does not collect student payments directly.",
     lastUpdated: "2026-06-01",
     steps: [
         {
@@ -60,8 +60,8 @@ export const feesArticle: HelpArticle = {
     ],
     faqs: [
         {
-            question: "Does Classes360 collect student payments?",
-            answer: "No. Classes360 does not process or transfer student money. Your team records payments after collection.",
+            question: "Does OnCampus collect student payments?",
+            answer: "No. OnCampus does not process or transfer student money. Your team records payments after collection.",
         },
         {
             question: "Can I add partial payments?",

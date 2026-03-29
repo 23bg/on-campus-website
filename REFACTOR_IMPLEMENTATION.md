@@ -1,4 +1,4 @@
-# Classes360 Refactor Implementation Guide
+# OnCampus Refactor Implementation Guide
 
 ## ✅ WHAT HAS BEEN IMPLEMENTED
 

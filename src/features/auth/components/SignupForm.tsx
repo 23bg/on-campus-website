@@ -150,7 +150,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 
-export default function SignupForm() {
+export default function SignupForm({ role }: { role?: "EMPLOYER" | "CANDIDATE" }) {
     const router = useRouter();
     const { signup, loading } = useAuth();
 
@@ -158,21 +158,25 @@ export default function SignupForm() {
         resolver: zodResolver(signupFormSchema),
         mode: "onBlur",
         defaultValues: {
-            name: "",
             email: "",
-            phoneNumber: "",
+            password: "",
+            confirmPassword: "",
         },
     });
 
     const onSubmit = async (data: SignupFormData) => {
         signup(
-            data,
+            {
+                email: data.email,
+                password: data.password,
+                role: role ?? "CANDIDATE",
+            },
             {
                 onSuccess: () => {
                     // Save email for OTP verification
-                    localStorage.setItem("login_email", data.email);
+                    localStorage.setItem("verification_email", data.email);
 
-                    toast.success("Signup successful! OTP sent.");
+                    toast.success("Signup successful! Verify your email to continue.");
                     router.push(ROUTES.AUTH.VERIFICATION);
 
                     form.reset();
@@ -190,27 +194,13 @@ export default function SignupForm() {
             <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl">Create an account</CardTitle>
                 <CardDescription>
-                    Enter your details to continue
+                    Enter your email and password to continue
                 </CardDescription>
             </CardHeader>
 
             <CardContent>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <FieldGroup>
-                        <Field>
-                            <FieldLabel>Name</FieldLabel>
-                            <Controller
-                                name="name"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <>
-                                        <Input {...field} placeholder="Full Name" disabled={loading} minLength={2} maxLength={80} />
-                                        <FieldError errors={[fieldState.error]} />
-                                    </>
-                                )}
-                            />
-                        </Field>
-
                         <Field>
                             <FieldLabel>Email</FieldLabel>
                             <Controller
@@ -226,13 +216,27 @@ export default function SignupForm() {
                         </Field>
 
                         <Field>
-                            <FieldLabel>Phone Number</FieldLabel>
+                            <FieldLabel>Password</FieldLabel>
                             <Controller
-                                name="phoneNumber"
+                                name="password"
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <>
-                                        <Input type="text" {...field} placeholder="Phone Number" disabled={loading} inputMode="numeric" maxLength={15} />
+                                        <Input type="password" {...field} placeholder="Create a password" disabled={loading} maxLength={128} />
+                                        <FieldError errors={[fieldState.error]} />
+                                    </>
+                                )}
+                            />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>Confirm Password</FieldLabel>
+                            <Controller
+                                name="confirmPassword"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <>
+                                        <Input type="password" {...field} placeholder="Confirm your password" disabled={loading} maxLength={128} />
                                         <FieldError errors={[fieldState.error]} />
                                     </>
                                 )}

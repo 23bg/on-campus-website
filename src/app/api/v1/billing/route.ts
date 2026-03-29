@@ -3,6 +3,7 @@ import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/l
 import { canManageBilling } from "@/lib/auth/permissions";
 import { BillingInterval, subscriptionService } from "@/features/subscription/subscriptionApi";
 import { billingService } from "@/features/billing/billingApi";
+import { BillingProvider, BillingServiceFactory } from "@/lib/billing/billing.service";
 import { toAppError } from "@/lib/utils/error";
 import { isPlanType } from "@/config/plans";
 import { env } from "@/lib/config/env";
@@ -101,15 +102,51 @@ export async function POST(req: NextRequest) {
                 ? body.interval
                 : "MONTHLY";
 
-        const created = await subscriptionService.createRazorpaySubscription(session.instituteId, body.planType, interval);
+        const provider = (body.provider as BillingProvider | undefined)
+            || (session.country === "IN" ? BillingProvider.RAZORPAY : BillingProvider.STRIPE);
+
+        console.log("PLAN:", body.planType, "INTERVAL:", interval, "PROVIDER:", provider);
+
+        const billingServiceImpl = BillingServiceFactory.getBillingService(provider);
+
+        // use existing mapping for plan type to provider plan ID (simplified)
+        const providerPlanId = provider === BillingProvider.RAZORPAY
+            ? process.env.RAZORPAY_PLAN_ID
+            : process.env.STRIPE_PRICE_ID;
+
+        if (!providerPlanId) {
+            throw new Error("Provider plan ID is not configured");
+        }
+
+        const customer = await billingServiceImpl.createCustomer({
+            instituteId: session.instituteId,
+            email: session.email ?? "",
+            name: session.name ?? "",
+            country: session.country ?? "",
+        });
+
+        const subscription = await billingServiceImpl.createSubscription({
+            instituteId: session.instituteId,
+            providerCustomerId: customer.providerCustomerId,
+            providerPlanId,
+            billingInterval: interval,
+        });
+
+        await subscriptionService.updateSubscriptionProvider(session.instituteId, {
+            provider,
+            providerCustomerId: customer.providerCustomerId,
+            providerSubscriptionId: subscription.providerSubscriptionId,
+            providerPlanId,
+        });
+
         return NextResponse.json({
             success: true,
             data: {
-                subscriptionId: created.subscriptionId,
-                key: env.RAZORPAY_KEY_ID,
-                planType: created.planType,
-                interval: created.interval,
-                reused: created.reused,
+                subscriptionId: subscription.providerSubscriptionId,
+                provider,
+                planType: body.planType,
+                interval,
+                reused: false,
             },
         });
     } catch (error) {

@@ -1,23 +1,28 @@
 import { prisma } from "@/lib/db/prisma";
 
-type AppRole = "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+type AppRole = "OWNER" | "EDITOR" | "VIEWER" | "MANAGER" | "EMPLOYER" | "CANDIDATE";
 
 type CreateUserInput = {
     email: string;
     instituteId?: string;
     role?: AppRole;
     name?: string;
+    passwordHash?: string;
     emailVerified?: boolean;
     otpPending?: boolean;
     otpHash?: string | null;
     otpResendCount?: number;
+    otpAttempts?: number;
     otpExpiresAt?: Date | null;
 };
 
-const toPrismaRole = (role?: AppRole): "OWNER" | "EDITOR" | "VIEWER" | undefined => {
+const toPrismaRole = (role?: AppRole): "OWNER" | "EDITOR" | "VIEWER" | "MANAGER" | "EMPLOYER" | "CANDIDATE" | undefined => {
     if (!role) return undefined;
-    if (role === "MANAGER") return "EDITOR";
-    return role;
+    if (role === "MANAGER") return "MANAGER";
+    if (role === "EMPLOYER") return "EMPLOYER";
+    if (role === "CANDIDATE") return "CANDIDATE";
+    if (role === "OWNER" || role === "EDITOR" || role === "VIEWER") return role;
+    return undefined;
 };
 
 export const userRepository = {
@@ -33,12 +38,14 @@ export const userRepository = {
             data: {
                 email: input.email.trim().toLowerCase(),
                 instituteId: input.instituteId,
-                role: toPrismaRole(input.role) ?? "OWNER",
+                role: toPrismaRole(input.role) ?? "CANDIDATE",
                 name: input.name,
+                passwordHash: input.passwordHash,
                 emailVerified: input.emailVerified ?? false,
                 otpPending: input.otpPending ?? false,
                 otpHash: input.otpHash,
                 otpResendCount: input.otpResendCount,
+                otpAttempts: input.otpAttempts,
                 otpExpiresAt: input.otpExpiresAt,
             },
         }),
@@ -49,11 +56,14 @@ export const userRepository = {
             instituteId?: string;
             role?: AppRole;
             name?: string | null;
+            passwordHash?: string;
             emailVerified?: boolean;
             otpPending?: boolean;
             otpHash?: string | null;
             otpResendCount?: number;
+            otpAttempts?: number;
             otpExpiresAt?: Date | null;
+            subject?: string | null;
         }
     ) => {
         const normalizedEmail = email.trim().toLowerCase();
@@ -63,11 +73,14 @@ export const userRepository = {
                 ...(input.instituteId !== undefined ? { instituteId: input.instituteId } : {}),
                 ...(input.role !== undefined ? { role: toPrismaRole(input.role) } : {}),
                 ...(input.name !== undefined ? { name: input.name } : {}),
+                ...(input.passwordHash !== undefined ? { passwordHash: input.passwordHash } : {}),
                 ...(input.emailVerified !== undefined ? { emailVerified: input.emailVerified } : {}),
                 ...(input.otpPending !== undefined ? { otpPending: input.otpPending } : {}),
                 ...(input.otpHash !== undefined ? { otpHash: input.otpHash } : {}),
                 ...(input.otpResendCount !== undefined ? { otpResendCount: input.otpResendCount } : {}),
+                ...(input.otpAttempts !== undefined ? { otpAttempts: input.otpAttempts } : {}),
                 ...(input.otpExpiresAt !== undefined ? { otpExpiresAt: input.otpExpiresAt } : {}),
+                ...(input.subject !== undefined ? { subject: input.subject } : {}),
             },
         });
 

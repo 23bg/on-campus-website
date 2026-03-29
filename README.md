@@ -1,6 +1,6 @@
-# Classes360 WWW
+# OnCampus WWW
 
-Classes360 is a production SaaS platform for coaching institutes. This repository powers the web application and dashboard experiences including admission CRM workflows, student operations, billing, and platform automation.
+OnCampus is a production SaaS platform for coaching institutes. This repository powers the web application and dashboard experiences including admission CRM workflows, student operations, billing, and platform automation.
 
 ## Stack
 
@@ -21,7 +21,7 @@ Classes360 is a production SaaS platform for coaching institutes. This repositor
 
 ## Recent Platform Updates
 
-- Optional institute WhatsApp sender support with fallback to Classes360 shared sender
+- Optional institute WhatsApp sender support with fallback to OnCampus shared sender
 - Billing and usage flow aligned to monthly alert limits and overage logic
 - Settings pages for WhatsApp integration and notification toggles
 - Imrabo assistant upgraded with helpDocs-based retrieval and guarded AI prompts

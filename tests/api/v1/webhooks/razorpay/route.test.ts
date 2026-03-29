@@ -12,7 +12,7 @@ vi.mock("@/lib/billing/razorpay", () => ({
     verifyRazorpayWebhookSignature: mockVerifySignature,
 }));
 
-vi.mock("@/features/subscription/services/subscription.service", () => ({
+vi.mock("@/features/subscription/subscriptionApi", () => ({
     subscriptionService: mockSubscriptionService,
 }));
 

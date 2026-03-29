@@ -1,6 +1,6 @@
-# Classes360 Load Tests (k6)
+# OnCampus Load Tests (k6)
 
-This folder contains scenario-based k6 load tests for the Classes360 multi-tenant SaaS surfaces.
+This folder contains scenario-based k6 load tests for the OnCampus multi-tenant SaaS surfaces.
 
 ## Covered Surfaces
 
@@ -24,7 +24,7 @@ This folder contains scenario-based k6 load tests for the Classes360 multi-tenan
 
 ## Environment Variables
 
-- `BASE_URL` (default: `https://classes360.online`)
+- `BASE_URL` (default: `https://oncampus.in`)
 - `PUBLIC_INSTITUTE_SLUG` (default: `kiran-academy`)
 - `TEST_PHONE` (default: `9999999999`)
 - `TEST_STUDENT_NAME` (default: `Test Student`)

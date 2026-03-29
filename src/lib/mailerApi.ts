@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { env } from "@/lib/config/env";
 import { AppError } from "@/lib/utils/error";
 import { logger } from "@/lib/utils/logger";
+import { OtpPurpose } from "@/modules/auth/domain/otpPurpose";
 
 let transporter: nodemailer.Transporter | null = null;
 
@@ -46,21 +47,29 @@ const getTransporter = (): nodemailer.Transporter => {
     return transporter;
 };
 
-const renderOtpEmailHtml = (otp: string, expiryMinutes: number): string => `
+const purposeLabel: Record<OtpPurpose, string> = {
+    [OtpPurpose.VERIFY_EMAIL]: "verify your email",
+    [OtpPurpose.MFA]: "complete sign in",
+    [OtpPurpose.RESET_PASSWORD]: "reset your password",
+};
+
+const renderOtpEmailHtml = (otp: string, expiryMinutes: number, purpose: OtpPurpose): string => `
   <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">
-    <h2 style="margin:0 0 12px;">Your Classes360 OTP</h2>
-    <p style="margin:0 0 16px;color:#4b5563;">Use the OTP below to continue sign in.</p>
+    <h2 style="margin:0 0 12px;">Your OnCampus OTP</h2>
+        <p style="margin:0 0 16px;color:#4b5563;">Use the OTP below to ${purposeLabel[purpose]}.</p>
     <div style="font-size:32px;font-weight:700;letter-spacing:8px;margin:16px 0;color:#111827;">${otp}</div>
     <p style="margin:0;color:#6b7280;">This OTP expires in ${expiryMinutes} minutes.</p>
   </div>
 `;
 
 export const mailerService = {
-    async sendOtpEmail(input: { email: string; otp: string }): Promise<void> {
+    async sendOtpEmail(input: { email: string; otp: string; purpose?: OtpPurpose }): Promise<void> {
         if (!env.OTP_EMAIL_ENABLED) {
             logger.info({ email: input.email }, "OTP email sending disabled; skipping provider send");
             return;
         }
+
+        const purpose = input.purpose ?? OtpPurpose.VERIFY_EMAIL;
 
         let transport = getTransporter();
 
@@ -68,9 +77,9 @@ export const mailerService = {
             from: `"${env.SMTP_HOST_NAME}" <${env.SMTP_FROM}>`,
             // from: env.SMTP_FROM,
             to: input.email,
-            subject: "Your Classes360 OTP",
-            text: `Your OTP is ${input.otp}. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.`,
-            html: renderOtpEmailHtml(input.otp, env.OTP_EXPIRY_MINUTES),
+            subject: "Your OnCampus OTP",
+            text: `Your OTP is ${input.otp}. Use it to ${purposeLabel[purpose]}. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.`,
+            html: renderOtpEmailHtml(input.otp, env.OTP_EXPIRY_MINUTES, purpose),
         };
 
         try {

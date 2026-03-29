@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import { feeRepository } from "@/features/fee/feeDataApi";
+import { feeRepository } from "@/features/fee/feeDataApi"; // Keep for now, but will be removed later
 
 const parseAggregateCount = (value: unknown) => {
     if (!Array.isArray(value)) return 0;
@@ -17,21 +17,17 @@ export const dashboardService = {
         const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
         const [
-            leadsAgg,
-            admissionsAgg,
-            studentsAgg,
-            feesCollected,
-            outstandingFees,
-            leadsTodayAgg,
-            studentsTodayAgg,
-            feesCollectedToday,
-            feesDueToday,
-            recentLeads,
-            recentPayments,
-            todaysFollowUps,
-            overdueFollowUps,
+            candidatesAgg, // Renamed from leadsAgg
+            hiresAgg,      // Renamed from admissionsAgg
+            employeesAgg,  // Renamed from studentsAgg (placeholder)
+            candidatesTodayAgg, // Renamed from leadsTodayAgg
+            employeesTodayAgg,  // Renamed from studentsTodayAgg (placeholder)
+            totalJobs, // New metric
+            pipelineDistribution, // New metric (placeholder for actual aggregation)
+            todaysInterviews, // Renamed from todaysFollowUps
+            overdueInterviews, // Renamed from overdueFollowUps
         ] = await Promise.all([
-            prisma.lead.aggregateRaw({
+            prisma.candidate.aggregateRaw({ // Updated from prisma.lead
                 pipeline: [
                     {
                         $match: {
@@ -42,19 +38,19 @@ export const dashboardService = {
                     { $count: "count" },
                 ],
             }),
-            prisma.lead.aggregateRaw({
+            prisma.candidate.aggregateRaw({ // Updated from prisma.lead
                 pipeline: [
                     {
                         $match: {
                             instituteId,
-                            status: "ADMITTED",
+                            status: "SELECTED", // Updated from "ADMITTED"
                             updatedAt: { $gte: monthStart },
                         },
                     },
                     { $count: "count" },
                 ],
             }),
-            prisma.student.aggregateRaw({
+            prisma.student.aggregateRaw({ // TODO: Update to prisma.employee.aggregateRaw
                 pipeline: [
                     {
                         $match: {
@@ -64,20 +60,7 @@ export const dashboardService = {
                     { $count: "count" },
                 ],
             }),
-            feeRepository.totalCollectedByInstitute(instituteId, monthStart),
-            feeRepository.totalOutstandingByInstitute(instituteId),
-            prisma.lead.aggregateRaw({
-                pipeline: [
-                    {
-                        $match: {
-                            instituteId,
-                            createdAt: { $gte: todayStart, $lt: tomorrowStart },
-                        },
-                    },
-                    { $count: "count" },
-                ],
-            }),
-            prisma.student.aggregateRaw({
+            prisma.candidate.aggregateRaw({ // Updated from prisma.lead
                 pipeline: [
                     {
                         $match: {
@@ -88,83 +71,81 @@ export const dashboardService = {
                     { $count: "count" },
                 ],
             }),
-            feeRepository.totalCollectedByInstitute(instituteId, todayStart),
-            feeRepository.countFeesDueOnDate(instituteId, todayStart, tomorrowStart),
-            prisma.lead.findMany({
+            prisma.student.aggregateRaw({ // TODO: Update to prisma.employee.aggregateRaw
+                pipeline: [
+                    {
+                        $match: {
+                            instituteId,
+                            createdAt: { $gte: todayStart, $lt: tomorrowStart },
+                        },
+                    },
+                    { $count: "count" },
+                ],
+            }),
+            prisma.job.count({ // New metric
                 where: { instituteId },
-                orderBy: { createdAt: "desc" },
-                take: 5,
-                select: {
-                    id: true,
-                    name: true,
-                    phone: true,
-                    status: true,
-                    createdAt: true,
-                },
             }),
-            feeRepository.listPaymentsByInstitute({ instituteId, limit: 5 }),
-            prisma.lead.findMany({
+            // TODO: Implement actual pipeline distribution aggregation
+            Promise.resolve([]), // Placeholder for pipelineDistribution
+            prisma.candidate.findMany({ // Updated from prisma.lead
                 where: {
                     instituteId,
-                    followUpAt: { gte: todayStart, lt: tomorrowStart },
-                    status: { notIn: ["ADMITTED", "DROPPED"] },
+                    followUpAt: { gte: todayStart, lt: tomorrowStart }, // TODO: Change to interviewAt
+                    status: { notIn: ["SELECTED", "REJECTED"] }, // Updated from "ADMITTED", "DROPPED"
                 },
-                orderBy: { followUpAt: "asc" },
+                orderBy: { followUpAt: "asc" }, // TODO: Change to interviewAt
                 take: 20,
                 select: {
                     id: true,
                     name: true,
                     phone: true,
-                    followUpAt: true,
+                    followUpAt: true, // TODO: Change to interviewAt
                     status: true,
                 },
             }),
-            prisma.lead.findMany({
+            prisma.candidate.findMany({ // Updated from prisma.lead
                 where: {
                     instituteId,
-                    followUpAt: { lt: todayStart },
-                    status: { notIn: ["ADMITTED", "DROPPED"] },
+                    followUpAt: { lt: todayStart }, // TODO: Change to interviewAt
+                    status: { notIn: ["SELECTED", "REJECTED"] }, // Updated from "ADMITTED", "DROPPED"
                 },
-                orderBy: { followUpAt: "asc" },
+                orderBy: { followUpAt: "asc" }, // TODO: Change to interviewAt
                 take: 20,
                 select: {
                     id: true,
                     name: true,
                     phone: true,
-                    followUpAt: true,
+                    followUpAt: true, // TODO: Change to interviewAt
                     status: true,
                 },
             }),
         ]);
 
-        const leadsThisMonth = parseAggregateCount(leadsAgg);
-        const admissionsThisMonth = parseAggregateCount(admissionsAgg);
-        const totalStudents = parseAggregateCount(studentsAgg);
-        const leadsToday = parseAggregateCount(leadsTodayAgg);
-        const studentsToday = parseAggregateCount(studentsTodayAgg);
+        const candidatesThisMonth = parseAggregateCount(candidatesAgg);
+        const hiresThisMonth = parseAggregateCount(hiresAgg);
+        const totalEmployees = parseAggregateCount(employeesAgg);
+        const candidatesToday = parseAggregateCount(candidatesTodayAgg);
+        const employeesToday = parseAggregateCount(employeesTodayAgg);
 
-        const conversionPercentage = leadsThisMonth > 0 ? Math.round((admissionsThisMonth / leadsThisMonth) * 100) : 0;
+        const conversionPercentage = candidatesThisMonth > 0 ? Math.round((hiresThisMonth / candidatesThisMonth) * 100) : 0;
 
         return {
-            leadsThisMonth,
-            admissionsThisMonth,
-            totalStudents,
+            candidatesThisMonth,
+            hiresThisMonth,
+            totalEmployees,
             conversionPercentage,
-            totalFeesCollectedThisMonth: feesCollected,
-            totalOutstandingFees: outstandingFees,
+            totalJobs, // New metric
+            candidatesPerJob: 0, // TODO: Implement candidates per job calculation
+            pipelineDistribution: pipelineDistribution, // New metric
             todayOverview: {
-                newLeads: leadsToday,
-                feesCollected: feesCollectedToday,
-                feesDueToday,
-                newStudents: studentsToday,
+                newCandidates: candidatesToday,
+                newEmployees: employeesToday,
             },
-            recentLeads,
-            recentPayments,
-            followUpOverview: {
-                todayCount: todaysFollowUps.length,
-                overdueCount: overdueFollowUps.length,
-                todaysFollowUps,
-                overdueFollowUps,
+            interviewOverview: { // Renamed from followUpOverview
+                todayCount: todaysInterviews.length,
+                overdueCount: overdueInterviews.length,
+                todaysInterviews,
+                overdueInterviews,
             },
         };
     },

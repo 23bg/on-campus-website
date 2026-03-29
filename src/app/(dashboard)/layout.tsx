@@ -9,7 +9,7 @@ import { DashboardLayoutWithProviders } from "@/providers/DashboardLayoutWithPro
 export const metadata: Metadata = {
     title: "Dashboard",
     description:
-        "Classes360 Dashboard - Manage admissions, leads, students, teachers, and billing.",
+        "OnCampus Dashboard - Manage admissions, leads, students, teachers, and billing.",
     robots: {
         index: false,
         follow: false,
@@ -23,7 +23,12 @@ export default async function AppLayout({
 }) {
     const session = await readSessionFromCookie();
     if (!session) {
-        redirect("/login");
+        redirect("/auth/employer/login");
+    }
+
+    if (session.role === "CANDIDATE") {
+        // Candidate users should use the candidate portal.
+        redirect("/auth/candidate/login");
     }
 
     const institute = await instituteService.getOverview(session.instituteId);

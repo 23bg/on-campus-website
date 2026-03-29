@@ -1,6 +1,6 @@
-# Classes360 Notification Event System
+# OnCampus Notification Event System
 
-This document defines the application-event based notification contract for Classes360.
+This document defines the application-event based notification contract for OnCampus.
 
 ## Channels
 
@@ -29,7 +29,7 @@ Notes:
 Rules:
 - ONCAMPUS_SYSTEM_NUMBER is used for lead alerts, follow-up reminders, and subscription alerts.
 - INSTITUTE_WHATSAPP_NUMBER is used for student communication, fee alerts, and announcements.
-- If institute sender is not connected, routing falls back to Classes360 system sender.
+- If institute sender is not connected, routing falls back to OnCampus system sender.
 
 ## Event Matrix
 

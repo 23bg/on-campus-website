@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://classes360.online";
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://oncampus.in";
 
         return NextResponse.json({
             success: true,

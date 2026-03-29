@@ -1,114 +1,106 @@
-export type PlanType = "STARTER" | "TEAM" | "GROWTH" | "SCALE";
-export type PricingVersion = "LEGACY" | "CURRENT";
+export type PlanType = "FREE" | "BASIC" | "PRO";
 
-export type PlanPricing = {
-    monthly: number;
-    yearly: number;
-};
-
-type PlanConfig = {
+export type PlanConfig = {
     key: PlanType;
     name: string;
     priceMonthly: number;
     priceYearly: number;
     /** null means unlimited */
     userLimit: number | null;
-    whatsappMonthlyLimit: number;
-    whatsappDailyLimit: number;
-    /** cost in INR per extra conversation over monthly limit */
-    extraConversationCost: number;
+    jobLimit: number | null;
     tagline: string;
 };
 
 export const PLAN_CONFIG: Record<PlanType, PlanConfig> = {
-    STARTER: {
-        key: "STARTER",
-        name: "Starter",
+    FREE: {
+        key: "FREE",
+        name: "Free",
+        priceMonthly: 0,
+        priceYearly: 0,
+        userLimit: 1,
+        jobLimit: 3,
+        tagline: "Start with up to 3 jobs and 1 user for free",
+    },
+    BASIC: {
+        key: "BASIC",
+        name: "Basic",
+        priceMonthly: 499,
+        priceYearly: 4990,
+        userLimit: 3,
+        jobLimit: 10,
+        tagline: "Manage up to 10 jobs and small teams efficiently",
+    },
+    PRO: {
+        key: "PRO",
+        name: "Pro",
         priceMonthly: 999,
         priceYearly: 9990,
-        userLimit: 1,
-        whatsappMonthlyLimit: 30,
-        whatsappDailyLimit: 5,
-        extraConversationCost: 0,
-        tagline: "For solo institute owners starting admissions management",
-    },
-    TEAM: {
-        key: "TEAM",
-        name: "Team",
-        priceMonthly: 1999,
-        priceYearly: 19990,
-        userLimit: 5,
-        whatsappMonthlyLimit: 150,
-        whatsappDailyLimit: 20,
-        extraConversationCost: 0,
-        tagline: "For small admission teams collaborating daily",
-    },
-    GROWTH: {
-        key: "GROWTH",
-        name: "Growth",
-        priceMonthly: 3499,
-        priceYearly: 34990,
-        userLimit: 20,
-        whatsappMonthlyLimit: 600,
-        whatsappDailyLimit: 80,
-        extraConversationCost: 0,
-        tagline: "For institutes scaling admissions volume",
-    },
-    SCALE: {
-        key: "SCALE",
-        name: "Scale",
-        priceMonthly: 4999,
-        priceYearly: 49990,
-        userLimit: null,
-        whatsappMonthlyLimit: 2000,
-        whatsappDailyLimit: 300,
-        extraConversationCost: 0,
-        tagline: "For large institutes with multiple counselors and high volume",
+        userLimit: 10,
+        jobLimit: null,
+        tagline: "Unlimited jobs and high-growth hiring for teams",
     },
 };
 
-export const DEFAULT_PLAN_TYPE: PlanType = "STARTER";
+export const DEFAULT_PLAN_TYPE: PlanType = "FREE";
 
-// Existing institutes created before this timestamp are grandfathered on legacy prices.
-export const PRICING_V2_EFFECTIVE_AT = new Date("2026-03-16T00:00:00+05:30");
-
-export const PLAN_PRICING_LEGACY: Record<PlanType, PlanPricing> = {
-    STARTER: { monthly: 399, yearly: 3990 },
-    TEAM: { monthly: 899, yearly: 8990 },
-    GROWTH: { monthly: 1799, yearly: 17990 },
-    SCALE: { monthly: 3999, yearly: 39990 },
+// Compatibility mapping for existing legacy plan types (transitional logic).
+export const LEGACY_PLAN_TYPE_MAP: Record<"STARTER" | "TEAM" | "GROWTH" | "SCALE", PlanType> = {
+    STARTER: "FREE",
+    TEAM: "BASIC",
+    GROWTH: "PRO",
+    SCALE: "PRO",
 };
 
-export const PLAN_PRICING_CURRENT: Record<PlanType, PlanPricing> = {
-    STARTER: { monthly: 999, yearly: 9990 },
-    TEAM: { monthly: 1999, yearly: 19990 },
-    GROWTH: { monthly: 3499, yearly: 34990 },
-    SCALE: { monthly: 4999, yearly: 49990 },
+export const mapLegacyPlanType = (legacyPlanType: string | null | undefined): PlanType => {
+    if (legacyPlanType === "STARTER") return "FREE";
+    if (legacyPlanType === "TEAM") return "BASIC";
+    if (legacyPlanType === "GROWTH") return "PRO";
+    if (legacyPlanType === "SCALE") return "PRO";
+    return DEFAULT_PLAN_TYPE;
 };
 
-export const AUTOMATION_PACK_PRICING: PlanPricing = {
-    monthly: 499,
-    yearly: 4990,
+export type PlanPricing = {
+    monthly: number;
+    yearly: number;
 };
 
-export const isGrandfatheredSubscription = (createdAt?: Date | null): boolean => {
-    if (!createdAt) {
-        return false;
+export const isPlanType = (value: string): value is PlanType =>
+    value === "FREE" || value === "BASIC" || value === "PRO";
+
+export const assertPlanType = (plan: string): PlanType => {
+    if (!isPlanType(plan)) {
+        throw new Error(`Invalid plan type: ${plan}`);
     }
+    return plan;
+};
 
-    return createdAt.getTime() < PRICING_V2_EFFECTIVE_AT.getTime();
+export const isGrandfatheredSubscription = (_createdAt?: Date | null): boolean => {
+    // As per new ATS pricing model, grandfathering is deprecated.
+    return false;
 };
 
 export const getPlanPricing = (
     planType: PlanType,
-    options?: { grandfathered?: boolean; version?: PricingVersion }
+    options?: { grandfathered?: boolean; version?: string }
 ): PlanPricing => {
-    const version = options?.version ?? (options?.grandfathered ? "LEGACY" : "CURRENT");
-    return version === "LEGACY" ? PLAN_PRICING_LEGACY[planType] : PLAN_PRICING_CURRENT[planType];
+    const plan = PLAN_CONFIG[planType];
+    return {
+        monthly: plan.priceMonthly,
+        yearly: plan.priceYearly,
+    };
 };
 
-export const isPlanType = (value: string): value is PlanType =>
-    value === "STARTER" || value === "TEAM" || value === "GROWTH" || value === "SCALE";
+export const canCreateJob = (plan: PlanConfig, currentJobs: number): boolean => {
+    if (plan.jobLimit === null) return true;
+    return currentJobs < plan.jobLimit;
+};
 
-/** Returns true when the plan has no user-count cap */
-export const isUnlimitedUsers = (limit: number | null): boolean => limit === null;
+export const canAddUser = (plan: PlanConfig, currentUsers: number): boolean => {
+    if (plan.userLimit === null) return true;
+    return currentUsers < plan.userLimit;
+};
+
+export const isJobLimitReached = (plan: PlanConfig, currentJobs: number): boolean => {
+    if (plan.jobLimit === null) return false;
+    return currentJobs >= plan.jobLimit;
+};

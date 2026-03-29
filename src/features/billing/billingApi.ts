@@ -1,4 +1,4 @@
-import { getPlanPricing, isGrandfatheredSubscription, PLAN_CONFIG, PlanType } from "@/config/plans";
+import { getPlanPricing, isPlanType, PLAN_CONFIG, PlanType } from "@/config/plans";
 import { billingRepository } from "@/features/billing/billingDataApi";
 import { subscriptionService } from "@/features/subscription/subscriptionApi";
 import { assertRazorpayReady, razorpay } from "@/lib/billing/razorpay";
@@ -13,33 +13,28 @@ type BillingPeriod = {
 };
 
 const toStoredPlanType = (storedPlanType: string | null | undefined, userLimit?: number | null): PlanType => {
-    if (storedPlanType === "STARTER" || storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
-        return storedPlanType;
+    if (!storedPlanType) {
+        return "FREE";
     }
 
-    if (storedPlanType === "SOLO") {
-        return "STARTER";
+    // Map legacy planType values to the new ATS plan set
+    if (storedPlanType === "STARTER" || storedPlanType === "SOLO") {
+        return "FREE";
     }
 
     if (storedPlanType === "TEAM") {
-        const normalizedLimit = userLimit ?? 0;
-
-        if (normalizedLimit === 0) {
-            return "SCALE";
-        }
-
-        if (normalizedLimit <= (PLAN_CONFIG.TEAM.userLimit ?? 5)) {
-            return "TEAM";
-        }
-
-        if (normalizedLimit <= (PLAN_CONFIG.GROWTH.userLimit ?? 20)) {
-            return "GROWTH";
-        }
-
-        return "SCALE";
+        return userLimit && userLimit > 3 ? "PRO" : "BASIC";
     }
 
-    return "STARTER";
+    if (storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
+        return "PRO";
+    }
+
+    if (isPlanType(storedPlanType)) {
+        return storedPlanType;
+    }
+
+    return "FREE";
 };
 
 const getCurrentMonthWindow = (now = new Date()) => {
@@ -90,9 +85,7 @@ export const billingService = {
     async createOrUpdateClosedMonthInvoice(instituteId: string, runAt = new Date()) {
         const subscription = await subscriptionService.getSubscription(instituteId);
         const planType = toStoredPlanType(subscription.planType, subscription.userLimit);
-        const pricing = getPlanPricing(planType, {
-            grandfathered: isGrandfatheredSubscription(subscription.createdAt),
-        });
+        const pricing = getPlanPricing(planType);
 
         const period = getClosedBillingPeriod(runAt);
         const alertsUsed = await billingRepository.countOutboundAlertsInWindow(instituteId, period.periodStart, period.periodEnd);
@@ -162,7 +155,7 @@ export const billingService = {
         const paymentLink = await (razorpay as any).paymentLink.create({
             amount: Math.round(invoice.totalAmount * 100),
             currency: "INR",
-            description: `Classes360 invoice ${invoice.month}/${invoice.year}`,
+            description: `OnCampus invoice ${invoice.month}/${invoice.year}`,
             reference_id: `invoice_${invoice.id}`,
             notify: {
                 sms: false,

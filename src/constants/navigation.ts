@@ -31,10 +31,7 @@ export const FOOTER_GROUPS: Array<{ titleKey: string; links: NavItem[] }> = [
         titleKey: "groupUseCases",
         links: [
             { labelKey: "allUseCases", href: ROUTES.USE_CASES },
-            { labelKey: "jeeNeetInstitutes", href: "/use-cases/jee-neet-coaching" },
-            { labelKey: "tuitionClasses", href: "/use-cases/tuition-classes" },
-            { labelKey: "computerTrainingCenters", href: "/use-cases/computer-training" },
-            { labelKey: "skillInstitutes", href: "/use-cases/skill-centers" },
+            { labelKey: "useCases", href: ROUTES.USE_CASES },
         ],
     },
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CreditCard } from "lucide-react";
-import { getPlanPricing, PLAN_CONFIG, PlanType, PricingVersion } from "@/config/plans";
+import { getPlanPricing, PLAN_CONFIG, PlanType } from "@/config/plans";
 import type { BillingInterval } from "@/features/subscription/subscriptionApi";
 import Script from "next/script";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
@@ -77,7 +77,7 @@ export default function BillingPage() {
     const invoices = billingData?.invoices ?? [];
     const policy = billingData?.policy ?? null;
     const sender = billingData?.sender ?? null;
-    const [selectedPlan, setSelectedPlan] = useState<PlanType>("STARTER");
+    const [selectedPlan, setSelectedPlan] = useState<PlanType>("FREE");
     const [selectedInterval, setSelectedInterval] = useState<BillingInterval>("MONTHLY");
     const [retryingInvoiceId, setRetryingInvoiceId] = useState<string | null>(null);
 
@@ -96,8 +96,7 @@ export default function BillingPage() {
 
     const usageWarningThreshold = usage ? Math.floor(usage.alertsIncluded * 0.8) : null;
     const isUsageWarning = usage && usage.alertsIncluded > 0 && usage.alertsUsed >= (usageWarningThreshold ?? 0);
-    const selectedPricingVersion: PricingVersion = (summary?.pricingVersion as PricingVersion | undefined) ?? "CURRENT";
-    const getDisplayPlanPrice = (planType: PlanType) => getPlanPricing(planType, { version: selectedPricingVersion }).monthly;
+    const getDisplayPlanPrice = (planType: PlanType) => getPlanPricing(planType).monthly;
 
     const createSubscription = async (planType: PlanType) => {
         try {
@@ -118,8 +117,8 @@ export default function BillingPage() {
             const rzp = new RazorpayCtor({
                 key: payload.key,
                 subscription_id: payload.subscriptionId,
-                name: "Classes360",
-                description: "Admission and Student Management Platform Subscription",
+                name: "OnCampus",
+                description: "ATS and Job Management Platform Subscription",
                 handler: async (checkoutResponse) => {
                     await dispatch(confirmBillingSubscription(checkoutResponse as unknown as Record<string, unknown>)).unwrap();
                     toast.success(`${planType} plan activated`);
@@ -211,7 +210,7 @@ export default function BillingPage() {
                                 <CreditCard className="h-5 w-5" /> Subscription Plan
                             </CardTitle>
                             <CardDescription className="mt-1">
-                                {summary?.planName ?? "Starter System"} — ₹{summary?.planAmount ?? PLAN_CONFIG.STARTER.priceMonthly}/month
+                                {summary?.planName ?? "Starter System"} — ₹{summary?.planAmount ?? PLAN_CONFIG.FREE.priceMonthly}/month
                                 {summary?.planAmountYearly ? ` · ₹${summary.planAmountYearly}/year` : ""}
                             </CardDescription>
                         </div>
@@ -283,45 +282,36 @@ export default function BillingPage() {
 
                     <div className="grid gap-2 pt-2 sm:grid-cols-4">
                         <Button
-                            variant={selectedPlan === "STARTER" ? "default" : "outline"}
+                            variant={selectedPlan === "FREE" ? "default" : "outline"}
                             disabled={creating}
                             onClick={() => {
-                                setSelectedPlan("STARTER");
-                                void createSubscription("STARTER");
+                                setSelectedPlan("FREE");
+                                void createSubscription("FREE");
                             }}
                         >
-                            {creating && selectedPlan === "STARTER" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Starter (₹${getDisplayPlanPrice("STARTER")})`}
+                            {creating && selectedPlan === "FREE" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Free (₹${getDisplayPlanPrice("FREE")})`}
                         </Button>
                         <Button
-                            variant={selectedPlan === "TEAM" ? "default" : "outline"}
+                            variant={selectedPlan === "BASIC" ? "default" : "outline"}
                             disabled={creating}
                             onClick={() => {
-                                setSelectedPlan("TEAM");
-                                void createSubscription("TEAM");
+                                setSelectedPlan("BASIC");
+                                void createSubscription("BASIC");
                             }}
                         >
-                            {creating && selectedPlan === "TEAM" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Team (₹${getDisplayPlanPrice("TEAM")})`}
+                            {creating && selectedPlan === "BASIC" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Basic (₹${getDisplayPlanPrice("BASIC")})`}
                         </Button>
                         <Button
-                            variant={selectedPlan === "GROWTH" ? "default" : "outline"}
+                            variant={selectedPlan === "PRO" ? "default" : "outline"}
                             disabled={creating}
                             onClick={() => {
-                                setSelectedPlan("GROWTH");
-                                void createSubscription("GROWTH");
+                                setSelectedPlan("PRO");
+                                void createSubscription("PRO");
                             }}
                         >
-                            {creating && selectedPlan === "GROWTH" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Growth (₹${getDisplayPlanPrice("GROWTH")})`}
+                            {creating && selectedPlan === "PRO" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Choose Pro (₹${getDisplayPlanPrice("PRO")})`}
                         </Button>
-                        <Button
-                            variant={selectedPlan === "SCALE" ? "default" : "outline"}
-                            disabled={creating}
-                            onClick={() => {
-                                setSelectedPlan("SCALE");
-                                void createSubscription("SCALE");
-                            }}
-                        >
-                            {creating && selectedPlan === "SCALE" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Upgrade Scale (₹${getDisplayPlanPrice("SCALE")})`}
-                        </Button>
+
                     </div>
                 </CardContent>
             </Card>
@@ -346,7 +336,7 @@ export default function BillingPage() {
                         <span className="font-medium">
                             {sender?.mode === "INSTITUTE_CUSTOM"
                                 ? `Institute WhatsApp Number${sender?.connectedNumber ? ` (${sender.connectedNumber})` : ""}`
-                                : "Classes360 Shared Number"}
+                                : "OnCampus Shared Number"}
                         </span>
                     </div>
                     <div className="flex justify-between">
@@ -355,7 +345,7 @@ export default function BillingPage() {
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">In plan</span>
-                        <span className="font-medium">Classes360 system alerts for institute staff</span>
+                        <span className="font-medium">OnCampus system alerts for institute staff</span>
                     </div>
                 </CardContent>
             </Card>

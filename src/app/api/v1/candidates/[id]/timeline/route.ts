@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
-import { leadService } from "@/server/leadsApi";
+import { candidateService } from "@/server/candidatesApi"; // Updated import
 import { toAppError } from "@/lib/utils/error";
 
 type RouteContext = {
-    params: Promise<{ id: string }>;
+    params: Promise<{ candidateId: string }>; // Updated to candidateId
 };
 
 export async function GET(_: Request, context: RouteContext) {
@@ -17,8 +17,8 @@ export async function GET(_: Request, context: RouteContext) {
             );
         }
 
-        const { id } = await context.params;
-        const data = await leadService.getLeadTimeline(session.instituteId, id);
+        const { candidateId } = await context.params; // Updated to candidateId
+        const data = await candidateService.getCandidateTimeline(session.instituteId, candidateId); // Updated service call and id parameter
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

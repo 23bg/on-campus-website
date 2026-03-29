@@ -15,7 +15,7 @@ const dashboardTourSteps: Tour[] = [
         steps: [
             {
                 icon: "👋",
-                title: "Welcome to Classes360",
+                title: "Welcome to OnCampus",
                 content: "Manage admissions easily from one place.",
                 selector: "#dashboard-brand",
                 side: "right",
@@ -65,7 +65,7 @@ const dashboardTourSteps: Tour[] = [
             {
                 icon: "✅",
                 title: "Start Using Dashboard",
-                content: "You are all set to run admissions on Classes360.",
+                content: "You are all set to run admissions on OnCampus.",
                 selector: "#dashboard-header",
                 side: "bottom",
                 nextRoute: ROUTES.DASHBOARD.ROOT,

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { getRequestHostname, resolveHost } from "@/lib/tenancy/host-routing";
 import { instituteService } from "@/features/institute/instituteApi";
@@ -13,6 +13,7 @@ export const revalidate = 60; // ISR: revalidate every minute
 
 export default async function Page() {
     const headerStore = await headers();
+    const cookieStore = await cookies();
     const hostname = (headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "")
         .split(":")[0]
         .toLowerCase();
@@ -23,10 +24,14 @@ export default async function Page() {
 
     // Check if user is authenticated
     const session = await readSessionFromCookie();
+    const hasRefreshToken = Boolean(cookieStore.get("refresh_token")?.value);
 
     // === PORTAL SURFACE (Admin Dashboard) ===
     if (surface === "portal") {
         if (!session) {
+            if (hasRefreshToken) {
+                redirect("/api/v1/auth/refresh?next=/");
+            }
             // Not logged in → show landing page
             return <LandingPage />;
         }

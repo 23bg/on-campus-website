@@ -68,7 +68,7 @@ export default function InstituteScoreTool() {
                     {showScore ? (
                         <>
                             <p className="text-3xl font-bold">{score}/100</p>
-                            <p className="mt-2 text-sm text-muted-foreground">Improve your score using Classes360</p>
+                            <p className="mt-2 text-sm text-muted-foreground">Improve your score using OnCampus</p>
                         </>
                     ) : (
                         <p className="text-sm text-muted-foreground">Complete all answers to see score.</p>

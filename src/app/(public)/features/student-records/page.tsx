@@ -3,18 +3,18 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Student Records for Coaching Institutes | Classes360",
+    title: "Student Records for Coaching Institutes | OnCampus",
     description: "Maintain complete student records in one place after admission conversion with coaching-focused operations.",
     alternates: { canonical: "/features/student-records" },
     openGraph: {
-        title: "Student Records for Coaching Institutes | Classes360",
+        title: "Student Records for Coaching Institutes | OnCampus",
         description: "Maintain complete student records in one place after admission conversion with coaching-focused operations.",
         url: "/features/student-records",
         type: "website",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Student Records for Coaching Institutes | Classes360",
+        title: "Student Records for Coaching Institutes | OnCampus",
         description: "Maintain complete student records in one place after admission conversion with coaching-focused operations.",
     },
 };
@@ -24,9 +24,9 @@ export default function StudentRecordsFeaturePage() {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://classes360.online/" },
-            { "@type": "ListItem", position: 2, name: "Features", item: "https://classes360.online/features" },
-            { "@type": "ListItem", position: 3, name: "Student Records", item: "https://classes360.online/features/student-records" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://oncampus.in/" },
+            { "@type": "ListItem", position: 2, name: "Features", item: "https://oncampus.in/features" },
+            { "@type": "ListItem", position: 3, name: "Student Records", item: "https://oncampus.in/features/student-records" },
         ],
     };
 

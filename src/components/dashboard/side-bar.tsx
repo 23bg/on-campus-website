@@ -100,29 +100,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
                     icon: Users2,
                 },
 
-                {
-                    title: "Billing",
-                    // url: ROUTES.DASHBOARD.BILLING,
-                    icon: Wallet,
-                    children: [
-                        // {
-                        //     title: "Billing Overview",
-                        //     url: ROUTES.DASHBOARD.BILLING,
-                        // },
-                        {
-                            title: "Payments",
-                            url: ROUTES.DASHBOARD.BILLING_PAYMENTS,
-                        },
-                        {
-                            title: "Payment Details",
-                            url: ROUTES.DASHBOARD.BILLING_PAYMENT_DETAILS,
-                        },
-                        {
-                            title: "Plans",
-                            url: ROUTES.DASHBOARD.BILLING_PLANS,
-                        },
-                    ],
-                },
+                // DEPRECATED: Billing, Payments, Plans navigation removed for ATS
             ],
         },
     ];
@@ -139,7 +117,7 @@ export function DashboardAppSidebar({ ...props }: React.ComponentProps<typeof Si
 
 
 
-                                    <p className="text-xl font-semibold text-primary">Classes360</p>
+                                    <p className="text-xl font-semibold text-primary">OnCampus</p>
                                     <p className="text-xs text-muted-foreground hover:text-muted-foreground">Manage your institute</p>
 
 

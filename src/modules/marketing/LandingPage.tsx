@@ -13,12 +13,14 @@ import UseCases from "@/components/landing/UseCases";
 import TrustBar from "@/components/landing/TrustBar";
 import LandingHeader from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+import PageContainer from "@/components/layout/PageContainer";
+import Section from "@/components/layout/Section";
 
 export default function LandingPage() {
     const softwareAppSchema = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: "Classes360",
+        name: "OnCampus",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         offers: {},
@@ -28,16 +30,49 @@ export default function LandingPage() {
         <>
             <JsonLd data={softwareAppSchema} />
             <LandingHeader />
+
+            {/* Hero (full width) */}
             <Hero />
-            <LogoStrip />
-            <Problem />
-            <Features />
-            <HowItWorks />
-            <Testimonials />
-            <UseCases />
-            <TrustBar />
-            <PricingPreview />
-            <CTA />
+
+            {/* Page content wrapped in PageContainer */}
+            <PageContainer>
+                <Section className="py-0">
+                    <LogoStrip />
+                </Section>
+
+                <Section>
+                    <Problem />
+                </Section>
+
+                <Section>
+                    <Features />
+                </Section>
+
+                <Section>
+                    <HowItWorks />
+                </Section>
+
+                <Section>
+                    <Testimonials />
+                </Section>
+
+                <Section>
+                    <UseCases />
+                </Section>
+
+                <Section>
+                    <TrustBar />
+                </Section>
+
+                <Section>
+                    <PricingPreview />
+                </Section>
+
+                <Section className="pb-0">
+                    <CTA />
+                </Section>
+            </PageContainer>
+
             <Footer />
         </>
     );

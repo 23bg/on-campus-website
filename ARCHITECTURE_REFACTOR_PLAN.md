@@ -1,4 +1,4 @@
-# 🏗️ Classes360 Architecture Refactor Plan
+# 🏗️ OnCampus Architecture Refactor Plan
 
 **Status**: Planning Phase  
 **Date**: 2026-03-23  

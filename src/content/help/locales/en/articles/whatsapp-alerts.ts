@@ -4,15 +4,15 @@ export const whatsappAlertsArticle: HelpArticle = {
     slug: "whatsapp-alerts",
     locale: "en",
     category: "whatsappAndNotifications",
-    title: "WhatsApp Alerts in Classes360",
-    description: "Understand the two WhatsApp modes in Classes360 and how Meta billing works for institute-owned numbers.",
-    overview: "Classes360 supports staff-focused system alerts and optional institute-owned WhatsApp automation for student communication.",
+    title: "WhatsApp Alerts in OnCampus",
+    description: "Understand the two WhatsApp modes in OnCampus and how Meta billing works for institute-owned numbers.",
+    overview: "OnCampus supports staff-focused system alerts and optional institute-owned WhatsApp automation for student communication.",
     lastUpdated: "2026-03-15",
     steps: [
         {
             id: "step1",
-            title: "Mode 1: Classes360 system alerts",
-            description: "Operational alerts are sent to institute staff from the Classes360 system number.",
+            title: "Mode 1: OnCampus system alerts",
+            description: "Operational alerts are sent to institute staff from the OnCampus system number.",
             bullets: [
                 "New enquiry submission",
                 "Follow-up scheduling",
@@ -37,11 +37,11 @@ export const whatsappAlertsArticle: HelpArticle = {
     ],
     faqs: [
         {
-            question: "Can institutes manually send WhatsApp messages from Classes360?",
-            answer: "Classes360 focuses on automation templates and operational notifications rather than manual campaigns.",
+            question: "Can institutes manually send WhatsApp messages from OnCampus?",
+            answer: "OnCampus focuses on automation templates and operational notifications rather than manual campaigns.",
         },
         {
-            question: "Does Classes360 charge per WhatsApp message?",
+            question: "Does OnCampus charge per WhatsApp message?",
             answer: "No WhatsApp message quota is applied in pricing plans. Meta conversation charges are billed directly to the institute when using its own WhatsApp Business account.",
         },
     ],

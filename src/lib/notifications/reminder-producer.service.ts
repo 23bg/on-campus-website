@@ -129,7 +129,7 @@ export const reminderProducerService = {
                     event: "TRIAL_ENDING_SOON",
                     instituteId: sub.instituteId,
                     title: "Trial Ending Soon",
-                    message: "Your Classes360 trial is ending soon. Add a payment method to avoid service interruption.",
+                    message: "Your OnCampus trial is ending soon. Add a payment method to avoid service interruption.",
                     link: "/billing",
                     metadata: { trialEndsAt: sub.trialEndsAt?.toISOString() },
                 })

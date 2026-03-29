@@ -17,12 +17,12 @@ const FEATURE_SET = new Set(FEATURE_DEEP_DIVE_SLUGS);
 export async function generateMetadata({ params }: FeaturePageProps): Promise<Metadata> {
     const { featureSlug } = await params;
     if (!FEATURE_SET.has(featureSlug as (typeof FEATURE_DEEP_DIVE_SLUGS)[number])) {
-        return { title: "Feature - Classes360", robots: { index: false, follow: false } };
+        return { title: "Feature - OnCampus", robots: { index: false, follow: false } };
     }
 
     const featureName = titleFromSlug(featureSlug);
-    const title = `${featureName} for Coaching Institutes | Classes360`;
-    const description = `Explore how ${featureName.toLowerCase()} works in Classes360 for coaching admissions, student operations, and growth workflows.`;
+    const title = `${featureName} for Coaching Institutes | OnCampus`;
+    const description = `Explore how ${featureName.toLowerCase()} works in OnCampus for coaching admissions, student operations, and growth workflows.`;
 
     return {
         title,
@@ -45,9 +45,9 @@ export default async function FeatureDeepDivePage({ params }: FeaturePageProps) 
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://classes360.online/" },
-            { "@type": "ListItem", position: 2, name: "Features", item: "https://classes360.online/features" },
-            { "@type": "ListItem", position: 3, name: featureName, item: `https://classes360.online/features/${featureSlug}` },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://oncampus.in/" },
+            { "@type": "ListItem", position: 2, name: "Features", item: "https://oncampus.in/features" },
+            { "@type": "ListItem", position: 3, name: featureName, item: `https://oncampus.in/features/${featureSlug}` },
         ],
     };
 
@@ -57,7 +57,7 @@ export default async function FeatureDeepDivePage({ params }: FeaturePageProps) 
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{featureName}</h1>
             <div className="mt-6 space-y-4 text-muted-foreground">
                 <p>
-                    {featureName} in Classes360 is built for coaching teams that need practical execution, faster operations, and clean reporting across admissions and students.
+                    {featureName} in OnCampus is built for coaching teams that need practical execution, faster operations, and clean reporting across admissions and students.
                 </p>
                 <p>
                     Instead of fragmented tools, this workflow helps teams run structured operations with clear ownership, traceable activity, and measurable outcomes.

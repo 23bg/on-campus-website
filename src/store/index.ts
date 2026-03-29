@@ -8,6 +8,7 @@ import appTeamReducer from "@/features/appTeam/appTeamSlice";
 import appInstituteReducer from "@/features/appInstitute/appInstituteSlice";
 import studentPortalReducer from "@/features/studentPortal/studentPortalSlice";
 import dashboardReducer from "@/features/dashboard/dashboardSlice";
+import candidateReducer from "@/features/candidate/candidateSlice"; // New import
 
 export const store = configureStore({
     reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
         appInstitute: appInstituteReducer,
         studentPortal: studentPortalReducer,
         dashboard: dashboardReducer,
+        candidate: candidateReducer, // New reducer
     },
 });
 

@@ -1,12 +1,12 @@
 // Complete auth types definition
 export interface LoginPayload {
     email: string;
+    password: string;
 }
 
 export interface SignupPayload {
-    name: string;
     email: string;
-    phoneNumber: string;
+    password: string;
 }
 
 export interface VerifyOtpPayload {
@@ -29,6 +29,8 @@ export interface AuthResponse {
     expiresAt?: number;
     redirectTo?: string;
     message?: string;
+    mfaRequired?: boolean;
+    requiresEmailVerification?: boolean;
 }
 
 export interface OtpResponse {
@@ -37,5 +39,6 @@ export interface OtpResponse {
 }
 
 export interface LogoutResponse {
-    message: string;
+    loggedOut?: boolean;
+    message?: string;
 }

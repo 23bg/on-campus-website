@@ -27,7 +27,16 @@ const ROUTES = {
 		LOG_IN: "/login",
 		SIGN_UP: "/signup",
 		VERIFICATION: "/verification",
+		EMPLOYER: {
+			LOGIN: "/auth/employer/login",
+			SIGN_UP: "/auth/employer/signup",
+		},
+		CANDIDATE: {
+			LOGIN: "/auth/candidate/login",
+			SIGN_UP: "/auth/candidate/signup",
+		},
 	},
+	JOBS: "/jobs",
 	PRICING: "/pricing",
 	FEATURES: "/features",
 	FEATURE_DETAILS: {

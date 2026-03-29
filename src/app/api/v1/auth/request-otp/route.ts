@@ -1,26 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { authService } from "@/features/auth/authDomainApi";
 import { toAppError } from "@/lib/utils/error";
 import { createRouteLogger } from "@/lib/api/route-logger";
 import { fail, ok } from "@/modules/auth/api/responses";
-
-const schema = z.object({
-    email: z.email(),
-});
+import { requestOtpRequestSchema } from "@/modules/auth/api/schemas";
+import { OtpPurpose } from "@/modules/auth/domain/otpPurpose";
 
 export async function POST(req: NextRequest) {
     const routeLog = createRouteLogger("/api/v1/auth/request-otp#POST", req);
     try {
         const body = await req.json();
-        const input = schema.parse(body);
+        const input = requestOtpRequestSchema.parse(body);
         const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
-        routeLog.info("request_otp_started", { email: input.email, ip });
+        routeLog.info("request_otp_started", { email: input.email, purpose: input.purpose, ip });
 
-        const result = await authService.requestOtp({ email: input.email, ip });
+        const result = await authService.requestOtp({ email: input.email, ip, purpose: input.purpose as OtpPurpose });
 
-        routeLog.info("request_otp_succeeded", { email: input.email });
+        routeLog.info("request_otp_succeeded", { email: input.email, purpose: input.purpose });
 
         return NextResponse.json(ok(result));
     } catch (error) {

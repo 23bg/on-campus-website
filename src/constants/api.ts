@@ -2,28 +2,35 @@
     BASE_V1: '/api/v1',
     ONCAMPUS: {
         AUTH: {
-            REQUEST_OTP: '/auth/request-otp',
-            VERIFY_OTP: '/auth/verify-otp',
+            SIGN_UP: '/auth/signup',
+            LOG_IN: '/auth/login',
+            VERIFICATION: '/auth/verification',
+            VERIFICATION_REQUEST: '/auth/verification/request',
             LOG_OUT: '/auth/logout',
             ME: '/auth/me',
-            REFRESH_TOKEN: '/auth/refresh-token',
+            REFRESH_TOKEN: '/auth/refresh',
+            PASSWORD_RESET: '/auth/password-reset',
+            PASSWORD_RESET_REQUEST: '/auth/password-reset/request',
         },
         DASHBOARD: {
             METRICS: '/dashboard/metrics',
         },
         PUBLIC: {
-            LEAD: (slug: string) => `/public/${slug}/lead`,
+            CANDIDATE: (slug: string) => `/public/${slug}/candidate`,
         },
         WEBHOOKS: {
             RAZORPAY: '/webhooks/razorpay',
         },
     },
     AUTH: {
-        LOG_IN: '/auth/request-otp',
+        LOG_IN: '/auth/login',
         LOG_OUT: '/auth/logout',
-        SIGN_UP: '/auth/request-otp',
-        VERIFY: '/auth/verify-otp',
-        REFRESH_TOKEN: '/auth/refresh-token',
+        SIGN_UP: '/auth/signup',
+        VERIFY: '/auth/verification',
+        VERIFY_REQUEST: '/auth/verification/request',
+        REFRESH_TOKEN: '/auth/refresh',
+        PASSWORD_RESET: '/auth/password-reset',
+        PASSWORD_RESET_REQUEST: '/auth/password-reset/request',
         ME: '/auth/me',
     },
     INTERNAL: {
@@ -47,15 +54,11 @@
             IMRABO_CHAT: '/ai/imrabo',
         },
         PUBLIC: {
-            LEAD: (slug: string) => `/public/${slug}/lead`,
+            CANDIDATE: (slug: string) => `/public/${slug}/candidate`,
         },
         STUDENT_AUTH: {
             LOGIN: '/student-auth/login',
             LOGOUT: '/student-auth/logout',
-        },
-        STUDENT_PORTAL: {
-            ME: '/student-portal/me',
-            NOTIFICATIONS: '/student-portal/notifications',
         },
         NOTIFICATIONS: {
             ADMIN: '/notifications/admin',
@@ -103,11 +106,11 @@
         PAYMENTS: {
             ROOT: '/payments',
         },
-        LEADS: {
-            ROOT: '/leads',
-            BY_ID: (id: string) => `/leads/${id}`,
-            TIMELINE: (id: string) => `/leads/${id}/timeline`,
-            IMPORT: '/leads/import',
+        CANDIDATES: { // Renamed from LEADS
+            ROOT: '/candidates', // Renamed from /leads
+            BY_ID: (id: string) => `/candidates/${id}`, // Renamed from /leads/${id}
+            TIMELINE: (id: string) => `/candidates/${id}/timeline`, // Renamed from /leads/${id}/timeline
+            IMPORT: '/candidates/import', // Renamed from /leads/import
         },
         NOTES: {
             ROOT: '/notes',

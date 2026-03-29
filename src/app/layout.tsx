@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { HelpCircle, SquareScissors } from "lucide-react";
+
 
 export const inter = Inter({
   subsets: ["latin"],
@@ -22,13 +22,13 @@ export const jakarta = Plus_Jakarta_Sans({
 
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://classes360.online"),
+  metadataBase: new URL("https://oncampus.in"),
   title: {
-    default: "Classes360 - Admission CRM for Coaching Institutes",
-    template: "%s | Classes360",
+    default: "OnCampus - Admission CRM for Coaching Institutes",
+    template: "%s | OnCampus",
   },
   description:
-    "Classes360 helps coaching institutes capture enquiries, manage admissions, track students, courses and fees.",
+    "OnCampus helps coaching institutes capture enquiries, manage admissions, track students, courses and fees.",
   keywords: [
     "admission crm",
     "coaching institute crm",
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "https://classes360.online",
-    siteName: "Classes360",
+    url: "https://oncampus.in",
+    siteName: "OnCampus",
     images: [
       {
         url: "/og-image.png",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Classes360 Admission CRM",
+    title: "OnCampus Admission CRM",
     description: "Admission and student management platform for coaching institutes.",
     images: ["/og-image.png"],
   },
@@ -79,35 +79,17 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${jakarta.variable}`}
     >
-      <body>
+      <body className="bg-background text-foreground antialiased">
         <ThemeProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <NextTopLoader
-              showSpinner={false}
-              color="#00BF63"
-              shadow={false}
-            />
+            <NextTopLoader showSpinner={false} color="var(--color-primary)" shadow={false} />
             {children}
             <Toaster
               duration={3000}
               position={"bottom-right"}
               richColors
               expand={true}
-
-
-              offset={{ bottom: '30px' }}
-              // closeButton
-
-              style={
-                {
-                  background: "var(--background)",
-                  color: "var(--foreground)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                }
-
-              }
-
+              offset={{ bottom: '1.5rem' }}
             />
           </NextIntlClientProvider>
         </ThemeProvider>

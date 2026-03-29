@@ -184,7 +184,7 @@ Subtext:
 
 ### Solution statement
 
-> Classes360 keeps all your enquiries in one place and reminds you when to follow up.
+> OnCampus keeps all your enquiries in one place and reminds you when to follow up.
 
 ---
 
@@ -282,7 +282,7 @@ Better:
 
 ---
 
-# 7. Tone Personality for Classes360
+# 7. Tone Personality for OnCampus
 
 Your brand voice should feel like:
 
@@ -313,7 +313,7 @@ You should use **real scenarios in your tone**.
 Example:
 
 > A student sends an enquiry.
-> Classes360 saves it automatically.
+> OnCampus saves it automatically.
 > You get a WhatsApp alert.
 > You follow up and convert the admission.
 

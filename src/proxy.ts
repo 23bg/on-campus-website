@@ -20,8 +20,16 @@ export function proxy(req: NextRequest) {
     // 1. Read access token from cookie
     const token = req.cookies.get("access_token")?.value;
 
+    const refreshToken = req.cookies.get("refresh_token")?.value;
+
     if (!token) {
-        // No token → redirect to login (preserve next URL for redirect after login)
+        if (refreshToken) {
+            const refreshUrl = new URL("/api/v1/auth/refresh", req.url);
+            refreshUrl.searchParams.set("next", pathname);
+            edgeLogger.info("redirect_to_refresh", { requestId, from: pathname, reason: "missing_access_token" });
+            return NextResponse.redirect(refreshUrl);
+        }
+
         const loginUrl = new URL(LOGIN_PATH, req.url);
         loginUrl.searchParams.set("next", pathname);
         edgeLogger.info("redirect_to_login", { requestId, from: pathname });
@@ -32,7 +40,13 @@ export function proxy(req: NextRequest) {
     const session = verifyAccessToken(token);
 
     if (!session) {
-        // Invalid/expired token → redirect to login
+        if (refreshToken) {
+            const refreshUrl = new URL("/api/v1/auth/refresh", req.url);
+            refreshUrl.searchParams.set("next", pathname);
+            edgeLogger.info("redirect_to_refresh", { requestId, from: pathname, reason: "invalid_access_token" });
+            return NextResponse.redirect(refreshUrl);
+        }
+
         const loginUrl = new URL(LOGIN_PATH, req.url);
         loginUrl.searchParams.set("next", pathname);
         edgeLogger.info("invalid_token", { requestId, from: pathname });
@@ -63,7 +77,7 @@ export function proxy(req: NextRequest) {
 export const config = {
     matcher: [
         "/overview/:path*",
-        "/leads/:path*",
+        "/candidates/:path*",
         "/students/:path*",
         "/upload/:path*",
         "/team/:path*",
@@ -78,7 +92,6 @@ export const config = {
         "/profile/:path*",
         "/onboarding/:path*",
         "/api/v1/private/:path*",
-        "/api/auth/:path*",
     ],
 };
 

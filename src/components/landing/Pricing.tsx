@@ -33,7 +33,7 @@ export default function Pricing() {
         : t("monthlyPriceSuffix");
 
     return (
-        <section id="pricing" className="border-b bg-muted/40">
+        <section id="pricing" className="border-borderbg-muted/40">
             <div className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20">
 
                 {/* HEADER */}
@@ -91,7 +91,7 @@ export default function Pricing() {
 
                 {/* PRICING CARDS */}
 
-                <div className="mt-12 grid gap-6 xl:grid-cols-4">
+                <div className="mt-12 grid gap-6 xl:grid-cols-3">
                     {planDefinitions.map((plan) => (
                         <PlanCard
                             key={plan.key}

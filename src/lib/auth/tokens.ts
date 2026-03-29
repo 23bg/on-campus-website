@@ -4,7 +4,7 @@ import { AccessTokenClaims as ModuleAccessTokenClaims, RefreshTokenClaims as Mod
 export type AccessTokenPayload = {
     userId: string;
     email: string;
-    role: "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+    role: "OWNER" | "EDITOR" | "VIEWER" | "MANAGER" | "EMPLOYER" | "CANDIDATE";
     instituteId: string;
     isOnboarded: boolean;
     subscriptionStatus: "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";

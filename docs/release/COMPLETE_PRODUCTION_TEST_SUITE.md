@@ -1,6 +1,6 @@
 # COMPLETE PRODUCTION SAAS TEST SUITE — ONCAMPUS
 
-This document defines full pre-release behavioral test cases for Classes360.
+This document defines full pre-release behavioral test cases for OnCampus.
 
 - Scope: behavior only (no code quality review)
 - Target: 90%+ feature coverage

@@ -1,4 +1,4 @@
-export type SessionRole = "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+export type SessionRole = "OWNER" | "EDITOR" | "VIEWER" | "MANAGER" | "EMPLOYER" | "CANDIDATE";
 
 export type SubscriptionStatus = "TRIAL" | "ACTIVE" | "INACTIVE" | "CANCELLED";
 

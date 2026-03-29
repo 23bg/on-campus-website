@@ -8,28 +8,28 @@ import { billingService } from "@/features/billing/billingApi";
 import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 import { logger } from "@/lib/utils/logger";
 
-export type LeadActivityType =
-    | "LEAD_CREATED"
+export type CandidateActivityType =
+    | "CANDIDATE_CREATED"
     | "STATUS_CHANGED"
     | "NOTE_ADDED"
     | "FOLLOWUP_SCHEDULED"
     | "FOLLOWUP_COMPLETED"
     | "ASSIGNED_USER_CHANGED"
-    | "CONVERTED_TO_STUDENT";
+    | "CONVERTED_TO_EMPLOYEE";
 
-type CreateLeadInput = {
+type CreateCandidateInput = {
     instituteId: string;
     name: string;
     phone: string;
     email?: string;
     source?: string;
-    course?: string;
+    jobId?: string; // Changed from course to jobId
     message?: string;
     followUpAt?: Date;
     status?: string;
 };
 
-type ListLeadInput = {
+type ListCandidateInput = {
     instituteId: string;
     status?: string;
     query?: string;
@@ -37,69 +37,69 @@ type ListLeadInput = {
     to?: Date;
 };
 
-type LeadActivityEntry = {
-    leadId: string;
+type CandidateActivityEntry = {
+    candidateId: string; // Changed from leadId to candidateId
     instituteId: string;
-    activityType: LeadActivityType;
+    activityType: CandidateActivityType;
     title: string;
     description?: string;
     actorUserId?: string;
     createdAt: Date;
 };
 
-const createLeadRecord = async (payload: CreateLeadInput) =>
-    prisma.lead.create({
+const createCandidateRecord = async (payload: CreateCandidateInput) =>
+    prisma.candidate.create({
         data: {
             instituteId: payload.instituteId,
             name: payload.name,
             phone: payload.phone,
             email: payload.email,
             source: payload.source,
-            course: payload.course,
+            jobId: payload.jobId,
             message: payload.message,
             followUpAt: payload.followUpAt,
-            status: payload.status ?? "NEW",
+            status: payload.status ?? "APPLIED",
         },
     });
 
-const bulkCreateLeadRecords = async (rows: CreateLeadInput[]) =>
-    prisma.lead.createMany({
+const bulkCreateCandidateRecords = async (rows: CreateCandidateInput[]) =>
+    prisma.candidate.createMany({
         data: rows.map((payload) => ({
             instituteId: payload.instituteId,
             name: payload.name,
             phone: payload.phone,
             email: payload.email,
             source: payload.source,
-            course: payload.course,
+            jobId: payload.jobId,
             message: payload.message,
             followUpAt: payload.followUpAt,
-            status: payload.status ?? "NEW",
+            status: payload.status ?? "APPLIED",
         })),
     });
 
-const findLeadByPhoneInInstitute = async (instituteId: string, phone: string) =>
-    prisma.lead.findFirst({
+const findCandidateByPhoneInInstitute = async (instituteId: string, phone: string) =>
+    prisma.candidate.findFirst({
         where: withTenantScope(instituteId, { phone }),
     });
 
-const findLeadByIdInInstitute = async (instituteId: string, leadId: string) =>
-    prisma.lead.findFirst({
-        where: withTenantScope(instituteId, { id: leadId }),
+const findCandidateByIdInInstitute = async (instituteId: string, candidateId: string) =>
+    prisma.candidate.findFirst({
+        where: withTenantScope(instituteId, { id: candidateId }),
     });
 
-const updateLeadStatusRecord = async (instituteId: string, leadId: string, status: string) =>
-    prisma.lead.updateMany({
-        where: { id: leadId, instituteId },
+const updateCandidateStatusRecord = async (instituteId: string, candidateId: string, status: string) =>
+    prisma.candidate.updateMany({
+        where: { id: candidateId, instituteId },
         data: { status },
     });
 
-const updateLeadByIdInInstitute = async (
+const updateCandidateByIdInInstitute = async (
     instituteId: string,
-    leadId: string,
+    candidateId: string,
     payload: { message?: string | null; followUpAt?: Date | null; status?: string }
 ) =>
-    prisma.lead.updateMany({
-        where: { id: leadId, instituteId },
+    prisma.candidate.updateMany({
+        where: { id: candidateId, instituteId },
         data: {
             ...(payload.message !== undefined ? { message: payload.message } : {}),
             ...(payload.followUpAt !== undefined ? { followUpAt: payload.followUpAt } : {}),
@@ -107,8 +107,8 @@ const updateLeadByIdInInstitute = async (
         },
     });
 
-const listLeadRecords = async (input: ListLeadInput) =>
-    prisma.lead.findMany({
+const listCandidateRecords = async (input: ListCandidateInput) =>
+    prisma.candidate.findMany({
         where: {
             ...withTenantScope(input.instituteId),
             ...(input.status ? { status: input.status } : {}),
@@ -118,7 +118,7 @@ const listLeadRecords = async (input: ListLeadInput) =>
                         { name: { contains: input.query, mode: "insensitive" } },
                         { phone: { contains: input.query, mode: "insensitive" } },
                         { email: { contains: input.query, mode: "insensitive" } },
-                        { course: { contains: input.query, mode: "insensitive" } },
+                        { jobId: { contains: input.query, mode: "insensitive" } }, // Changed from course to jobId
                     ],
                 }
                 : {}),
@@ -134,10 +134,10 @@ const listLeadRecords = async (input: ListLeadInput) =>
         orderBy: { createdAt: "desc" },
     });
 
-const logLeadActivity = async (entry: Omit<LeadActivityEntry, "createdAt"> & { createdAt?: Date }) => {
+const logCandidateActivity = async (entry: Omit<CandidateActivityEntry, "createdAt"> & { createdAt?: Date }) => {
     const createdAt = entry.createdAt ?? new Date();
-    const updated = await prisma.lead.updateMany({
-        where: { id: entry.leadId, instituteId: entry.instituteId },
+    const updated = await prisma.candidate.updateMany({
+        where: { id: entry.candidateId, instituteId: entry.instituteId },
         data: {
             activities: {
                 push: {
@@ -152,13 +152,13 @@ const logLeadActivity = async (entry: Omit<LeadActivityEntry, "createdAt"> & { c
     });
 
     if (updated.count === 0) {
-        logger.warn("lead activity logging skipped: lead not found for embedded activity push");
+        logger.warn("candidate activity logging skipped: candidate not found for embedded activity push");
     }
 };
 
-const listLeadActivities = async (instituteId: string, leadId: string) => {
-    const lead = await prisma.lead.findFirst({
-        where: { id: leadId, instituteId },
+const listCandidateActivities = async (instituteId: string, candidateId: string) => {
+    const candidate = await prisma.candidate.findFirst({
+        where: { id: candidateId, instituteId },
         select: {
             id: true,
             instituteId: true,
@@ -166,16 +166,16 @@ const listLeadActivities = async (instituteId: string, leadId: string) => {
         },
     });
 
-    if (!lead) return [];
+    if (!candidate) return [];
 
-    return (lead.activities ?? [])
+    return (candidate.activities ?? [])
         .slice()
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
         .slice(0, 100)
         .map((row) => ({
-            leadId: lead.id,
-            instituteId: lead.instituteId,
-            activityType: row.activityType as LeadActivityType,
+            candidateId: candidate.id,
+            instituteId: candidate.instituteId,
+            activityType: row.activityType as CandidateActivityType,
             title: row.title,
             description: row.description,
             actorUserId: row.actorUserId,
@@ -183,23 +183,23 @@ const listLeadActivities = async (instituteId: string, leadId: string) => {
         }));
 };
 
-const leadImportRowSchema = z.object({
+const candidateImportRowSchema = z.object({
     name: z.string().trim().min(2).max(80),
     phone: z.string().regex(/^[6-9]\d{9}$/),
     email: z.string().trim().max(120).email().optional(),
     source: z.string().trim().max(80).optional(),
-    course: z.string().trim().max(120).optional(),
+    jobId: z.string().trim().max(120).optional(), // Changed from course to jobId
     city: z.string().trim().max(80).optional(),
     message: z.string().trim().max(1024).optional(),
 });
 
-const leadInputSchema = z.object({
+const candidateInputSchema = z.object({
     instituteId: z.string().min(1),
     name: z.string().trim().min(2).max(80),
     phone: z.string().regex(/^[6-9]\d{9}$/),
     email: z.string().trim().max(120).email().optional(),
     source: z.string().trim().max(80).optional(),
-    course: z.string().trim().max(120).optional(),
+    jobId: z.string().trim().max(120).optional(), // Changed from course to jobId
     message: z.string().trim().max(1024).optional(),
     followUpAt: z.string().optional(),
 });
@@ -211,39 +211,39 @@ const listInputSchema = z.object({
     to: z.coerce.date().optional(),
 });
 
-export const leadActivityService = {
-    log: logLeadActivity,
-    listByLead: listLeadActivities,
+export const candidateActivityService = {
+    log: logCandidateActivity,
+    listByLead: listCandidateActivities,
 };
 
-export const leadService = {
-    async createLead(payload: unknown) {
-        const input = leadInputSchema.parse(payload);
-        await billingService.assertCanCreateLeads(input.instituteId);
-        const duplicate = await findLeadByPhoneInInstitute(input.instituteId, input.phone);
+export const candidateService = {
+    async createCandidate(payload: unknown) {
+        const input = candidateInputSchema.parse(payload);
+        await billingService.assertCanCreateCandidates(input.instituteId);
+        const duplicate = await findCandidateByPhoneInInstitute(input.instituteId, input.phone);
         if (duplicate) {
-            throw new AppError("Lead already exists with this mobile number", 409, "DUPLICATE_LEAD", {
-                existingLeadId: duplicate.id,
+            throw new AppError("Candidate already exists with this mobile number", 409, "DUPLICATE_CANDIDATE", {
+                existingCandidateId: duplicate.id,
                 existingPhone: duplicate.phone,
             });
         }
 
-        const created = await createLeadRecord({
+        const created = await createCandidateRecord({
             ...input,
             followUpAt: input.followUpAt ? new Date(input.followUpAt) : undefined,
-            status: "NEW",
+            status: "APPLIED",
         });
 
-        await logLeadActivity({
-            leadId: created.id,
+        await logCandidateActivity({
+            candidateId: created.id,
             instituteId: created.instituteId,
-            activityType: "LEAD_CREATED",
-            title: "Lead created",
+            activityType: "CANDIDATE_CREATED",
+            title: "Candidate created",
         });
 
         if (created.followUpAt) {
-            await logLeadActivity({
-                leadId: created.id,
+            await logCandidateActivity({
+                candidateId: created.id,
                 instituteId: created.instituteId,
                 activityType: "FOLLOWUP_SCHEDULED",
                 title: "Follow-up scheduled",
@@ -252,16 +252,16 @@ export const leadService = {
         }
 
         await eventDispatcherService.dispatch({
-            event: "LEAD_CREATED",
+            event: "CANDIDATE_CREATED",
             instituteId: created.instituteId,
-            message: `New enquiry received: ${created.name} (${created.phone}).`,
-            link: `/leads/${created.id}`,
-            metadata: { leadId: created.id },
+            message: `New application received: ${created.name} (${created.phone}).`,
+            link: `/candidates/${created.id}`,
+            metadata: { candidateId: created.id },
             whatsappPhoneNumber: created.phone,
-            templateEvent: "new_enquiry_alert",
+            templateEvent: "new_application_alert",
             templateVariables: {
-                student_name: created.name,
-                course_name: created.course ?? "General enquiry",
+                candidate_name: created.name,
+                job_name: created.jobId ?? "General application",
             },
         });
 
@@ -284,28 +284,28 @@ export const leadService = {
             throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
         }
 
-        return this.createLead({
+        return this.createCandidate({
             instituteId: institute.id,
             ...payload,
         });
     },
 
-    async updateStatus(instituteId: string, leadId: string, status: string) {
-        const beforeUpdate = await findLeadByIdInInstitute(instituteId, leadId);
+    async updateStatus(instituteId: string, candidateId: string, status: string) { // status will be CandidateStatus enum
+        const beforeUpdate = await findCandidateByIdInInstitute(instituteId, candidateId);
         if (!beforeUpdate) {
-            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+            throw new AppError("Candidate not found", 404, "CANDIDATE_NOT_FOUND");
         }
 
-        await updateLeadStatusRecord(instituteId, leadId, status);
-        const updated = await findLeadByIdInInstitute(instituteId, leadId);
+        await updateCandidateStatusRecord(instituteId, candidateId, status);
+        const updated = await findCandidateByIdInInstitute(instituteId, candidateId);
 
         if (!updated) {
-            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+            throw new AppError("Candidate not found", 404, "CANDIDATE_NOT_FOUND");
         }
 
         if (beforeUpdate.status !== status) {
-            await logLeadActivity({
-                leadId: updated.id,
+            await logCandidateActivity({
+                candidateId: updated.id,
                 instituteId,
                 activityType: "STATUS_CHANGED",
                 title: "Status changed",
@@ -313,20 +313,22 @@ export const leadService = {
             });
 
             await eventDispatcherService.dispatch({
-                event: "LEAD_STATUS_CHANGED",
+                event: "CANDIDATE_STATUS_CHANGED",
                 instituteId,
                 message: `${updated.name} status changed from ${beforeUpdate.status} to ${status}.`,
-                link: `/leads/${updated.id}`,
-                metadata: { leadId: updated.id, previousStatus: beforeUpdate.status, status },
+                link: `/candidates/${updated.id}`,
+                metadata: { candidateId: updated.id, previousStatus: beforeUpdate.status, status },
             });
         }
 
-        if (status === "ADMITTED") {
+        if (status === "SELECTED") {
+            // TODO: Replace with employeeService.findEmployeeByPhoneInInstitute
             const duplicate = await studentService.findStudentByPhoneInInstitute(instituteId, updated.phone);
             if (duplicate) {
-                throw new AppError("Student already exists with this phone", 409, "DUPLICATE_STUDENT");
+                throw new AppError("Employee already exists with this phone", 409, "DUPLICATE_EMPLOYEE");
             }
 
+            // TODO: Replace with employeeService.createEmployeeRecord
             await studentService.createStudentRecord({
                 instituteId,
                 name: updated.name,
@@ -334,24 +336,24 @@ export const leadService = {
                 email: updated.email ?? undefined,
             });
 
-            await logLeadActivity({
-                leadId: updated.id,
+            await logCandidateActivity({
+                candidateId: updated.id,
                 instituteId,
-                activityType: "CONVERTED_TO_STUDENT",
-                title: "Converted to student",
+                activityType: "CONVERTED_TO_EMPLOYEE",
+                title: "Converted to employee",
             });
 
             await eventDispatcherService.dispatch({
-                event: "LEAD_CONVERTED_TO_STUDENT",
+                event: "CANDIDATE_CONVERTED_TO_EMPLOYEE",
                 instituteId,
-                message: `Lead converted to student: ${updated.name} (${updated.phone}).`,
-                link: `/students`,
+                message: `Candidate converted to employee: ${updated.name} (${updated.phone}).`,
+                link: `/employees`, // TODO: Update link to actual employee page
                 whatsappPhoneNumber: updated.phone,
-                metadata: { leadId: updated.id },
-                templateEvent: "admission_confirmed",
+                metadata: { candidateId: updated.id },
+                templateEvent: "hiring_confirmed",
                 templateVariables: {
-                    student_name: updated.name,
-                    course_name: updated.course ?? "Course",
+                    employee_name: updated.name,
+                    job_name: updated.jobId ?? "Job",
                 },
             });
         }
@@ -359,13 +361,13 @@ export const leadService = {
         return updated;
     },
 
-    async updateLeadStatus(instituteId: string, leadId: string, status: string) {
-        return this.updateStatus(instituteId, leadId, status);
+    async updateCandidateStatus(instituteId: string, candidateId: string, status: string) {
+        return this.updateStatus(instituteId, candidateId, status);
     },
 
-    async updateLead(
+    async updateCandidate(
         instituteId: string,
-        leadId: string,
+        candidateId: string,
         payload: { status?: string; message?: string | null; followUpAt?: string | null }
     ) {
         if (!payload.status && payload.message === undefined && payload.followUpAt === undefined) {
@@ -373,12 +375,12 @@ export const leadService = {
         }
 
         if (payload.status) {
-            return this.updateStatus(instituteId, leadId, payload.status);
+            return this.updateStatus(instituteId, candidateId, payload.status);
         }
 
-        const existing = await findLeadByIdInInstitute(instituteId, leadId);
+        const existing = await findCandidateByIdInInstitute(instituteId, candidateId);
         if (!existing) {
-            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+            throw new AppError("Candidate not found", 404, "CANDIDATE_NOT_FOUND");
         }
 
         if (payload.message !== undefined && payload.message !== null) {
@@ -392,14 +394,14 @@ export const leadService = {
                     ? new Date(payload.followUpAt)
                     : null;
 
-        await updateLeadByIdInInstitute(instituteId, leadId, {
+        await updateCandidateByIdInInstitute(instituteId, candidateId, {
             message: payload.message,
             followUpAt,
         });
 
-        const updated = await findLeadByIdInInstitute(instituteId, leadId);
+        const updated = await findCandidateByIdInInstitute(instituteId, candidateId);
         if (!updated) {
-            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+            throw new AppError("Candidate not found", 404, "CANDIDATE_NOT_FOUND");
         }
 
         if (
@@ -408,26 +410,26 @@ export const leadService = {
             payload.message.trim().length > 0 &&
             payload.message !== (existing.message ?? "")
         ) {
-            await logLeadActivity({
-                leadId: updated.id,
+            await logCandidateActivity({
+                candidateId: updated.id,
                 instituteId,
                 activityType: "NOTE_ADDED",
                 title: "Note added",
             });
 
             await eventDispatcherService.dispatch({
-                event: "LEAD_NOTE_ADDED",
+                event: "CANDIDATE_NOTE_ADDED",
                 instituteId,
                 message: `A new note was added for ${updated.name}.`,
-                link: `/leads/${updated.id}`,
-                metadata: { leadId: updated.id },
+                link: `/candidates/${updated.id}`,
+                metadata: { candidateId: updated.id },
             });
         }
 
         if (existing.followUpAt?.toISOString() !== updated.followUpAt?.toISOString()) {
             if (updated.followUpAt) {
-                await logLeadActivity({
-                    leadId: updated.id,
+                await logCandidateActivity({
+                    candidateId: updated.id,
                     instituteId,
                     activityType: "FOLLOWUP_SCHEDULED",
                     title: "Follow-up scheduled",
@@ -438,12 +440,12 @@ export const leadService = {
                     event: "FOLLOW_UP_SCHEDULED",
                     instituteId,
                     message: `Follow-up scheduled for ${updated.name} on ${updated.followUpAt.toISOString().slice(0, 10)}.`,
-                    link: `/leads/${updated.id}`,
-                    metadata: { leadId: updated.id, followUpAt: updated.followUpAt.toISOString() },
+                    link: `/candidates/${updated.id}`,
+                    metadata: { candidateId: updated.id, followUpAt: updated.followUpAt.toISOString() },
                 });
             } else if (existing.followUpAt && !updated.followUpAt) {
-                await logLeadActivity({
-                    leadId: updated.id,
+                await logCandidateActivity({
+                    candidateId: updated.id,
                     instituteId,
                     activityType: "FOLLOWUP_COMPLETED",
                     title: "Follow-up completed",
@@ -453,8 +455,8 @@ export const leadService = {
                     event: "FOLLOW_UP_COMPLETED",
                     instituteId,
                     message: `Follow-up completed for ${updated.name}.`,
-                    link: `/leads/${updated.id}`,
-                    metadata: { leadId: updated.id },
+                    link: `/candidates/${updated.id}`,
+                    metadata: { candidateId: updated.id },
                 });
             }
         }
@@ -462,23 +464,23 @@ export const leadService = {
         return updated;
     },
 
-    async getLeadTimeline(instituteId: string, leadId: string) {
-        const lead = await findLeadByIdInInstitute(instituteId, leadId);
-        if (!lead) {
-            throw new AppError("Lead not found", 404, "LEAD_NOT_FOUND");
+    async getCandidateTimeline(instituteId: string, candidateId: string) {
+        const candidate = await findCandidateByIdInInstitute(instituteId, candidateId);
+        if (!candidate) {
+            throw new AppError("Candidate not found", 404, "CANDIDATE_NOT_FOUND");
         }
 
-        return listLeadActivities(instituteId, leadId);
+        return listCandidateActivities(instituteId, candidateId);
     },
 
-    async searchLeads(
+    async searchCandidates(
         instituteId: string,
         query?: string,
         status?: string,
         from?: Date,
         to?: Date
     ) {
-        return listLeadRecords({
+        return listCandidateRecords({
             instituteId,
             query,
             status,
@@ -487,32 +489,32 @@ export const leadService = {
         });
     },
 
-    async getLeads(
+    async getCandidates(
         instituteId: string,
         filters: { status?: string; query?: string; from?: string; to?: string }
     ) {
         const parsed = listInputSchema.parse(filters);
-        return this.searchLeads(instituteId, parsed.query, parsed.status, parsed.from, parsed.to);
+        return this.searchCandidates(instituteId, parsed.query, parsed.status, parsed.from, parsed.to);
     },
 
-    async filterLeads(instituteId: string, status: string) {
-        return listLeadRecords({ instituteId, status });
+    async filterCandidates(instituteId: string, status: string) {
+        return listCandidateRecords({ instituteId, status });
     },
 
-    async exportLeads(instituteId: string) {
-        const leads = await listLeadRecords({ instituteId });
-        return leads.map((lead) => ({
-            id: lead.id,
-            name: lead.name,
-            phone: lead.phone,
-            email: lead.email ?? "",
-            status: lead.status,
-            source: lead.source ?? "",
-            createdAt: lead.createdAt.toISOString(),
+    async exportCandidates(instituteId: string) {
+        const candidates = await listCandidateRecords({ instituteId });
+        return candidates.map((candidate) => ({
+            id: candidate.id,
+            name: candidate.name,
+            phone: candidate.phone,
+            email: candidate.email ?? "",
+            status: candidate.status,
+            source: candidate.source ?? "",
+            createdAt: candidate.createdAt.toISOString(),
         }));
     },
 
-    async importLeads(
+    async importCandidates(
         instituteId: string,
         rows: unknown[],
         options?: { createdBy?: string; dryRun?: boolean }
@@ -523,7 +525,7 @@ export const leadService = {
 
         const errors: Array<{ row: number; message: string }> = [];
         const skippedDuplicates: Array<{ row: number; phone: string }> = [];
-        const validRows: Array<z.infer<typeof leadImportRowSchema>> = [];
+        const validRows: Array<z.infer<typeof candidateImportRowSchema>> = [];
         const seenPhones = new Set<string>();
 
         for (let index = 0; index < rows.length; index += 1) {
@@ -532,15 +534,15 @@ export const leadService = {
 
             const normalized = {
                 name: typeof raw.name === "string" ? raw.name.trim() : "",
-                phone: typeof raw.phone === "string" ? raw.phone.trim() : String(raw.phone ?? "").trim(),
+                phone: typeof raw.phone === "string" ? String(raw.phone ?? "").trim() : String(raw.phone ?? "").trim(),
                 email: typeof raw.email === "string" && raw.email.trim().length > 0 ? raw.email.trim() : undefined,
                 source: typeof raw.source === "string" && raw.source.trim().length > 0 ? raw.source.trim() : undefined,
-                course: typeof raw.course === "string" && raw.course.trim().length > 0 ? raw.course.trim() : undefined,
+                jobId: typeof raw.jobId === "string" && raw.jobId.trim().length > 0 ? raw.jobId.trim() : undefined, // Changed from course to jobId
                 city: typeof raw.city === "string" && raw.city.trim().length > 0 ? raw.city.trim() : undefined,
                 message: typeof raw.message === "string" && raw.message.trim().length > 0 ? raw.message.trim() : undefined,
             };
 
-            const parsed = leadImportRowSchema.safeParse(normalized);
+            const parsed = candidateImportRowSchema.safeParse(normalized);
             if (!parsed.success) {
                 errors.push({ row: rowNumber, message: parsed.error.issues[0]?.message ?? "Invalid row" });
                 continue;
@@ -551,7 +553,7 @@ export const leadService = {
                 continue;
             }
 
-            const existing = await findLeadByPhoneInInstitute(instituteId, parsed.data.phone);
+            const existing = await findCandidateByPhoneInInstitute(instituteId, parsed.data.phone);
             if (existing) {
                 skippedDuplicates.push({ row: rowNumber, phone: parsed.data.phone });
                 continue;
@@ -562,16 +564,16 @@ export const leadService = {
         }
 
         if (!options?.dryRun && validRows.length > 0) {
-            await bulkCreateLeadRecords(
+            await bulkCreateCandidateRecords(
                 validRows.map((row) => ({
                     instituteId,
                     name: row.name,
                     phone: row.phone,
                     email: row.email,
                     source: row.source,
-                    course: row.course,
+                    jobId: row.jobId, // Changed from course to jobId
                     message: row.message,
-                    status: "NEW",
+                    status: "APPLIED",
                 }))
             );
         }

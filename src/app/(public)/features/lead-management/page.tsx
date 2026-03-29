@@ -3,18 +3,18 @@ import Link from "next/link";
 import JsonLd from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-    title: "Lead Management for Coaching Institutes | Classes360",
+    title: "Lead Management for Coaching Institutes | OnCampus",
     description: "Track every admission enquiry from first touchpoint to final enrollment with a coaching-focused workflow.",
     alternates: { canonical: "/features/lead-management" },
     openGraph: {
-        title: "Lead Management for Coaching Institutes | Classes360",
+        title: "Lead Management for Coaching Institutes | OnCampus",
         description: "Track every admission enquiry from first touchpoint to final enrollment with a coaching-focused workflow.",
         url: "/features/lead-management",
         type: "website",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Lead Management for Coaching Institutes | Classes360",
+        title: "Lead Management for Coaching Institutes | OnCampus",
         description: "Track every admission enquiry from first touchpoint to final enrollment with a coaching-focused workflow.",
     },
 };
@@ -24,9 +24,9 @@ export default function LeadManagementFeaturePage() {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://classes360.online/" },
-            { "@type": "ListItem", position: 2, name: "Features", item: "https://classes360.online/features" },
-            { "@type": "ListItem", position: 3, name: "Lead Management", item: "https://classes360.online/features/lead-management" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://oncampus.in/" },
+            { "@type": "ListItem", position: 2, name: "Features", item: "https://oncampus.in/features" },
+            { "@type": "ListItem", position: 3, name: "Lead Management", item: "https://oncampus.in/features/lead-management" },
         ],
     };
 

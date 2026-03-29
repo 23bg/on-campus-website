@@ -39,18 +39,28 @@ export default function VerificationForm() {
     };
 
     const router = useRouter();
-    const { verifyOTP, loading } = useAuth();
+    const { verifyEmail, loading } = useAuth();
 
     const [email, setEmail] = useState<string | null>(null);
+    const [mode, setMode] = useState<"emailVerification" | "mfa">("emailVerification");
 
     useEffect(() => {
-        const storedEmail = localStorage.getItem("login_email");
-        if (!storedEmail) {
-            toast.error("Session expired, please login again.");
-            router.push(ROUTES.AUTH.LOG_IN);
+        const mfaEmail = localStorage.getItem("mfa_email");
+        if (mfaEmail) {
+            setEmail(mfaEmail);
+            setMode("mfa");
             return;
         }
-        setEmail(storedEmail);
+
+        const verificationEmail = localStorage.getItem("verification_email");
+        if (verificationEmail) {
+            setEmail(verificationEmail);
+            setMode("emailVerification");
+            return;
+        }
+
+        toast.error("Verification session expired. Please try again.");
+        router.push(ROUTES.AUTH.LOG_IN);
     }, [router]);
 
     const form = useForm<OtpFormData>({
@@ -62,16 +72,39 @@ export default function VerificationForm() {
     const onSubmit = async (data: OtpFormData) => {
         if (!email) return;
 
-        verifyOTP(
+        if (mode === "mfa") {
+            fetch("/api/v1/auth/mfa/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ email, otp: data.otp }),
+            })
+                .then(async (res) => {
+                    const payload = await res.json();
+                    if (!res.ok || !payload?.success) {
+                        throw new Error(payload?.error || "Invalid OTP");
+                    }
+
+                    toast.success("MFA verification successful.");
+                    localStorage.removeItem("mfa_email");
+                    router.push(payload?.data?.redirectTo || "/overview");
+                })
+                .catch((err) => {
+                    toast.error(err instanceof Error ? err.message : "Invalid OTP. Please try again.");
+                });
+            return;
+        }
+
+        verifyEmail(
             { email, otp: data.otp },
             {
-                onSuccess: (result: { redirectTo?: string }) => {
-                    toast.success("OTP verified successfully.");
-                    localStorage.removeItem("login_email");
-                    router.push(result?.redirectTo || "/onboarding");
+                onSuccess: () => {
+                    toast.success("Email verified. Please sign in.");
+                    localStorage.removeItem("verification_email");
+                    router.push(ROUTES.AUTH.LOG_IN);
                 },
                 onError: (err: any) => {
-                    toast.error(typeof err === 'string' ? err : err?.message || "Invalid OTP. Please try again.");
+                    toast.error(typeof err === "string" ? err : err?.message || "Invalid OTP. Please try again.");
                 },
             }
         );
@@ -82,7 +115,7 @@ export default function VerificationForm() {
     return (
         <Card className="border shadow-none rounded-md">
             <CardHeader>
-                <CardTitle className="text-2xl">Verify your account</CardTitle>
+                <CardTitle className="text-2xl">{mode === "mfa" ? "Complete sign in" : "Verify your email"}</CardTitle>
                 <CardDescription>Enter the 5-digit code sent to your email</CardDescription>
             </CardHeader>
 
