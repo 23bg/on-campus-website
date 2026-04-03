@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/providers/theme-provider";
+import { ReduxProvider } from "@/providers/ReduxProvider";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -81,17 +82,19 @@ export default async function RootLayout({
     >
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <NextTopLoader showSpinner={false} color="var(--color-primary)" shadow={false} />
-            {children}
-            <Toaster
-              duration={3000}
-              position={"bottom-right"}
-              richColors
-              expand={true}
-              offset={{ bottom: '1.5rem' }}
-            />
-          </NextIntlClientProvider>
+          <ReduxProvider>
+            <NextIntlClientProvider locale={locale} messages={messages}>
+              <NextTopLoader showSpinner={false} color="var(--color-primary)" shadow={false} />
+              {children}
+              <Toaster
+                duration={3000}
+                position={"bottom-right"}
+                richColors
+                expand={true}
+                offset={{ bottom: '1.5rem' }}
+              />
+            </NextIntlClientProvider>
+          </ReduxProvider>
         </ThemeProvider>
       </body>
 

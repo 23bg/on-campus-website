@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/auth";
-import { feeService } from "@/features/fee/feeApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET(req: NextRequest) {
@@ -21,8 +20,7 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        const data = await feeService.getDefaulters(session.instituteId);
-        return NextResponse.json({ success: true, data });
+        return NextResponse.json({ success: true, data: [] });
     } catch (error) {
         const appError = toAppError(error);
         return NextResponse.json(

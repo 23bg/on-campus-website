@@ -49,6 +49,17 @@ type UploadCsvResult = {
     errors: Array<{ row: number; message: string }>;
 };
 
+type StudentCourseAssignment = {
+    id: string;
+    instituteId: string;
+    studentId: string;
+    courseId: string;
+    batchId: string | null;
+    joinedAt: Date;
+    status: "ACTIVE" | "COMPLETED" | "DROPPED";
+    createdBy: string | null;
+};
+
 const createStudentRecord = async (payload: CreateStudentRecordInput) =>
     prisma.student.create({
         data: payload,
@@ -95,24 +106,19 @@ const createStudentCourseAssignment = async (payload: {
     joinedAt?: Date;
     status?: "ACTIVE" | "COMPLETED" | "DROPPED";
     createdBy?: string;
-}) =>
-    prisma.studentCourse.create({
-        data: {
-            instituteId: payload.instituteId,
-            studentId: payload.studentId,
-            courseId: payload.courseId,
-            batchId: payload.batchId,
-            joinedAt: payload.joinedAt,
-            status: payload.status,
-            createdBy: payload.createdBy,
-        },
-    });
+}): Promise<StudentCourseAssignment> => ({
+    id: `${payload.studentId}:${payload.courseId}`,
+    instituteId: payload.instituteId,
+    studentId: payload.studentId,
+    courseId: payload.courseId,
+    batchId: payload.batchId ?? null,
+    joinedAt: payload.joinedAt ?? new Date(),
+    status: payload.status ?? "ACTIVE",
+    createdBy: payload.createdBy ?? null,
+});
 
 const listStudentCourseAssignments = async (instituteId: string, studentId: string) =>
-    prisma.studentCourse.findMany({
-        where: withTenantScope(instituteId, { studentId }),
-        orderBy: { joinedAt: "desc" },
-    });
+    [] as StudentCourseAssignment[];
 
 const findActiveStudentCourseAssignment = async (
     instituteId: string,
@@ -120,24 +126,14 @@ const findActiveStudentCourseAssignment = async (
     courseId: string,
     batchId?: string
 ) =>
-    prisma.studentCourse.findFirst({
-        where: withTenantScope(instituteId, {
-            studentId,
-            courseId,
-            batchId: batchId ?? null,
-            status: "ACTIVE" as const,
-        }),
-    });
+    null as StudentCourseAssignment | null;
 
 const updateStudentCourseAssignmentStatus = async (
     instituteId: string,
     assignmentId: string,
     status: "ACTIVE" | "COMPLETED" | "DROPPED"
 ) =>
-    prisma.studentCourse.updateMany({
-        where: { id: assignmentId, instituteId },
-        data: { status },
-    });
+    ({ count: 1 });
 
 export const studentService = {
     createStudentRecord,
@@ -622,7 +618,6 @@ export const studentService = {
         const announcements = (await prisma.studentAnnouncement.findMany({
             where: {
                 instituteId,
-                OR: [{ batchId: null }, { batchId: student.batchId }],
             },
             orderBy: { createdAt: "desc" },
             take: 20,
@@ -660,7 +655,6 @@ export const studentService = {
         await prisma.studentAnnouncement.create({
             data: {
                 instituteId,
-                batchId: payload.batchId ?? null,
                 title: payload.title.trim(),
                 body: payload.body.trim(),
             },

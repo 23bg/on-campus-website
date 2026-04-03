@@ -46,12 +46,12 @@ export default async function CourseComparisonPage({ searchParams }: CourseCompa
     const instituteIds = institutes.map((institute) => institute.id);
 
     const courses = instituteIds.length
-        ? await prisma.course.findMany({
+        ? await prisma.job.findMany({
             where: {
                 instituteId: { in: instituteIds },
                 ...(course
                     ? {
-                        name: {
+                        title: {
                             contains: course,
                             mode: "insensitive",
                         },
@@ -61,9 +61,8 @@ export default async function CourseComparisonPage({ searchParams }: CourseCompa
             select: {
                 id: true,
                 instituteId: true,
-                name: true,
-                defaultFees: true,
-                duration: true,
+                title: true,
+                salary: true,
             },
             orderBy: { createdAt: "desc" },
             take: 200,
@@ -79,9 +78,9 @@ export default async function CourseComparisonPage({ searchParams }: CourseCompa
             return {
                 id: row.id,
                 institute: institute.name || "Institute",
-                course: row.name,
-                fees: row.defaultFees != null ? `₹${row.defaultFees.toLocaleString("en-IN")}` : "N/A",
-                duration: row.duration || "N/A",
+                course: row.title,
+                fees: row.salary != null ? `₹${row.salary.toLocaleString("en-IN")}` : "N/A",
+                duration: "N/A",
                 mode: "Offline / Hybrid",
                 city: institute.address?.city || "N/A",
             };

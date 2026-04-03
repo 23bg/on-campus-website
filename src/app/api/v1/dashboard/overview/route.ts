@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/auth";
 import { dashboardService } from "@/features/dashboard/dashboardApi";
-import { feeService } from "@/features/fee/feeApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET(req: NextRequest) {
@@ -22,12 +21,9 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        const [metrics, defaulters] = await Promise.all([
-            dashboardService.getMetrics(session.instituteId),
-            feeService.getDefaulters(session.instituteId),
-        ]);
+        const metrics = await dashboardService.getMetrics(session.instituteId);
 
-        return NextResponse.json({ success: true, data: { metrics, defaulters } });
+        return NextResponse.json({ success: true, data: { metrics, defaulters: [] } });
     } catch (error) {
         const appError = toAppError(error);
         return NextResponse.json(

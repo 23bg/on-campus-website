@@ -3,7 +3,8 @@ import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/l
 import { canManageBilling } from "@/lib/auth/permissions";
 import { BillingInterval, subscriptionService } from "@/features/subscription/subscriptionApi";
 import { billingService } from "@/features/billing/billingApi";
-import { BillingProvider, BillingServiceFactory } from "@/lib/billing/billing.service";
+import { BillingProvider } from "@/lib/billing/types";
+import { BillingServiceFactory } from "@/lib/billing/billing.service";
 import { toAppError } from "@/lib/utils/error";
 import { isPlanType } from "@/config/plans";
 import { env } from "@/lib/config/env";
@@ -59,8 +60,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const body = (await req.json().catch(() => ({}))) as { action?: string; planType?: string; interval?: string };
-        const typedBody = body as { action?: string; planType?: string; interval?: string; invoiceId?: string };
+        const body = (await req.json().catch(() => ({}))) as { action?: string; planType?: string; interval?: string; provider?: BillingProvider };
+        const typedBody = body as { action?: string; planType?: string; interval?: string; provider?: BillingProvider; invoiceId?: string };
         if (body.action === "generate-invoice") {
             const invoice = await billingService.createOrUpdateClosedMonthInvoice(session.instituteId);
             return NextResponse.json({ success: true, data: invoice });

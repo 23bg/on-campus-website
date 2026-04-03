@@ -276,6 +276,14 @@ model WhatsAppAccount {
 
     businessAccountId String?
 
+    otpHash String?
+
+    otpExpiresAt DateTime?
+
+    otpRequestedAt DateTime?
+
+    otpAttempts Int @default(0)
+
     status WhatsAppAccountStatus @default(PENDING)
 
     connectedAt DateTime?
@@ -444,6 +452,23 @@ model Candidate {
     @@map("candidates") // Renamed from 'leads'
 }
 
+model Course {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    name        String
+    slug        String?   @unique
+    banner      String?
+    duration    String?
+    defaultFees Float?
+    description String?
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([instituteId])
+    @@map("courses")
+}
+
 model Job {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
@@ -479,7 +504,22 @@ model Job {
     @@map("jobs") // Renamed from 'courses'
 }
 
-// Removed Batch Model
+model Batch {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    courseId    String?   @db.ObjectId
+    name        String
+    startDate   DateTime?
+    schedule    String?
+    teacherId   String?   @db.ObjectId
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@index([instituteId])
+    @@index([courseId])
+    @@map("batches")
+}
 
 // Removed Student Model for now
 
@@ -507,6 +547,29 @@ model Job {
  * }
  */
 
+model Student {
+    id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId        String    @db.ObjectId
+    name               String
+    phone              String
+    email              String?
+    courseId           String?   @db.ObjectId
+    batchId            String?   @db.ObjectId
+    createdBy          String?   @db.ObjectId
+    portalUsername     String?
+    portalEmail        String?
+    portalPasswordHash String?
+    portalActive       Boolean   @default(true)
+    admissionDate      DateTime? @default(now())
+    deletedAt          DateTime?
+    createdAt          DateTime  @default(now())
+    updatedAt          DateTime  @updatedAt
+
+    @@unique([instituteId, phone])
+    @@index([instituteId])
+    @@map("students")
+}
+
 // Removed StudentCourse Model for now
 
 /**
@@ -530,6 +593,26 @@ model Job {
  * }
  */
 
+model Attendance {
+    id          String           @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String           @db.ObjectId
+    studentId   String           @db.ObjectId
+    courseId    String?          @db.ObjectId
+    batchId     String?          @db.ObjectId
+    date        DateTime
+    status      AttendanceStatus
+    markedBy    String?
+    deletedAt   DateTime?
+    createdAt   DateTime         @default(now())
+    updatedAt   DateTime         @updatedAt
+
+    @@index([instituteId])
+    @@index([studentId])
+    @@index([courseId])
+    @@index([batchId])
+    @@map("attendance")
+}
+
 model Note {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
@@ -543,7 +626,7 @@ model Note {
 
     courseId String? @db.ObjectId // This will likely become jobId
 
-    // Removed batchId
+    batchId String? @db.ObjectId
 
     createdBy String? @db.ObjectId
 
@@ -553,32 +636,46 @@ model Note {
 
     updatedAt DateTime @updatedAt
 
-    // Removed batchId index
-
     @@index([instituteId])
     @@index([courseId]) // This will become jobId
+    @@index([batchId])
     @@map("notes")
 }
 
 // Removed Attendance Model
 
-// Removed FeePlan Model
+model FeePlan {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    studentId   String    @db.ObjectId
+    instituteId String    @db.ObjectId
+    totalAmount Float
+    dueDate     DateTime?
+    createdBy   String?   @db.ObjectId
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
-/**
- * model FeePlan {
- * id          String    @id @default(auto()) @map("_id") @db.ObjectId
- * studentId   String    @db.ObjectId
- * instituteId String    @db.ObjectId
- * totalAmount Float
- * dueDate     DateTime?
- * createdBy   String?   @db.ObjectId
- * deletedAt   DateTime?
- * createdAt   DateTime  @default(now())
- * updatedAt   DateTime  @updatedAt
- * @@index([studentId])
- * @@map("feeplans")
- * }
- */
+    @@index([studentId])
+    @@map("feeplans")
+}
+
+model FeeInstallment {
+    id          String            @id @default(auto()) @map("_id") @db.ObjectId
+    feePlanId   String            @db.ObjectId
+    studentId   String            @db.ObjectId
+    instituteId String            @db.ObjectId
+    amount      Float
+    paidOn      DateTime?
+    note        String?
+    status      InstallmentStatus
+    createdBy   String?           @db.ObjectId
+    deletedAt   DateTime?
+    createdAt   DateTime          @default(now())
+    updatedAt   DateTime          @updatedAt
+
+    @@index([feePlanId])
+    @@map("feeinstallments")
+}
 
 // Removed FeeInstallment Model
 
@@ -600,26 +697,25 @@ model Note {
  * }
  */
 
-// Removed Payment Model
+model Payment {
+    id          String    @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String    @db.ObjectId
+    studentId   String    @db.ObjectId
+    amount      Float
+    method      String?
+    reference   String?
+    createdBy   String?   @db.ObjectId
+    paidOn      DateTime  @default(now())
+    deletedAt   DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
-/**
- * model Payment {
- * id          String    @id @default(auto()) @map("_id") @db.ObjectId
- * instituteId String    @db.ObjectId
- * studentId   String    @db.ObjectId
- * amount      Float
- * method      String?
- * reference   String?
- * createdBy   String?   @db.ObjectId
- * paidOn      DateTime  @default(now())
- * deletedAt   DateTime?
- * createdAt   DateTime  @default(now())
- * updatedAt   DateTime  @updatedAt
- * @@index([studentId])
- * @@index([instituteId])
- * @@map("payments")
- * }
- */
+    @@index([studentId])
+    @@index([instituteId])
+    @@map("payments")
+}
+
+// Removed StudentAnnouncement Model
 
 // Removed StudentAnnouncement Model
 
@@ -648,6 +744,18 @@ model WhatsAppUsage {
     @@index([phoneNumber])
     @@index([conversationStart])
     @@map("whatsapp_usage")
+}
+
+model StudentAnnouncement {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId
+    instituteId String   @db.ObjectId
+    title       String
+    body        String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@index([instituteId])
+    @@map("student_announcements")
 }
 
 model MonthlyUsage {

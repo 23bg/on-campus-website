@@ -43,7 +43,8 @@ export async function POST(req: NextRequest) {
         }
 
         const body = (await req.json()) as { email: string; name?: string; role: "MANAGER" | "VIEWER" };
-        const data = await teamService.createMember(session.instituteId, session.role, body);
+        const currentRole = session.role as "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+        const data = await teamService.createMember(session.instituteId, currentRole, body);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

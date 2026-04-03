@@ -1,27 +1,54 @@
-﻿type Bucket = {
-    count: number;
-    resetAt: number;
+﻿import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+type RateLimitResult = {
+    ok: boolean;
+    retryAfter: number;
 };
 
-const buckets = new Map<string, Bucket>();
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-export function enforceRateLimit(key: string, limit: number, windowMs: number): { ok: boolean; retryAfter: number } {
-    const now = Date.now();
-    const existing = buckets.get(key);
+const redis = upstashUrl && upstashToken
+    ? new Redis({ url: upstashUrl, token: upstashToken })
+    : null;
 
-    if (!existing || now > existing.resetAt) {
-        buckets.set(key, {
-            count: 1,
-            resetAt: now + windowMs,
-        });
+const limiterCache = new Map<string, Ratelimit>();
+
+const getLimiter = (limit: number, windowMs: number): Ratelimit => {
+    const key = `${limit}:${windowMs}`;
+    const existing = limiterCache.get(key);
+    if (existing) {
+        return existing;
+    }
+
+    if (!redis) {
+        throw new Error("Missing Upstash Redis configuration for rate limiting.");
+    }
+
+    const seconds = Math.max(1, Math.ceil(windowMs / 1000));
+    const limiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(limit, `${seconds} s`),
+        analytics: true,
+        prefix: "rl",
+    });
+
+    limiterCache.set(key, limiter);
+    return limiter;
+};
+
+export async function enforceRateLimit(key: string, limit: number, windowMs: number): Promise<RateLimitResult> {
+    if (process.env.NODE_ENV === "test") {
         return { ok: true, retryAfter: 0 };
     }
 
-    if (existing.count >= limit) {
-        return { ok: false, retryAfter: Math.max(0, Math.ceil((existing.resetAt - now) / 1000)) };
-    }
+    const limiter = getLimiter(limit, windowMs);
+    const result = await limiter.limit(key);
 
-    existing.count += 1;
-    return { ok: true, retryAfter: 0 };
+    return {
+        ok: result.success,
+        retryAfter: result.success ? 0 : Math.max(0, Math.ceil((result.reset - Date.now()) / 1000)),
+    };
 }
 

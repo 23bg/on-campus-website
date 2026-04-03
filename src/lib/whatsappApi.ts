@@ -115,19 +115,29 @@ type SendSystemAlertResult = {
 };
 
 const toStoredPlanType = (storedPlanType: string | null | undefined, userLimit?: number | null): PlanType => {
-    if (storedPlanType === "STARTER" || storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
+    if (storedPlanType === "FREE" || storedPlanType === "BASIC" || storedPlanType === "PRO") {
         return storedPlanType;
     }
 
-    if (storedPlanType === "SOLO") {
-        return "STARTER";
+    if (storedPlanType === "STARTER" || storedPlanType === "SOLO") {
+        return "FREE";
     }
 
     if (storedPlanType === "TEAM") {
-        return (userLimit ?? 0) >= (PLAN_CONFIG.SCALE.userLimit ?? Number.MAX_SAFE_INTEGER) ? "SCALE" : "GROWTH";
+        return (userLimit ?? 0) > 3 ? "PRO" : "BASIC";
     }
 
-    return "STARTER";
+    if (storedPlanType === "GROWTH" || storedPlanType === "SCALE") {
+        return "PRO";
+    }
+
+    return "FREE";
+};
+
+const PLAN_WHATSAPP_LIMITS: Record<PlanType, { daily: number; monthly: number }> = {
+    FREE: { daily: 25, monthly: 300 },
+    BASIC: { daily: 100, monthly: 3000 },
+    PRO: { daily: 400, monthly: 10000 },
 };
 
 const getMonthWindow = (now = new Date()) => ({
@@ -165,6 +175,7 @@ export const sendSystemAlert = async (
         const subscription = await subscriptionService.getSubscription(instituteId);
         const planType = toStoredPlanType(subscription.planType, subscription.userLimit);
         const plan = PLAN_CONFIG[planType];
+        const limits = PLAN_WHATSAPP_LIMITS[planType];
 
         const now = new Date();
         const monthWindow = getMonthWindow(now);
@@ -189,13 +200,13 @@ export const sendSystemAlert = async (
             }),
         ]);
 
-        if (dayCount >= plan.whatsappDailyLimit) {
+        if (dayCount >= limits.daily) {
             return { sent: false, blocked: true, billable: false, reason: "DAILY_ALERT_LIMIT_REACHED" };
         }
 
         const nextMonthCount = monthCount + 1;
         const nextDayCount = dayCount + 1;
-        const billable = nextMonthCount > plan.whatsappMonthlyLimit;
+        const billable = nextMonthCount > limits.monthly;
 
         const sender =
             senderType === "INSTITUTE_WHATSAPP_NUMBER"

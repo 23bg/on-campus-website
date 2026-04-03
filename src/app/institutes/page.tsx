@@ -30,5 +30,6 @@ type InstitutesPageProps = {
     searchParams: Promise<{ city?: string; course?: string; q?: string; sort?: "popular" | "newest" }>;
 };
 
-export default function RemovedPage() { return null; }
+export default function InstitutesPage() {
+    return null;
 }

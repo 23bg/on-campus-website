@@ -718,11 +718,10 @@ export const fetchWhatsappIntegration = createAsyncThunk("dashboard/fetchWhatsap
 });
 
 export const connectWhatsapp = createAsyncThunk("dashboard/connectWhatsapp", async (phoneNumber: string) => {
-    const response = await api.post(API.INTERNAL.INSTITUTE.WHATSAPP, { action: "connect", phoneNumber });
+    await api.post(API.INTERNAL.INSTITUTE.WHATSAPP, { action: "connect", phoneNumber });
     const stateResponse = await api.get<{ success: boolean; data: WhatsAppIntegrationState }>(API.INTERNAL.INSTITUTE.WHATSAPP);
     return {
         data: stateResponse.data?.data ?? DEFAULT_WHATSAPP,
-        otpHint: response.data?.data?.otpHint as string | undefined,
     };
 });
 

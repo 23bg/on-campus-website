@@ -46,7 +46,7 @@ export type ResetPasswordInput = {
 
 export type PasswordLoginResult = {
     mfaRequired: boolean;
-    redirectTo?: "/overview" | "/pricing" | "/onboarding";
+    redirectTo?: "/dashboard" | "/jobs" | "/applications" | "/overview" | "/pricing" | "/onboarding";
 };
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -81,7 +81,7 @@ const sendOtpForPurpose = async (input: RequestOtpInput): Promise<{ expiresAt: n
         throw new AppError("Invalid email", 400, "INVALID_EMAIL");
     }
 
-    const rate = enforceRateLimit(`otp:${input.purpose}:${input.ip}:${email}`, env.OTP_RATE_LIMIT_PER_MIN, 60_000);
+    const rate = await enforceRateLimit(`otp:${input.purpose}:${input.ip}:${email}`, env.OTP_RATE_LIMIT_PER_MIN, 60_000);
     if (!rate.ok) {
         throw new AppError(`Too many OTP requests. Retry in ${rate.retryAfter}s`, 429, "RATE_LIMITED");
     }
@@ -262,7 +262,7 @@ export const authService = {
         };
     },
 
-    async completeMfaLogin(input: VerifyOtpInput): Promise<{ redirectTo: "/overview" | "/pricing" | "/onboarding" }> {
+    async completeMfaLogin(input: VerifyOtpInput): Promise<{ redirectTo: "/dashboard" | "/jobs" | "/applications" | "/overview" | "/pricing" | "/onboarding" }> {
         if (input.purpose !== OtpPurpose.MFA) {
             throw new AppError("Invalid OTP purpose", 400, "INVALID_OTP_PURPOSE");
         }

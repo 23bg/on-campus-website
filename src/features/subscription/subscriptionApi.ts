@@ -3,7 +3,7 @@ import { subscriptionRepository } from "@/features/subscription/subscriptionData
 import { assertRazorpayReady, razorpay, verifyRazorpayCheckoutSignature } from "@/lib/billing/razorpay";
 import { BillingProvider } from "@/lib/billing/types";
 import { env } from "@/lib/config/env";
-import { DEFAULT_PLAN_TYPE, getPlanPricing, isPlanType, PLAN_CONFIG, PlanType } from "@/config/plans";
+import { assertPlanType, DEFAULT_PLAN_TYPE, getPlanPricing, isPlanType, PLAN_CONFIG, PlanType } from "@/config/plans";
 import { userRepository } from "@/features/auth/userDataApi";
 import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
 
@@ -15,7 +15,7 @@ type SubscriptionRecord = {
     planType?: string | null;
     userLimit?: number | null;
     razorpaySubId?: string | null;
-    provider?: BillingProvider | null;
+    provider?: string | null;
     providerCustomerId?: string | null;
     providerSubscriptionId?: string | null;
     providerPlanId?: string | null;

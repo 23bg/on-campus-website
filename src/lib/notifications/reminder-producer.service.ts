@@ -11,7 +11,7 @@ export const reminderProducerService = {
         const dayStart = startOfDayUtc();
         const dayEnd = addDays(dayStart, 1);
 
-        const leads = await prisma.lead.findMany({
+        const candidates = await prisma.candidate.findMany({
             where: {
                 followUpAt: {
                     gte: dayStart,
@@ -24,30 +24,30 @@ export const reminderProducerService = {
                 instituteId: true,
                 name: true,
                 phone: true,
-                course: true,
+                jobId: true,
             },
             take: 1000,
         });
 
         await Promise.all(
-            leads.map((lead) =>
+            candidates.map((candidate) =>
                 eventDispatcherService.dispatch({
                     event: "FOLLOW_UP_REMINDER",
-                    instituteId: lead.instituteId,
+                    instituteId: candidate.instituteId,
                     title: "Follow-up Reminder",
-                    message: `Follow-up due today for ${lead.name}.`,
-                    link: `/leads/${lead.id}`,
+                    message: `Follow-up due today for ${candidate.name}.`,
+                    link: `/candidates/${candidate.id}`,
                     whatsappPhoneNumber: undefined,
                     templateVariables: {
-                        student_name: lead.name,
-                        course_name: lead.course ?? "General enquiry",
+                        student_name: candidate.name,
+                        course_name: candidate.jobId ?? "General application",
                     },
-                    metadata: { leadId: lead.id },
+                    metadata: { candidateId: candidate.id },
                 })
             )
         );
 
-        return { produced: leads.length };
+        return { produced: candidates.length };
     },
 
     async produceFeeDueReminders() {

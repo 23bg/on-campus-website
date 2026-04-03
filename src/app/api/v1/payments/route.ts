@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSessionFromCookie } from "@/lib/auth/auth";
-import { feeService } from "@/features/fee/feeApi";
+import { prisma } from "@/lib/db/prisma";
 import { toAppError } from "@/lib/utils/error";
 
 export async function GET(req: NextRequest) {
@@ -20,12 +20,22 @@ export async function GET(req: NextRequest) {
         const limitRaw = req.nextUrl.searchParams.get("limit");
         const limit = limitRaw ? Number(limitRaw) : undefined;
 
-        const data = await feeService.listPayments(session.instituteId, {
-            from,
-            to,
-            studentId,
-            method,
-            limit: Number.isFinite(limit) ? limit : undefined,
+        const paidOnFilter = from || to
+            ? {
+                ...(from ? { gte: new Date(from) } : {}),
+                ...(to ? { lte: new Date(to) } : {}),
+            }
+            : undefined;
+
+        const data = await prisma.payment.findMany({
+            where: {
+                instituteId: session.instituteId,
+                ...(studentId ? { studentId } : {}),
+                ...(method ? { method } : {}),
+                ...(paidOnFilter ? { paidOn: paidOnFilter } : {}),
+            },
+            orderBy: { paidOn: "desc" },
+            ...(Number.isFinite(limit) ? { take: limit } : {}),
         });
 
         return NextResponse.json({ success: true, data });

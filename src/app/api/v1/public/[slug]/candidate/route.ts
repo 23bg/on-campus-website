@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
         routeLog.info("public_candidate_submit_started", { slug }); // Updated log message
 
         const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-        const rate = enforceRateLimit(`candidate:${ip}:${slug}`, env.LEAD_RATE_LIMIT_PER_MIN, 60_000); // Updated rate limit key
+        const rate = await enforceRateLimit(`candidate:${ip}:${slug}`, env.LEAD_RATE_LIMIT_PER_MIN, 60_000); // Updated rate limit key
         if (!rate.ok) {
             routeLog.warn("public_candidate_submit_rate_limited", { slug, retryAfter: rate.retryAfter }); // Updated log message
             return NextResponse.json(
@@ -58,10 +58,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
             };
         }
 
-        const input = candidateSchema.parse(payload); // Renamed schema
-        const candidate = await candidateService.createCandidateBySlug(slug, input); // Updated service call and variable name
+        const input = candidateSchema.parse(payload);
+        const candidate = await candidateService.createLeadBySlug(slug, input);
 
-        routeLog.info("public_candidate_submit_succeeded", { slug, instituteId: candidate.instituteId, candidateId: candidate.id }); // Updated log message and variable names
+        routeLog.info("public_candidate_submit_succeeded", { slug, instituteId: candidate.instituteId, candidateId: candidate.id });
 
         if (contentType.includes("application/json")) {
             return NextResponse.json({ success: true, data: candidate });

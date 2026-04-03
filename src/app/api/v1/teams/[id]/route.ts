@@ -27,7 +27,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
         const { id } = await context.params;
         const body = (await req.json()) as { role: "MANAGER" | "VIEWER" };
-        const data = await teamService.updateMemberRole(session.instituteId, session.role, session.userId, id, body.role);
+        const currentRole = session.role as "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+        const data = await teamService.updateMemberRole(session.instituteId, currentRole, session.userId, id, body.role);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);
@@ -56,7 +57,8 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
         }
 
         const { id } = await context.params;
-        const data = await teamService.removeMember(session.instituteId, session.role, session.userId, id);
+        const currentRole = session.role as "OWNER" | "EDITOR" | "VIEWER" | "MANAGER";
+        const data = await teamService.removeMember(session.instituteId, currentRole, session.userId, id);
         return NextResponse.json({ success: true, data });
     } catch (error) {
         const appError = toAppError(error);

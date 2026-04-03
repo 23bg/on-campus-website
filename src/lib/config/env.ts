@@ -47,9 +47,6 @@ const envSchema = z.object({
     WHATSAPP_API_VERSION: z.preprocess(emptyToUndefined, z.string().default("v19.0")),
     GEMINI_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
     GEMINI_MODEL: z.preprocess(emptyToUndefined, z.string().optional()),
-    STRIPE_SECRET_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
-    STRIPE_WEBHOOK_SECRET: z.preprocess(emptyToUndefined, z.string().optional()),
-    STRIPE_PLAN_ID_SOLO: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

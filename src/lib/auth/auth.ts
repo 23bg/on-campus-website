@@ -15,6 +15,8 @@ export type SessionPayload = {
     instituteId: string;
     isOnboarded: boolean;
     subscriptionStatus: SubscriptionStatus;
+    country?: string;
+    name?: string;
 };
 
 export const createSessionToken = (payload: SessionPayload): string =>

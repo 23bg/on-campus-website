@@ -2,7 +2,7 @@ import React from "react";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readSessionFromCookie } from "@/lib/auth/auth";
-import { instituteService } from "@/features/institute/instituteApi";
+import { instituteService } from "@/server/instituteApi";
 import { userRepository } from "@/features/auth/userDataApi";
 import { DashboardLayoutWithProviders } from "@/providers/DashboardLayoutWithProviders";
 

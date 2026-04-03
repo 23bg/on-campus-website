@@ -8,7 +8,7 @@ const { mockAuthService } = vi.hoisted(() => ({
     },
 }));
 
-vi.mock("@/features/auth/services/auth.service", () => ({
+vi.mock("@/features/auth/authDomainApi", () => ({
     authService: mockAuthService,
 }));
 
@@ -26,7 +26,7 @@ describe("POST /api/v1/auth/request-otp", () => {
                 "content-type": "application/json",
                 "x-forwarded-for": "10.0.0.1",
             },
-            body: JSON.stringify({ email: "owner@acme.com" }),
+            body: JSON.stringify({ email: "owner@acme.com", purpose: "VERIFY_EMAIL" }),
         });
 
         const response = await POST(request as never);
@@ -34,7 +34,11 @@ describe("POST /api/v1/auth/request-otp", () => {
 
         expect(response.status).toBe(200);
         expect(body.success).toBe(true);
-        expect(mockAuthService.requestOtp).toHaveBeenCalledWith({ email: "owner@acme.com", ip: "10.0.0.1" });
+        expect(mockAuthService.requestOtp).toHaveBeenCalledWith({
+            email: "owner@acme.com",
+            ip: "10.0.0.1",
+            purpose: "VERIFY_EMAIL",
+        });
     });
 
     it("returns service error status when service fails", async () => {
@@ -43,7 +47,7 @@ describe("POST /api/v1/auth/request-otp", () => {
         const request = new Request("http://localhost/api/v1/auth/request-otp", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email: "owner@acme.com" }),
+            body: JSON.stringify({ email: "owner@acme.com", purpose: "VERIFY_EMAIL" }),
         });
 
         const response = await POST(request as never);

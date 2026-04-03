@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { instituteService } from "@/features/institute/instituteApi";
+import { instituteService } from "@/server/instituteApi";
 import { toAppError } from "@/lib/utils/error";
 import { createRouteLogger } from "@/lib/api/route-logger";
 

@@ -1,8 +1,8 @@
 import { z } from "zod";
+import type { CandidateStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { withTenantScope } from "@/lib/db/tenant-scope";
 import { studentService } from "@/server/studentsApi";
-import { instituteRepository } from "@/features/institute/instituteDataApi";
 import { AppError } from "@/lib/utils/error";
 import { billingService } from "@/features/billing/billingApi";
 import { eventDispatcherService } from "@/lib/notifications/event-dispatcher.service";
@@ -26,12 +26,12 @@ type CreateCandidateInput = {
     jobId?: string; // Changed from course to jobId
     message?: string;
     followUpAt?: Date;
-    status?: string;
+    status?: CandidateStatus;
 };
 
 type ListCandidateInput = {
     instituteId: string;
-    status?: string;
+    status?: CandidateStatus;
     query?: string;
     from?: Date;
     to?: Date;
@@ -46,6 +46,8 @@ type CandidateActivityEntry = {
     actorUserId?: string;
     createdAt: Date;
 };
+
+const candidateStatusValues = ["APPLIED", "SCREENING", "INTERVIEW", "SELECTED", "REJECTED"] as const;
 
 const createCandidateRecord = async (payload: CreateCandidateInput) =>
     prisma.candidate.create({
@@ -87,7 +89,7 @@ const findCandidateByIdInInstitute = async (instituteId: string, candidateId: st
         where: withTenantScope(instituteId, { id: candidateId }),
     });
 
-const updateCandidateStatusRecord = async (instituteId: string, candidateId: string, status: string) =>
+const updateCandidateStatusRecord = async (instituteId: string, candidateId: string, status: CandidateStatus) =>
     prisma.candidate.updateMany({
         where: { id: candidateId, instituteId },
         data: { status },
@@ -96,7 +98,7 @@ const updateCandidateStatusRecord = async (instituteId: string, candidateId: str
 const updateCandidateByIdInInstitute = async (
     instituteId: string,
     candidateId: string,
-    payload: { message?: string | null; followUpAt?: Date | null; status?: string }
+    payload: { message?: string | null; followUpAt?: Date | null; status?: CandidateStatus }
 ) =>
     prisma.candidate.updateMany({
         where: { id: candidateId, instituteId },
@@ -205,7 +207,7 @@ const candidateInputSchema = z.object({
 });
 
 const listInputSchema = z.object({
-    status: z.string().optional(),
+    status: z.enum(candidateStatusValues).optional(),
     query: z.string().trim().max(120).optional(),
     from: z.coerce.date().optional(),
     to: z.coerce.date().optional(),
@@ -219,7 +221,7 @@ export const candidateActivityService = {
 export const candidateService = {
     async createCandidate(payload: unknown) {
         const input = candidateInputSchema.parse(payload);
-        await billingService.assertCanCreateCandidates(input.instituteId);
+        await billingService.assertCanCreateLeads(input.instituteId);
         const duplicate = await findCandidateByPhoneInInstitute(input.instituteId, input.phone);
         if (duplicate) {
             throw new AppError("Candidate already exists with this mobile number", 409, "DUPLICATE_CANDIDATE", {
@@ -252,16 +254,16 @@ export const candidateService = {
         }
 
         await eventDispatcherService.dispatch({
-            event: "CANDIDATE_CREATED",
+            event: "LEAD_CREATED",
             instituteId: created.instituteId,
             message: `New application received: ${created.name} (${created.phone}).`,
             link: `/candidates/${created.id}`,
             metadata: { candidateId: created.id },
             whatsappPhoneNumber: created.phone,
-            templateEvent: "new_application_alert",
+            templateEvent: "new_enquiry_alert",
             templateVariables: {
-                candidate_name: created.name,
-                job_name: created.jobId ?? "General application",
+                student_name: created.name,
+                course_name: created.jobId ?? "General application",
             },
         });
 
@@ -279,7 +281,7 @@ export const candidateService = {
             message?: string;
         }
     ) {
-        const institute = await instituteRepository.findBySlug(slug);
+        const institute = await prisma.institute.findUnique({ where: { slug } });
         if (!institute) {
             throw new AppError("Institute not found", 404, "INSTITUTE_NOT_FOUND");
         }
@@ -290,7 +292,7 @@ export const candidateService = {
         });
     },
 
-    async updateStatus(instituteId: string, candidateId: string, status: string) { // status will be CandidateStatus enum
+    async updateStatus(instituteId: string, candidateId: string, status: CandidateStatus) {
         const beforeUpdate = await findCandidateByIdInInstitute(instituteId, candidateId);
         if (!beforeUpdate) {
             throw new AppError("Candidate not found", 404, "CANDIDATE_NOT_FOUND");
@@ -313,7 +315,7 @@ export const candidateService = {
             });
 
             await eventDispatcherService.dispatch({
-                event: "CANDIDATE_STATUS_CHANGED",
+                event: "LEAD_STATUS_CHANGED",
                 instituteId,
                 message: `${updated.name} status changed from ${beforeUpdate.status} to ${status}.`,
                 link: `/candidates/${updated.id}`,
@@ -344,16 +346,16 @@ export const candidateService = {
             });
 
             await eventDispatcherService.dispatch({
-                event: "CANDIDATE_CONVERTED_TO_EMPLOYEE",
+                event: "STUDENT_CREATED",
                 instituteId,
                 message: `Candidate converted to employee: ${updated.name} (${updated.phone}).`,
                 link: `/employees`, // TODO: Update link to actual employee page
                 whatsappPhoneNumber: updated.phone,
                 metadata: { candidateId: updated.id },
-                templateEvent: "hiring_confirmed",
+                templateEvent: "admission_confirmed",
                 templateVariables: {
-                    employee_name: updated.name,
-                    job_name: updated.jobId ?? "Job",
+                    student_name: updated.name,
+                    course_name: updated.jobId ?? "Job",
                 },
             });
         }
@@ -361,14 +363,14 @@ export const candidateService = {
         return updated;
     },
 
-    async updateCandidateStatus(instituteId: string, candidateId: string, status: string) {
+    async updateCandidateStatus(instituteId: string, candidateId: string, status: CandidateStatus) {
         return this.updateStatus(instituteId, candidateId, status);
     },
 
     async updateCandidate(
         instituteId: string,
         candidateId: string,
-        payload: { status?: string; message?: string | null; followUpAt?: string | null }
+        payload: { status?: CandidateStatus; message?: string | null; followUpAt?: string | null }
     ) {
         if (!payload.status && payload.message === undefined && payload.followUpAt === undefined) {
             throw new AppError("Nothing to update", 400, "INVALID_UPDATE");
@@ -418,7 +420,7 @@ export const candidateService = {
             });
 
             await eventDispatcherService.dispatch({
-                event: "CANDIDATE_NOTE_ADDED",
+                event: "LEAD_NOTE_ADDED",
                 instituteId,
                 message: `A new note was added for ${updated.name}.`,
                 link: `/candidates/${updated.id}`,
@@ -476,7 +478,7 @@ export const candidateService = {
     async searchCandidates(
         instituteId: string,
         query?: string,
-        status?: string,
+        status?: CandidateStatus,
         from?: Date,
         to?: Date
     ) {
@@ -497,7 +499,7 @@ export const candidateService = {
         return this.searchCandidates(instituteId, parsed.query, parsed.status, parsed.from, parsed.to);
     },
 
-    async filterCandidates(instituteId: string, status: string) {
+    async filterCandidates(instituteId: string, status: CandidateStatus) {
         return listCandidateRecords({ instituteId, status });
     },
 

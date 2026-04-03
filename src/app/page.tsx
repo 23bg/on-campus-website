@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { getRequestHostname, resolveHost } from "@/lib/tenancy/host-routing";
-import { instituteService } from "@/features/institute/instituteApi";
+import { instituteService } from "@/server/instituteApi";
 import LandingPage from "@/modules/marketing/LandingPage";
 import DashboardHome from "@/modules/dashboard/DashboardHome";
 import DashboardLayout from "@/components/layout/dashboard/DashboardLayout";

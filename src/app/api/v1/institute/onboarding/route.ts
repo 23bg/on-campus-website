@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, readSessionFromCookie, setSessionCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
-import { instituteService } from "@/features/institute/instituteApi";
+import { instituteService } from "@/server/instituteApi";
 import { toAppError } from "@/lib/utils/error";
 
 export async function POST(req: NextRequest) {

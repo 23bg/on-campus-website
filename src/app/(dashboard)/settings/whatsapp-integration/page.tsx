@@ -59,9 +59,8 @@ export default function WhatsAppIntegrationPage() {
 
     const connect = async () => {
         try {
-            const response = await dispatch(connectWhatsapp(phoneNumber)).unwrap();
-            const otpHint = response.otpHint;
-            toast.success(otpHint ? `OTP sent. Use ${otpHint} in this environment.` : "OTP sent");
+            await dispatch(connectWhatsapp(phoneNumber)).unwrap();
+            toast.success("OTP sent");
             await dispatch(fetchWhatsappIntegration()).unwrap();
         } catch (error: any) {
             toast.error(error?.data?.error?.message ?? "Unable to initiate connection");

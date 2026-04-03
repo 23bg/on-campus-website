@@ -15,7 +15,7 @@ export const getInstituteSummaryResources = async () => {
 export const getSettingsCountsResources = async () => {
     const [studentsRes, leadsRes, coursesRes, paymentsRes] = await Promise.all([
         apiGet<any[]>(API.INTERNAL.STUDENTS.ROOT),
-        apiGet<any[]>(API.INTERNAL.LEADS.ROOT),
+        apiGet<any[]>(API.INTERNAL.CANDIDATES.ROOT),
         apiGet<any[]>(API.INTERNAL.COURSES.ROOT),
         apiGet<any[]>(API.INTERNAL.PAYMENTS.ROOT),
     ]);
@@ -26,7 +26,7 @@ export const getSettingsCountsResources = async () => {
 export const getExportResources = async () => {
     const [students, leads, courses, fees, payments] = await Promise.all([
         apiGet<any[]>(API.INTERNAL.STUDENTS.ROOT),
-        apiGet<any[]>(API.INTERNAL.LEADS.ROOT),
+        apiGet<any[]>(API.INTERNAL.CANDIDATES.ROOT),
         apiGet<any[]>(API.INTERNAL.COURSES.ROOT),
         apiGet<any[]>(API.INTERNAL.FEES.ROOT),
         apiGet<any[]>(API.INTERNAL.PAYMENTS.ROOT),
@@ -63,7 +63,7 @@ export const activateDomain = async (customDomain: string) => {
 };
 
 export const createPublicEnquiry = async (slug: string, values: Record<string, unknown>) => {
-    await apiPost(API.INTERNAL.PUBLIC.LEAD(slug), values);
+    await apiPost(API.INTERNAL.PUBLIC.CANDIDATE(slug), values);
 };
 
 export const getOnboardingInstitute = async () => {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { CandidateStatus } from "@prisma/client";
 import { readSessionFromCookie } from "@/lib/auth/auth";
 import { canWriteInstituteData } from "@/lib/auth/permissions";
 import { candidateService } from "@/server/candidatesApi"; // Updated import
@@ -26,7 +27,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         }
 
         const { candidateId } = await context.params; // Updated to candidateId
-        const body = (await req.json()) as { status?: string; message?: string | null; followUpAt?: string | null };
+        const body = (await req.json()) as { status?: CandidateStatus; message?: string | null; followUpAt?: string | null };
 
         if (!body.status && body.message === undefined && body.followUpAt === undefined) {
             return NextResponse.json(

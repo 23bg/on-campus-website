@@ -8,7 +8,7 @@ const { mockAuthService } = vi.hoisted(() => ({
     },
 }));
 
-vi.mock("@/features/auth/services/auth.service", () => ({
+vi.mock("@/features/auth/authDomainApi", () => ({
     authService: mockAuthService,
 }));
 
@@ -23,7 +23,7 @@ describe("POST /api/v1/auth/verify-otp", () => {
         const request = new Request("http://localhost/api/v1/auth/verify-otp", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email: "owner@acme.com", otp: "12345" }),
+            body: JSON.stringify({ email: "owner@acme.com", otp: "12345", purpose: "VERIFY_EMAIL" }),
         });
 
         const response = await POST(request as never);
@@ -31,7 +31,11 @@ describe("POST /api/v1/auth/verify-otp", () => {
 
         expect(response.status).toBe(200);
         expect(body.success).toBe(true);
-        expect(mockAuthService.verifyOtp).toHaveBeenCalledWith({ email: "owner@acme.com", otp: "12345" });
+        expect(mockAuthService.verifyOtp).toHaveBeenCalledWith({
+            email: "owner@acme.com",
+            otp: "12345",
+            purpose: "VERIFY_EMAIL",
+        });
     });
 
     it("returns unauthorized when otp verification fails", async () => {
@@ -40,7 +44,7 @@ describe("POST /api/v1/auth/verify-otp", () => {
         const request = new Request("http://localhost/api/v1/auth/verify-otp", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email: "owner@acme.com", otp: "12345" }),
+            body: JSON.stringify({ email: "owner@acme.com", otp: "12345", purpose: "VERIFY_EMAIL" }),
         });
 
         const response = await POST(request as never);

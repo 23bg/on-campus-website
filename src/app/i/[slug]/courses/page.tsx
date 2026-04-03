@@ -39,5 +39,4 @@ export default async function InstituteCoursesPage({ params }: InstituteCoursesP
             <CoursesGrid slug={slug} courses={institute.courses} showDescription />
         </InstitutePageShell>
     );
-    // LEGACY PAGE REMOVED: This page is no longer available in ATS/job management platform.
-    export default function RemovedPage() { return null; }
+}
